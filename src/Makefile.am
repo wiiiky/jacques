@@ -16,9 +16,14 @@ bin_PROGRAMS = jacques
 
 jacques_SOURCES = \
 	main.c \
-	config.c
+	config.c \
+	server.c
 
 jacques_LDFLAGS =
 
 jacques_LDADD = $(JACQUES_LIBS)
 
+
+clean-local:
+	indent -kr -ts4 -nut *.c *.h
+	rm *~

@@ -1,5 +1,4 @@
 /*
- * config.c
  * Copyright (C) 2015 Wiky L <wiiiky@outlook.com>
  *
  * jacques is free software: you can redistribute it and/or modify it
@@ -15,23 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#include "config.h"
-#include <stdlib.h>
+#ifndef __JAC_I18N_H__
+#define __JAC_I18N_H__
+
+#include <locale.h>
+#include <libintl.h>
 
 
-static JConfParser *gConfigParser = NULL;
+#define _(string)   gettext(string)
 
 
-JConfParser *jac_config_parser(void)
-{
-    if (gConfigParser == NULL) {
-        gConfigParser = j_conf_parser_new();
-        j_conf_parser_add_env(gConfigParser, CONFIG_LOCATION);
-        j_conf_parser_add_env(gConfigParser, ".");
-        j_conf_parser_add_variable(gConfigParser,
-                                   "LogLocation=" LOG_LOCATION);
-        j_conf_parser_add_variable(gConfigParser,
-                                   "RunLocation=" RUNTIME_LOCATION);
-    }
-    return gConfigParser;
-}
+#endif

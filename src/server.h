@@ -1,5 +1,4 @@
 /*
- * config.c
  * Copyright (C) 2015 Wiky L <wiiiky@outlook.com>
  *
  * jacques is free software: you can redistribute it and/or modify it
@@ -15,23 +14,20 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
+#ifndef __JAC_SERVER_H__
+#define __JAC_SERVER_H__
+
 #include "config.h"
-#include <stdlib.h>
 
 
-static JConfParser *gConfigParser = NULL;
+#define JAC_VIRTUAL_SERVER_SCOPE    "VirtualServer"
+#define LISTEN_PORT_DIRECTIVE  "ListenPort"
+
+/*
+ * Checks to see if the config of servers are correct
+ * If no <VirtualServer> found or directive error, returns 0
+ */
+int jac_server_check_conf(JConfParser * p);
 
 
-JConfParser *jac_config_parser(void)
-{
-    if (gConfigParser == NULL) {
-        gConfigParser = j_conf_parser_new();
-        j_conf_parser_add_env(gConfigParser, CONFIG_LOCATION);
-        j_conf_parser_add_env(gConfigParser, ".");
-        j_conf_parser_add_variable(gConfigParser,
-                                   "LogLocation=" LOG_LOCATION);
-        j_conf_parser_add_variable(gConfigParser,
-                                   "RunLocation=" RUNTIME_LOCATION);
-    }
-    return gConfigParser;
-}
+#endif
