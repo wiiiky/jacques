@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-02-12 17:41+0800\n"
+"POT-Creation-Date: 2015-02-13 13:10+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.c:69
+#: ../src/main.c:74
 #, c-format
 msgid ""
 "error: unknown command '%s'\n"
@@ -26,31 +26,86 @@ msgstr ""
 "错误: 无法识别的命令 '%s'\n"
 "\n"
 
-#: ../src/main.c:78 ../src/main.c:90
+#: ../src/main.c:83 ../src/main.c:100
 #, c-format
 msgid "%s version: %s/%s\n"
 msgstr "%s 版本: %s/%s\n"
 
-#: ../src/main.c:80
-#, c-format
+#: ../src/main.c:85
+#, fuzzy, c-format
 msgid ""
-"Usage: %s start|stop [options]\n"
+"Usage: %s start|stop|check [options]\n"
 "\n"
 msgstr ""
-"使用方法: %s start|stop [选项]\n"
+"使用方法: %s start|stop|check [选项]\n"
 "\n"
 
-#: ../src/main.c:81
+#: ../src/main.c:86
+#, c-format
+msgid "Command:\n"
+msgstr "命令:\n"
+
+#: ../src/main.c:87
+#, c-format
+msgid "  start\t: start jacques daemon\n"
+msgstr "  start\t: 启动jacques\n"
+
+#: ../src/main.c:88
+#, c-format
+msgid "  stop\t: stop jacques daemon and all server processes\n"
+msgstr "  stop\t: 停止jacques服务\n"
+
+#: ../src/main.c:89
+#, c-format
+msgid "  check\t: check to see if the runtime environment is OK\n"
+msgstr "  check\t: 检查jacques的运行环境是否可行\n"
+
+#: ../src/main.c:91
 #, c-format
 msgid "Options:\n"
 msgstr "选项:\n"
 
-#: ../src/main.c:82
+#: ../src/main.c:92
 #, c-format
 msgid "  -h\t: show this help\n"
 msgstr "  -h\t: 显示本帮助\n"
 
-#: ../src/main.c:83
+#: ../src/main.c:93
 #, c-format
 msgid "  -v\t: show version and exit\n"
 msgstr "  -v\t: 显示版本号并退出\n"
+
+#: ../src/main.c:121
+#, c-format
+msgid "Checking configuration file:\n"
+msgstr "检查配置文件:\n"
+
+#: ../src/main.c:123 ../src/main.c:131 ../src/main.c:137 ../src/main.c:143
+#, c-format
+msgid "\t*ERROR*: [31m%s - %s[0m\n"
+msgstr "\t*错误*: \033[31m%s - %s\033[0m\n"
+
+#: ../src/main.c:127
+#, c-format
+msgid "\tconfiguration file is OK!\n"
+msgstr "配置文件没有错误!\n"
+
+#: ../src/main.c:129
+#, c-format
+msgid "Checking necessary directory:\n"
+msgstr "检查必要的目录:\n"
+
+#: ../src/main.c:134
+#, c-format
+msgid "\tconfiguration directory %s is OK\n"
+msgstr "\t配置目录 %s 没有错误\n"
+
+#: ../src/main.c:140
+#, c-format
+msgid "\truntime directory %s is OK\n"
+msgstr "\t运行时目录 %s 没有错误\n"
+
+#: ../src/main.c:146
+#, c-format
+msgid "\tlog directory %s is OK\n"
+msgstr "\t日志目录 %s 没有错误\n"

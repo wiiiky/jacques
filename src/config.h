@@ -20,52 +20,60 @@
 #define __JAC_CONFIG_H__
 
 
+#include <jconf/jconf.h>
+
+/*
+ * Gets the static JConfParser
+ */
+JConfParser *jac_config_parser(void);
+
+
 #define PROGRAME_NAME   "jacques"
 #define PROGRAME_VERSION    "0.01"
 
 /*********************** /etc *****************************/
 #ifndef CONFIG_LOCATION
-#define CONFIG_LOCATION ("/etc/" PROGRAME_NAME)
+#define CONFIG_LOCATION "/etc/" PROGRAME_NAME
 #endif
 
 
 #ifndef CONFIG_FILENAME
-#define CONFIG_FILENAME (PROGRAME_NAME ".conf")
+#define CONFIG_FILENAME PROGRAME_NAME ".conf"
 #endif
 
 
-#define CONFIG_FILEPATH (CONFIG_LOCATION "/" CONFIG_FILENAME)
+#define CONFIG_FILEPATH CONFIG_LOCATION "/" CONFIG_FILENAME
 
 
 /********************* /var/run **************************/
 #ifndef RUNTIME_LOCATION
-#define RUNTIME_LOCATION ("/var/run/" PROGRAME_NAME)
+#define RUNTIME_LOCATION "/var/run/" PROGRAME_NAME
 #endif
 
 
 #ifndef PID_FILENAME
-#define PID_FILENAME (PROGRAME_NAME ".pid")
+#define PID_FILENAME PROGRAME_NAME ".pid"
 #endif
 
-#define PID_FILEPATH (RUNTIME_LOCATION "/" PID_FILENAME)
+#define PID_FILEPATH RUNTIME_LOCATION "/" PID_FILENAME
 
 
 /********************* /var/log ****************************/
 #ifndef LOG_LOCATION
-#define LOG_LOCATION ("/var/log/" PROGRAME_NAME)
+#define LOG_LOCATION "/var/log/" PROGRAME_NAME
 #endif
 
 
 #ifndef LOG_FILENAME
-#define LOG_FILENAME (PROGRAME_NAME ".log")
+#define LOG_FILENAME PROGRAME_NAME ".log"
 #endif
 
 #ifndef ERR_FILENAME
-#define ERR_FILENAME (PROGRAME_NAME ".err")
+#define ERR_FILENAME PROGRAME_NAME ".err"
 #endif
 
-#define LOG_FILEPATH (LOG_LOCATION "/" LOG_FILENAME)
-#define ERR_FILEPATH (LOG_LOCATION "/" ERR_FILENAME)
+#define LOG_FILEPATH LOG_LOCATION "/" LOG_FILENAME
+#define ERR_FILEPATH LOG_LOCATION "/" ERR_FILENAME
 
 
 #endif

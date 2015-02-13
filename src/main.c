@@ -25,6 +25,8 @@
 #include <unistd.h>
 #include <locale.h>
 #include <libintl.h>
+#include <errno.h>
+#include <string.h>
 
 #define _(string)   gettext(string)
 
@@ -40,6 +42,7 @@ static inline void show_version(void);
 
 static inline void start_jacques(void);
 static inline void stop_jacques(void);
+static inline void check_jacques(void);
 
 int main(int argc, char *argv[])
 {
@@ -65,6 +68,8 @@ int main(int argc, char *argv[])
         start_jacques();
     } else if (j_strcmp0(cmd, "stop") == 0) {
         stop_jacques();
+    }else if(j_strcmp0(cmd,"check")==0){
+        check_jacques();
     }
     printf(_("error: unknown command \'%s\'\n\n"), cmd);
     show_help();
@@ -77,7 +82,12 @@ static inline void show_help(void)
 {
     printf(_("%s version: %s/%s\n"),
            PROGRAME_NAME, PROGRAME_NAME, PROGRAME_VERSION);
-    printf(_("Usage: %s start|stop [options]\n\n"), PROGRAME_NAME);
+    printf(_("Usage: %s start|stop|check [options]\n\n"), PROGRAME_NAME);
+    printf(_("Command:\n"));
+    printf(_("  start\t: start jacques daemon\n"));
+    printf(_("  stop\t: stop jacques daemon and all server processes\n"));
+    printf(_("  check\t: check to see if the runtime environment is OK\n"));
+    printf("\n");
     printf(_("Options:\n"));
     printf(_("  -h\t: show this help\n"));
     printf(_("  -v\t: show version and exit\n"));
@@ -101,5 +111,39 @@ static inline void start_jacques(void)
 static inline void stop_jacques(void)
 {
     printf("stopped!\n");
+    exit(0);
+}
+
+static inline void check_jacques(void)
+{
+    JConfParser *parser =jac_config_parser();
+    char *error=NULL;
+    printf(_("Checking configuration file:\n"));
+    if(!j_conf_parser_parse(parser,CONFIG_FILEPATH,&error)){
+        printf(_("\t*ERROR*: \033[31m%s - %s\033[0m\n"),
+            CONFIG_FILEPATH,strerror(errno));
+        j_free(error);
+    }else{
+        printf(_("\tconfiguration file is OK!\n"));
+    }
+    printf(_("Checking necessary directory:\n"));
+    if(access(CONFIG_LOCATION,F_OK|R_OK)){
+        printf(_("\t*ERROR*: \033[31m%s - %s\033[0m\n"),
+            CONFIG_LOCATION,strerror(errno));
+    }else{
+        printf(_("\tconfiguration directory %s is OK\n"),CONFIG_LOCATION);
+    }
+    if(access(RUNTIME_LOCATION,F_OK|R_OK|W_OK)){
+        printf(_("\t*ERROR*: \033[31m%s - %s\033[0m\n"),
+            RUNTIME_LOCATION,strerror(errno));
+    }else{
+        printf(_("\truntime directory %s is OK\n"),RUNTIME_LOCATION);
+    }
+    if(access(RUNTIME_LOCATION,F_OK|R_OK|W_OK)){
+        printf(_("\t*ERROR*: \033[31m%s - %s\033[0m\n"),
+            LOG_LOCATION,strerror(errno));
+    }else{
+        printf(_("\tlog directory %s is OK\n"),LOG_LOCATION);
+    }
     exit(0);
 }
