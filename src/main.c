@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "server.h"
+#include "module.h"
 #include "i18n.h"
 #include <jlib/jlib.h>
 #include <jio/jio.h>
@@ -38,6 +39,10 @@ static struct option long_options[] = {
 
 static inline void show_help(void);
 static inline void show_version(void);
+
+
+
+static inline JConfParser *initialize_jacques(void);
 
 /*
  * Commands handler
@@ -105,7 +110,8 @@ static inline void show_version(void)
     exit(0);
 }
 
-static inline void start_jacques(void)
+
+static inline JConfParser *initialize_jacques(void)
 {
     j_mkdir_with_parents(RUNTIME_LOCATION, 0755);
     j_mkdir_with_parents(LOG_LOCATION, 0755);
@@ -122,6 +128,16 @@ static inline void start_jacques(void)
         printf(_("exit...\n"));
         exit(-1);
     }
+    if (!jac_load_modules(parser)) {
+        printf(_("exit...\n"));
+        exit(-1);
+    }
+    return parser;
+}
+
+static inline void start_jacques(void)
+{
+    JConfParser *parser = initialize_jacques();
     exit(0);
 }
 

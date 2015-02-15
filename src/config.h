@@ -45,6 +45,11 @@ JConfParser *jac_config_parser(void);
 #define CONFIG_FILEPATH CONFIG_LOCATION "/" CONFIG_FILENAME
 
 
+#ifndef MODULE_LOCATION
+#define MODULE_LOCATION CONFIG_LOCATION "/modules"
+#endif
+
+
 /********************* /var/run **************************/
 #ifndef RUNTIME_LOCATION
 #define RUNTIME_LOCATION "/var/run/" PROGRAME_NAME
