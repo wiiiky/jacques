@@ -20,38 +20,15 @@
 #include <stdio.h>
 #include <jlib/jlib.h>
 #include <jio/jio.h>
-
-
-static const char *get_module_path(const char *name)
-{
-    static char buf[2048];
-    if (j_path_is_absolute(name)) {
-        snprintf(buf, sizeof(buf) / sizeof(char), "%s", name);
-        if (j_file_exists(buf)) {
-            return buf;
-        }
-    } else {
-        snprintf(buf, sizeof(buf) / sizeof(char), "%s/%s", MODULE_LOCATION,
-                 name);
-        if (j_file_exists(buf)) {
-            return buf;
-        }
-        snprintf(buf, sizeof(buf) / sizeof(char), "%s/%s.so",
-                 MODULE_LOCATION, name);
-        if (j_file_exists(buf)) {
-            return buf;
-        }
-    }
-    return NULL;
-}
+#include <jmod/jmod.h>
 
 /*
  * Loads a module from path
  */
 int jac_load_module(const char *name)
 {
-    const char *path = get_module_path(name);
-    if (path == NULL) {
+    JModule *mod = j_mod_load(MODULE_LOCATION, name);
+    if (mod == NULL) {
         return 0;
     }
     return 1;
