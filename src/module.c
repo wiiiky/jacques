@@ -22,6 +22,16 @@
 #include <jio/jio.h>
 #include <jmod/jmod.h>
 
+
+static JList *mods = NULL;
+
+static inline void jac_module_register(JModule * mod)
+{
+    mods = j_list_append(mods, mod);
+    JModuleRegister init = mod->init;
+    init();
+}
+
 /*
  * Loads a module from path
  */
@@ -31,6 +41,7 @@ int jac_load_module(const char *name)
     if (mod == NULL) {
         return 0;
     }
+    jac_module_register(mod);
     return 1;
 }
 

@@ -5803,7 +5803,7 @@ $as_echo "yes" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile po/Makefile.in"
+ac_config_files="$ac_config_files Makefile src/Makefile mods/Makefile po/Makefile.in"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6540,6 +6540,7 @@ do
     "default-1") CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "mods/Makefile") CONFIG_FILES="$CONFIG_FILES mods/Makefile" ;;
     "po/Makefile.in") CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
     "po/stamp-it") CONFIG_COMMANDS="$CONFIG_COMMANDS po/stamp-it" ;;
 

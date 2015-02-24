@@ -30,5 +30,6 @@ PKG_CHECK_MODULES(JACQUES, [jlib-0.1 jio-0.1 jconf-0.1 jmod-0.1 ])
 AC_OUTPUT([
 Makefile
 src/Makefile
+mods/Makefile
 po/Makefile.in
 ])
