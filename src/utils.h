@@ -17,6 +17,20 @@
 #ifndef __JAC_UTILS_H__
 #define __JAC_UTILS_H__
 
+/*
+ * Daemonsize current process
+ * Returns current process id on success
+ * Returns 0 on error
+ */
+int jac_daemonize(void);
 
+
+/*
+ * Checks to see if jacques is already running or not
+ */
+int jac_check_instance(void);
+
+
+int jac_save_pid(int pid);
 
 #endif

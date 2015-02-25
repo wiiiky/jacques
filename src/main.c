@@ -21,6 +21,7 @@
 #include "server.h"
 #include "module.h"
 #include "i18n.h"
+#include "utils.h"
 #include <jlib/jlib.h>
 #include <jio/jio.h>
 #include <stdio.h>
@@ -113,8 +114,22 @@ static inline void show_version(void)
 
 static inline JConfParser *initialize_jacques(void)
 {
-    j_mkdir_with_parents(RUNTIME_LOCATION, 0755);
-    j_mkdir_with_parents(LOG_LOCATION, 0755);
+    if (!j_mkdir_with_parents(RUNTIME_LOCATION, 0755) ||
+        !j_mkdir_with_parents(LOG_LOCATION, 0755)) {
+        printf("%s\n", strerror(errno));
+        exit(-1);
+    }
+
+    int n;
+    if ((n = jac_check_instance()) > 0) {
+        printf(_("jacques is already running!\n"));
+        exit(-1);
+    } else if (n < 0) {
+        printf(_("unable to open %s: %s\n"), PID_FILEPATH,
+               strerror(errno));
+        exit(-1);
+    }
+
     JConfParser *parser = jac_config_parser();
     char *error = NULL;
     if (!j_conf_parser_parse(parser, CONFIG_FILEPATH, &error)) {
@@ -138,6 +153,12 @@ static inline JConfParser *initialize_jacques(void)
 static inline void start_jacques(void)
 {
     JConfParser *parser = initialize_jacques();
+    int pid = jac_daemonize();
+    if (!pid || !jac_save_pid(pid)) {
+        exit(-1);
+    }
+    while (1) {
+    }
     exit(0);
 }
 
