@@ -91,7 +91,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_jacques_OBJECTS = main.$(OBJEXT) config.$(OBJEXT) server.$(OBJEXT) \
-	module.$(OBJEXT) utils.$(OBJEXT)
+	module.$(OBJEXT) utils.$(OBJEXT) master.$(OBJEXT)
 jacques_OBJECTS = $(am_jacques_OBJECTS)
 am__DEPENDENCIES_1 =
 jacques_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -288,7 +288,8 @@ jacques_SOURCES = \
 	config.c \
 	server.c \
 	module.c \
-	utils.c
+	utils.c \
+	master.c
 
 jacques_LDFLAGS = 
 jacques_LDADD = $(JACQUES_LIBS)
@@ -381,6 +382,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/master.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@

@@ -11,3 +11,6 @@ all-local: hello.c
 
 install-exec-local:
 	mv hello.so /etc/jacques/modules
+
+clean-local:
+	rm -f hello.so

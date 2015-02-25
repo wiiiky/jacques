@@ -19,7 +19,8 @@ jacques_SOURCES = \
 	config.c \
 	server.c \
 	module.c \
-	utils.c
+	utils.c \
+	master.c
 
 jacques_LDFLAGS =
 

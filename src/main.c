@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "server.h"
+#include "master.h"
 #include "module.h"
 #include "i18n.h"
 #include "utils.h"
@@ -153,13 +154,13 @@ static inline JConfParser *initialize_jacques(void)
 static inline void start_jacques(void)
 {
     JConfParser *parser = initialize_jacques();
-    int pid = jac_daemonize();
-    if (!pid || !jac_save_pid(pid)) {
+
+    JacMaster *master = jac_master_start(parser);
+    if (master == NULL) {
         exit(-1);
     }
-    while (1) {
-    }
-    exit(0);
+    jac_master_wait(master);
+    jac_master_quit(master);
 }
 
 static inline void stop_jacques(void)
