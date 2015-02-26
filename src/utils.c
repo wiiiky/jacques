@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdarg.h>
 
 
 /*
@@ -155,3 +157,87 @@ static inline int lockfile(int fd)
     fl.l_len = 0;
     return !fcntl(fd, F_SETLK, &fl);
 }
+
+extern char **environ;
+static char *argstart = NULL;
+static size_t maxarglen;        /* maximum available size of argument area */
+static int envmoved = 0;
+
+void set_proctitle(char **argv,
+                   /* argv as passed to main, so args can be moved if necessary */
+                   const char *fmt, /* printf(3)-style format string for process title */
+                   ... /* args to format string */ )
+  /* something as close as possible to BSD setproctitle(3), but for Linux.
+     Note I need argv as passed to main, in order to be able to poke the process
+     arguments area. Also don't call routines like putenv(3) or setenv(3)
+     prior to using this routine. */
+{
+    char title[512];            /* big enough? */
+    ssize_t titlelen;
+    {
+        va_list args;
+        va_start(args, fmt);
+        titlelen = vsnprintf(title, sizeof title, fmt, args);
+        va_end(args);
+        if (titlelen < 0) {
+            titlelen = 0;       /* ignore error */
+            title[0] = 0;
+        }                       /*if */
+        titlelen += 1;          /* including trailing nul */
+        if (titlelen > sizeof title) {
+            title[sizeof title - 1] = '\0'; /* do I need to do this? */
+            titlelen = sizeof title;
+        }                       /*if */
+    }
+    if (argstart == NULL) {
+        /* first call, find and initialize argument area */
+        char **thisarg = argv;
+        maxarglen = 0;
+        argstart = *thisarg;
+        while (*thisarg != NULL) {
+            maxarglen += strlen(*thisarg++) + 1;    /* including terminating nul */
+        }                       /*while */
+        memset(argstart, 0, maxarglen); /* clear it all out */
+    }                           /*if */
+    if (titlelen > maxarglen && !envmoved) {
+        /* relocate the environment strings and use that area for the command line
+           as well */
+        char **srcenv;
+        char **dstenv;
+        char **newenv;
+        size_t envlen = 0;
+        size_t nrenv = 1;       /* nr env strings + 1 for terminating NULL pointer */
+        if (argstart + maxarglen == environ[0]) {   /* not already moved by e.g. libc */
+            srcenv = environ;
+            while (*srcenv != NULL) {
+                envlen += strlen(*srcenv++) + 1;    /* including terminating nul */
+                ++nrenv;        /* count 'em up */
+            }                   /*while */
+            newenv = (char **) malloc(sizeof(char *) * nrenv);  /* new env array, never freed! */
+            srcenv = environ;
+            dstenv = newenv;
+            while (*srcenv != NULL) {
+                /* copy the environment strings */
+                *dstenv++ = strdup(*srcenv++);
+            }                   /*while */
+            *dstenv = NULL;     /* mark end of new environment array */
+            memset(environ[0], 0, envlen);  /* clear old environment area */
+            maxarglen += envlen;    /* this much extra space now available */
+            environ = newenv;   /* so libc etc pick up new environment location */
+        }                       /*if */
+        envmoved = 1;
+    }                           /*if */
+    if (titlelen > maxarglen) {
+        titlelen = maxarglen;   /* truncate to fit available area */
+    }                           /*if */
+    if (titlelen > 0) {
+        /* set the new title */
+        const size_t oldtitlelen = strlen(argstart) + 1;    /* including trailing nul */
+        memcpy(argstart, title, titlelen);
+        argstart[titlelen - 1] = '\0';  /* if not already done */
+        if (oldtitlelen > titlelen) {
+            /* wipe out remnants of previous title */
+            memset(argstart + titlelen, 0, oldtitlelen - titlelen);
+        }                       /*if */
+    }                           /*if */
+}                               /*setproctitle */

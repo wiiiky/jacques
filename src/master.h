@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include <jio/jio.h>
+#include <jlib/jlib.h>
 
 
 typedef struct {
@@ -29,6 +30,8 @@ typedef struct {
     JConfParser *cfg;
     JLogger *normal_logger;
     JLogger *error_logger;
+
+    JList *servers;
 } JacMaster;
 
 

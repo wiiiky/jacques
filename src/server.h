@@ -30,4 +30,21 @@
 int jac_server_check_conf(JConfParser * p);
 
 
+
+typedef struct {
+    int pid;
+    char *name;
+
+    int listenfd;
+    unsigned int listenport;
+} JacServer;
+
+/*
+ * Return a JacServer to master on success, NULL on error
+ */
+JacServer *jac_server_start(const char *name, unsigned int port);
+
+JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
+
+
 #endif

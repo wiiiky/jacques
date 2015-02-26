@@ -49,7 +49,7 @@ static inline JConfParser *initialize_jacques(void);
 /*
  * Commands handler
  */
-static inline void start_jacques(void);
+static inline void start_jacques(char **argv);
 static inline void stop_jacques(void);
 static inline void check_jacques(void);
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     }
     const char *cmd = argv[optind];
     if (j_strcmp0(cmd, "start") == 0) {
-        start_jacques();
+        start_jacques(argv);
     } else if (j_strcmp0(cmd, "stop") == 0) {
         stop_jacques();
     } else if (j_strcmp0(cmd, "check") == 0) {
@@ -151,10 +151,11 @@ static inline JConfParser *initialize_jacques(void)
     return parser;
 }
 
-static inline void start_jacques(void)
+static inline void start_jacques(char **argv)
 {
     JConfParser *parser = initialize_jacques();
 
+    set_proctitle(argv, "starting jacques master");
     JacMaster *master = jac_master_start(parser);
     if (master == NULL) {
         exit(-1);

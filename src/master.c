@@ -22,10 +22,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "i18n.h"
+#include "server.h"
 
 
 #define JAC_LOG_DIRECTIVE   "NormalLog"
 #define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
+
+
+static inline void jac_master_fork_servers(JacMaster * master);
 
 
 JacMaster *jac_master_start(JConfParser * cfg)
@@ -80,10 +84,32 @@ JacMaster *jac_master_start(JConfParser * cfg)
     master->cfg = cfg;
     master->normal_logger = normal_logger;
     master->error_logger = error_logger;
+    master->servers = NULL;
 
     j_logger_verbose(normal_logger, _("jacques daemon starts"));
 
+    set_proctitle(NULL, "jacques: master");
+
+    jac_master_fork_servers(master);
+
     return master;
+}
+
+static inline void jac_master_fork_servers(JacMaster * master)
+{
+    JConfNode *root = j_conf_parser_get_root(master->cfg);
+    JList *virtualservers =
+        j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
+    JList *ptr = virtualservers;
+    while (ptr) {
+        JConfNode *vs = (JConfNode *) j_list_data(ptr);
+        JacServer *server = jac_server_start_from_conf(root, vs);
+        if (server) {
+            master->servers = j_list_append(master->servers, server);
+        }
+        ptr = j_list_next(ptr);
+    }
+    j_list_free(virtualservers);
 }
 
 void jac_master_wait(JacMaster * master)

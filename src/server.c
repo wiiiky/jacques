@@ -17,8 +17,11 @@
 
 #include "server.h"
 #include "i18n.h"
+#include "utils.h"
 #include <jlib/jlib.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 {
@@ -76,4 +79,47 @@ int jac_server_check_conf(JConfParser * p)
     j_list_free(vs);
 
     return ret;
+}
+
+static inline void jac_server_main(JacServer * server)
+{
+    while (1);
+    exit(0);
+}
+
+JacServer *jac_server_start(const char *name, unsigned int port)
+{
+    int pid = fork();
+    if (pid < 0) {
+        return NULL;
+    }
+
+    JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
+    server->name = j_strdup(name);
+    server->listenport = port;
+    server->pid = getpid();
+    if (pid == 0) {
+        set_proctitle(NULL, "jacques: server %s", name);
+        jac_server_main(server);
+    }
+    return server;
+}
+
+JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
+{
+    JConfNode *directive = j_conf_node_get_directive_last(vs,
+                                                          LISTEN_PORT_DIRECTIVE);
+    if (directive == NULL) {
+        return NULL;
+    }
+    JConfData *port_data = j_conf_node_get_argument_first(directive);
+    if (j_conf_node_get_arguments_count(directive) != 1 ||
+        port_data == NULL || !j_conf_data_is_int(port_data) ||
+        j_conf_data_get_int(port_data) < 0 ||
+        j_conf_data_get_int(port_data) > 65535) {
+        return NULL;
+    }
+    unsigned int port = j_conf_data_get_int(port_data);
+    return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
+                            port);
 }
