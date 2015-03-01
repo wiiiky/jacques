@@ -81,4 +81,14 @@ JConfParser *jac_config_parser(void);
 #define ERR_FILEPATH LOG_LOCATION "/" ERR_FILENAME
 
 
+/******************* Directives ****************************/
+#define JAC_LOG_DIRECTIVE   "NormalLog"
+#define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
+
+
+/* functions */
+const char *jac_config_get_string(JConfNode * root,
+                                  const char *name, const char *def);
+
+
 #endif

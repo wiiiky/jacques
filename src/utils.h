@@ -25,6 +25,8 @@
 int jac_daemonize(void);
 
 
+void jac_close_fds(void);
+
 /*
  * Checks to see if jacques is already running or not
  */

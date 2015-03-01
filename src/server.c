@@ -87,28 +87,60 @@ static inline void jac_server_main(JacServer * server)
     exit(0);
 }
 
-JacServer *jac_server_start(const char *name, unsigned int port)
+JacServer *jac_server_start(const char *name, unsigned int port,
+                            const char *normal, const char *error)
 {
     int pid = fork();
     if (pid < 0) {
         return NULL;
     }
+    jac_close_fds();
 
     JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
     server->name = j_strdup(name);
     server->listenport = port;
     server->pid = getpid();
+    server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
+    server->error_logger = j_logger_open(error, "%0 [%l]: %m");
     if (pid == 0) {
         set_proctitle(NULL, "jacques: server %s", name);
+        j_logger_verbose(server->normal_logger, "server starts!!!!");
         jac_server_main(server);
     }
     return server;
+}
+
+
+static inline const char *jac_server_get_conf_log(JConfNode * root,
+                                                  JConfNode * vs)
+{
+    const char *normal = jac_config_get_string(vs, JAC_LOG_DIRECTIVE,
+                                               NULL);
+    if (normal) {
+        return normal;
+    }
+    normal = jac_config_get_string(root, JAC_LOG_DIRECTIVE, LOG_FILEPATH);
+    return normal;
+}
+
+static inline const char *jac_server_get_conf_err_log(JConfNode * root,
+                                                      JConfNode * vs)
+{
+    const char *error = jac_config_get_string(vs, JAC_ERROR_LOG_DIRECTIVE,
+                                              NULL);
+    if (error) {
+        return error;
+    }
+    return jac_config_get_string(root, JAC_ERROR_LOG_DIRECTIVE,
+                                 ERR_FILEPATH);
 }
 
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
 {
     JConfNode *directive = j_conf_node_get_directive_last(vs,
                                                           LISTEN_PORT_DIRECTIVE);
+    const char *normal = jac_server_get_conf_log(root, vs);
+    const char *error = jac_server_get_conf_err_log(root, vs);
     if (directive == NULL) {
         return NULL;
     }
@@ -121,5 +153,5 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
     }
     unsigned int port = j_conf_data_get_int(port_data);
     return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
-                            port);
+                            port, normal, error);
 }

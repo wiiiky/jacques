@@ -112,6 +112,21 @@ int jac_daemonize(void)
     return (int) getpid();
 }
 
+void jac_close_fds(void)
+{
+    int i;
+    struct rlimit rl;
+    if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
+        return;
+    }
+    if (rl.rlim_max == RLIM_INFINITY) {
+        rl.rlim_max = 1024;
+    }
+    for (i = 3; i < rl.rlim_max; i++) {
+        close(i);
+    }
+}
+
 /*
  * Checks to see if jacques is already running or not
  */

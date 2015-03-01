@@ -18,6 +18,7 @@
 #define __JAC_SERVER_H__
 
 #include "config.h"
+#include <jio/jio.h>
 
 
 #define JAC_VIRTUAL_SERVER_SCOPE    "VirtualServer"
@@ -35,6 +36,9 @@ typedef struct {
     int pid;
     char *name;
 
+    JLogger *normal_logger;
+    JLogger *error_logger;
+
     int listenfd;
     unsigned int listenport;
 } JacServer;
@@ -42,7 +46,8 @@ typedef struct {
 /*
  * Return a JacServer to master on success, NULL on error
  */
-JacServer *jac_server_start(const char *name, unsigned int port);
+JacServer *jac_server_start(const char *name, unsigned int port,
+                            const char *normal, const char *error);
 
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
 

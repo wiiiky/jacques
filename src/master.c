@@ -25,40 +25,29 @@
 #include "server.h"
 
 
-#define JAC_LOG_DIRECTIVE   "NormalLog"
-#define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
-
-
 static inline void jac_master_fork_servers(JacMaster * master);
 
 
 JacMaster *jac_master_start(JConfParser * cfg)
 {
     JConfNode *root = j_conf_parser_get_root(cfg);
-    JConfNode *normal_node = j_conf_node_get_directive_last(root,
-                                                            JAC_LOG_DIRECTIVE);
-    JConfNode *error_node = j_conf_node_get_directive_last(root,
-                                                           JAC_ERROR_LOG_DIRECTIVE);
 
-    const char *normal = LOG_FILEPATH;
-    const char *error = ERR_FILEPATH;
-    if (normal_node) {
-        if (j_conf_node_get_arguments_count(normal_node) != 1) {
-            printf(_("invalid argument of %s\n"), JAC_LOG_DIRECTIVE);
-            return NULL;
-        }
-        JConfData *data = j_conf_node_get_argument_first(normal_node);
-        normal = j_conf_data_get_raw(data);
+    const char *normal = jac_config_get_string(root,
+                                               JAC_LOG_DIRECTIVE,
+                                               LOG_FILEPATH);
+    if (normal == NULL) {
+        printf(_("invalid argument of %s\n"), JAC_LOG_DIRECTIVE);
+        return NULL;
     }
-    if (error_node) {
-        if (j_conf_node_get_arguments_count(error_node) != 1) {
-            printf(_("invalid argument of %s\n"), JAC_ERROR_LOG_DIRECTIVE);
-            return NULL;
-        }
-        JConfData *data = j_conf_node_get_argument_first(error_node);
-        error = j_conf_data_get_raw(data);
+    const char *error =
+        jac_config_get_string(root, JAC_ERROR_LOG_DIRECTIVE,
+                              ERR_FILEPATH);
+    if (error == NULL) {
+        printf(_("invalid argument of %s\n"), JAC_ERROR_LOG_DIRECTIVE);
+        return NULL;
     }
 
+    /* daemonize */
     int pid = jac_daemonize();
 
     JLogger *normal_logger = j_logger_open(normal, "%0 [%l]: %m");
@@ -66,17 +55,14 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     if (!pid) {
         j_logger_error(error_logger, _("fail to daemonize"));
-        j_logger_close(normal_logger);
-        j_logger_close(error_logger);
-        return NULL;
+        goto ERROR;
     }
 
     if (!jac_save_pid(pid)) {
         j_logger_error(error_logger,
                        _("fail to start jacques, is it already running?"));
-        j_logger_close(normal_logger);
-        j_logger_close(error_logger);
-        return NULL;
+
+        goto ERROR;
     }
 
     JacMaster *master = (JacMaster *) j_malloc(sizeof(JacMaster));
@@ -93,6 +79,10 @@ JacMaster *jac_master_start(JConfParser * cfg)
     jac_master_fork_servers(master);
 
     return master;
+  ERROR:
+    j_logger_close(normal_logger);
+    j_logger_close(error_logger);
+    return NULL;
 }
 
 static inline void jac_master_fork_servers(JacMaster * master)
