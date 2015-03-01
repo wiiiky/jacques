@@ -3,3 +3,4 @@
 src/main.c
 src/master.c
 src/server.c
+src/config.c

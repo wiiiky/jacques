@@ -87,6 +87,9 @@ JConfParser *jac_config_parser(void);
 
 
 /* functions */
+
+int jac_config_check(JConfParser * cfg);
+
 const char *jac_config_get_string(JConfNode * root,
                                   const char *name, const char *def);
 

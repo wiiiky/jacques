@@ -61,7 +61,6 @@ JacMaster *jac_master_start(JConfParser * cfg)
     if (!jac_save_pid(pid)) {
         j_logger_error(error_logger,
                        _("fail to start jacques, is it already running?"));
-
         goto ERROR;
     }
 

@@ -16,11 +16,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "config.h"
+#include "i18n.h"
+#include "server.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 
 static JConfParser *gConfigParser = NULL;
 
+
+/*
+ * Checks to see if the config is correct
+ */
+int jac_config_check(JConfParser * cfg)
+{
+    JConfNode *root = j_conf_parser_get_root(cfg);
+    JList *vs = j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
+    if (vs == NULL) {
+        printf(_("no <%s> found\n"), JAC_VIRTUAL_SERVER_SCOPE);
+        return 0;
+    }
+    JList *ptr = vs;
+    int ret = 1;
+    while (ptr) {
+        JConfNode *node = (JConfNode *) j_list_data(ptr);
+        if (!jac_server_check_conf_virtualserver(node)) {
+            ret = 0;
+        }
+        ptr = j_list_next(ptr);
+    }
+    j_list_free(vs);
+
+    return ret;
+}
 
 JConfParser *jac_config_parser(void)
 {

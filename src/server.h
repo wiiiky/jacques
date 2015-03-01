@@ -28,7 +28,7 @@
  * Checks to see if the config of servers are correct
  * If no <VirtualServer> found or directive error, returns 0
  */
-int jac_server_check_conf(JConfParser * p);
+int jac_server_check_conf_virtualserver(JConfNode * vs);
 
 
 

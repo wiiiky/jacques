@@ -140,7 +140,7 @@ static inline JConfParser *initialize_jacques(void)
         j_free(error);
         exit(-1);
     }
-    if (!jac_server_check_conf(parser)) {
+    if (!jac_config_check(parser)) {
         printf(_("exit...\n"));
         exit(-1);
     }
@@ -182,10 +182,7 @@ static inline void check_jacques(void)
     } else {
         printf(_("configuration file is \033[32mOK\033[0m!\n\n"));
         printf(_("Checking %s:\n"), JAC_VIRTUAL_SERVER_SCOPE);
-        if (jac_server_check_conf(parser)) {
-            printf(_("%s is \033[32mOK\033[0m\n"),
-                   JAC_VIRTUAL_SERVER_SCOPE);
-        }
+        jac_config_check(parser);
     }
     printf("\n");
     printf(_("Checking necessary directory:\n"));

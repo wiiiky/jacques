@@ -32,7 +32,7 @@ static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
     return _("unnamed");
 }
 
-static int jac_server_check_conf_virtualserver(JConfNode * vs)
+int jac_server_check_conf_virtualserver(JConfNode * vs)
 {
     JConfNode *directive = j_conf_node_get_directive_last(vs,
                                                           LISTEN_PORT_DIRECTIVE);
@@ -53,32 +53,6 @@ static int jac_server_check_conf_virtualserver(JConfNode * vs)
         return 0;
     }
     return 1;
-}
-
-/*
- * Checks to see if the config of servers are correct
- * If no <VirtualServer> found or directive error, returns 0
- */
-int jac_server_check_conf(JConfParser * p)
-{
-    JConfNode *root = j_conf_parser_get_root(p);
-    JList *vs = j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
-    if (vs == NULL) {
-        printf(_("no <%s> found\n"), JAC_VIRTUAL_SERVER_SCOPE);
-        return 0;
-    }
-    JList *ptr = vs;
-    int ret = 1;
-    while (ptr) {
-        JConfNode *node = (JConfNode *) j_list_data(ptr);
-        if (!jac_server_check_conf_virtualserver(node)) {
-            ret = 0;
-        }
-        ptr = j_list_next(ptr);
-    }
-    j_list_free(vs);
-
-    return ret;
 }
 
 static inline void jac_server_main(JacServer * server)
