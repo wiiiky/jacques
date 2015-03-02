@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-01 14:13+0800\n"
+"POT-Creation-Date: 2015-03-02 17:35+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -158,20 +158,21 @@ msgstr "jacques守护进程启动"
 msgid "unnamed"
 msgstr "未命名"
 
-#: ../src/server.c:40
-#, c-format
-msgid "[31m%s not found in %s[0m\n"
-msgstr "[31m%s 在%s中不存在[0m\n"
-
-#: ../src/server.c:50
+#: ../src/server.c:39
 #, c-format
 msgid "[31minvalid argument of %s in %s[0m\n"
 msgstr "[31m%s中的%s参数无效[0m\n"
 
-#: ../src/config.c:36
-#, c-format
-msgid "no <%s> found\n"
-msgstr "没有发现 <%s>\n"
+#: ../src/config.c:37
+msgid "[31minvalid argument of %s[0m\n"
+msgstr "[31m%s的参数无效[0m\n"
+
+#: ../src/config.c:52
+msgid "[31mno <%s> found[0m\n"
+msgstr "\033[31m没有发现 <%s>\033[0m\n"
+
+#~ msgid "[31m%s not found in %s[0m\n"
+#~ msgstr "[31m%s 在%s中不存在[0m\n"
 
 #~ msgid "%s is [32mOK[0m\n"
 #~ msgstr "%s [32m没有问题[0m\n"
