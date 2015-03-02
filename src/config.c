@@ -25,6 +25,9 @@
 static JConfParser *gConfigParser = NULL;
 
 
+/*
+ * Checks to see if the JConfNode root has and only has a string arugment
+ */
 static inline int jac_config_check_directive_string(JConfNode * root,
                                                     const char *name)
 {
@@ -93,6 +96,20 @@ const char *jac_config_get_string(JConfNode * root,
         }
         JConfData *data = j_conf_node_get_argument_first(node);
         return j_conf_data_get_raw(data);
+    }
+    return def;
+}
+
+int jac_config_get_integer(JConfNode * node, const char *name, int def)
+{
+    JConfNode *d = j_conf_node_get_directive_last(node, name);
+    if (d) {
+        JConfData *data = j_conf_node_get_argument_first(d);
+        if (j_conf_node_get_arguments_count(d) != 1 ||
+            !j_conf_data_is_int(data)) {
+            return -1;
+        }
+        return j_conf_data_get_int(data);
     }
     return def;
 }

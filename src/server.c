@@ -34,19 +34,8 @@ static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 
 int jac_server_check_conf_virtualserver(JConfNode * vs)
 {
-    JConfNode *directive = j_conf_node_get_directive_last(vs,
-                                                          LISTEN_PORT_DIRECTIVE);
-    if (directive == NULL) {
-        printf(_("\033[31m%s not found in %s\033[0m\n"),
-               LISTEN_PORT_DIRECTIVE,
-               jac_server_get_conf_virtualserver_name(vs));
-        return 0;
-    }
-    JConfData *port_data = j_conf_node_get_argument_first(directive);
-    if (j_conf_node_get_arguments_count(directive) != 1 ||
-        port_data == NULL || !j_conf_data_is_int(port_data) ||
-        j_conf_data_get_int(port_data) < 0 ||
-        j_conf_data_get_int(port_data) > 65535) {
+    int port = jac_config_get_integer(vs, LISTEN_PORT_DIRECTIVE, -1);
+    if (port <= 0 || port > 65535) {
         printf(_("\033[31minvalid argument of %s in %s\033[0m\n"),
                LISTEN_PORT_DIRECTIVE,
                jac_server_get_conf_virtualserver_name(vs));
@@ -111,21 +100,12 @@ static inline const char *jac_server_get_conf_err_log(JConfNode * root,
 
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
 {
-    JConfNode *directive = j_conf_node_get_directive_last(vs,
-                                                          LISTEN_PORT_DIRECTIVE);
+    int port = jac_config_get_integer(vs, LISTEN_PORT_DIRECTIVE, -1);
+    if (port <= 0 || port > 65535) {
+        return NULL;
+    }
     const char *normal = jac_server_get_conf_log(root, vs);
     const char *error = jac_server_get_conf_err_log(root, vs);
-    if (directive == NULL) {
-        return NULL;
-    }
-    JConfData *port_data = j_conf_node_get_argument_first(directive);
-    if (j_conf_node_get_arguments_count(directive) != 1 ||
-        port_data == NULL || !j_conf_data_is_int(port_data) ||
-        j_conf_data_get_int(port_data) < 0 ||
-        j_conf_data_get_int(port_data) > 65535) {
-        return NULL;
-    }
-    unsigned int port = j_conf_data_get_int(port_data);
     return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
                             port, normal, error);
 }
