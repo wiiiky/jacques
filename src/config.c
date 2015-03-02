@@ -25,27 +25,46 @@
 static JConfParser *gConfigParser = NULL;
 
 
+static inline int jac_config_check_directive_string(JConfNode * root,
+                                                    const char *name)
+{
+    const char *str = jac_config_get_string(root, name,
+                                            (const char *) 1);
+    if (str == NULL) {
+        printf(_("\033[31minvalid argument of %s\033[0m\n"), name);
+        return 0;
+    }
+    return 1;
+}
+
 /*
  * Checks to see if the config is correct
  */
 int jac_config_check(JConfParser * cfg)
 {
+    int ret = 1;
     JConfNode *root = j_conf_parser_get_root(cfg);
     JList *vs = j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
     if (vs == NULL) {
-        printf(_("no <%s> found\n"), JAC_VIRTUAL_SERVER_SCOPE);
-        return 0;
-    }
-    JList *ptr = vs;
-    int ret = 1;
-    while (ptr) {
-        JConfNode *node = (JConfNode *) j_list_data(ptr);
-        if (!jac_server_check_conf_virtualserver(node)) {
-            ret = 0;
+        printf(_("\033[31mno <%s> found\033[0m\n"),
+               JAC_VIRTUAL_SERVER_SCOPE);
+    } else {
+        JList *ptr = vs;
+        while (ptr) {
+            JConfNode *node = (JConfNode *) j_list_data(ptr);
+            if (!jac_server_check_conf_virtualserver(node)) {
+                ret = 0;
+            }
+            ptr = j_list_next(ptr);
         }
-        ptr = j_list_next(ptr);
+        j_list_free(vs);
     }
-    j_list_free(vs);
+
+    ret =
+        ret & jac_config_check_directive_string(root,
+                                                JAC_LOG_DIRECTIVE) &
+        jac_config_check_directive_string(root, JAC_ERROR_LOG_DIRECTIVE);
+
 
     return ret;
 }
@@ -70,7 +89,7 @@ const char *jac_config_get_string(JConfNode * root,
     JConfNode *node = j_conf_node_get_directive_last(root, name);
     if (node) {
         if (j_conf_node_get_arguments_count(node) != 1) {
-            return def;
+            return NULL;
         }
         JConfData *data = j_conf_node_get_argument_first(node);
         return j_conf_data_get_raw(data);

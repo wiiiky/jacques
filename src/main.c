@@ -177,7 +177,7 @@ static inline void check_jacques(void)
     printf(_("Checking configuration file:\n"));
     if (!j_conf_parser_parse(parser, CONFIG_FILEPATH, &error)) {
         printf(_("\033[31m*ERROR*: %s - %s\033[0m\n"),
-               CONFIG_FILEPATH, strerror(errno));
+               CONFIG_FILEPATH, error);
         j_free(error);
     } else {
         printf(_("configuration file is \033[32mOK\033[0m!\n\n"));
