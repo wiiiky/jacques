@@ -32,6 +32,8 @@ typedef struct {
     JLogger *error_logger;
 
     JList *servers;
+
+    int running;
 } JacMaster;
 
 

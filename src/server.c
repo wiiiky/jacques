@@ -22,6 +22,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
+
+static void signal_handler(int signum);
 
 static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 {
@@ -44,8 +47,12 @@ int jac_server_check_conf_virtualserver(JConfNode * vs)
     return 1;
 }
 
+static JacServer *running_server = NULL;
+
 static inline void jac_server_main(JacServer * server)
 {
+    running_server = server;
+    signal(SIGINT, signal_handler);
     while (1);
     exit(0);
 }
@@ -57,19 +64,20 @@ JacServer *jac_server_start(const char *name, unsigned int port,
     if (pid < 0) {
         return NULL;
     }
-    jac_close_fds();
-
     JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
     server->name = j_strdup(name);
     server->listenport = port;
-    server->pid = getpid();
-    server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
-    server->error_logger = j_logger_open(error, "%0 [%l]: %m");
     if (pid == 0) {
+        jac_close_fds();
+
+        server->pid = getpid();
+        server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
+        server->error_logger = j_logger_open(error, "%0 [%l]: %m");
         set_proctitle(NULL, "jacques: server %s", name);
         j_logger_verbose(server->normal_logger, "server starts!!!!");
         jac_server_main(server);
     }
+    server->pid = pid;
     return server;
 }
 
@@ -108,4 +116,11 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
     const char *error = jac_server_get_conf_err_log(root, vs);
     return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
                             port, normal, error);
+}
+
+static void signal_handler(int signum)
+{
+    if (signum == SIGINT) {
+        exit(0);
+    }
 }

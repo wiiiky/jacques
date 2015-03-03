@@ -21,11 +21,15 @@
 #include <jlib/jlib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "i18n.h"
 #include "server.h"
 
 
 static inline void jac_master_fork_servers(JacMaster * master);
+static void signal_handler(int signum);
 
 
 JacMaster *jac_master_start(JConfParser * cfg)
@@ -70,6 +74,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
     master->normal_logger = normal_logger;
     master->error_logger = error_logger;
     master->servers = NULL;
+    master->running = 1;
 
     j_logger_verbose(normal_logger, _("jacques daemon starts"));
 
@@ -101,11 +106,32 @@ static inline void jac_master_fork_servers(JacMaster * master)
     j_list_free(virtualservers);
 }
 
+static JacMaster *running_master = NULL;
+
 void jac_master_wait(JacMaster * master)
 {
-    while (1) {
-
+    running_master = master;
+    signal(SIGINT, signal_handler);
+    while (master->running) {
+        wait(NULL);
     }
+}
+
+static void signal_handler(int signum)
+{
+    if (running_master == NULL) {
+        return;
+    }
+    JList *ptr = running_master->servers;
+    while (ptr) {
+        JacServer *server = (JacServer *) j_list_data(ptr);
+        kill(server->pid, SIGINT);  /* Sends signal SIGINT to server */
+        ptr = j_list_next(ptr);
+    }
+    while (wait(NULL) > 0);
+    running_master->running = 0;
+    j_logger_verbose(running_master->normal_logger,
+                     _("jacques master quits"));
 }
 
 void jac_master_quit(JacMaster * master)
