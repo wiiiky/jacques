@@ -131,7 +131,7 @@ static void signal_handler(int signum)
     while (wait(NULL) > 0);
     running_master->running = 0;
     j_logger_verbose(running_master->normal_logger,
-                     _("jacques master quits"));
+                     _("jacques MASTER quits"));
 }
 
 void jac_master_quit(JacMaster * master)

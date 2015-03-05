@@ -139,7 +139,17 @@ int jac_check_instance(void)
         return -1;
     }
     if (!lockfile(fd)) {
+        char buf[32];
+        int n = read(fd, buf, sizeof(buf) / sizeof(char));
         close(fd);
+        if (n > 0) {
+            buf[n] = '\0';
+            int pid = atoi(buf);
+            if (pid > 0) {
+                return pid;
+            }
+            return 0;
+        }
         return 1;
     }
     close(fd);

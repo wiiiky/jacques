@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/types.h>
+#include <signal.h>
 
 
 static struct option long_options[] = {
@@ -166,7 +168,19 @@ static inline void start_jacques(char **argv)
 
 static inline void stop_jacques(void)
 {
-    printf("stopped!\n");
+    int pid = jac_check_instance();
+    if (pid < 0) {
+        printf("%s\n", strerror(errno));
+    } else if (pid == 0) {
+        printf(_("jacques is not running!\n"));
+    } else {
+        if (kill(pid, SIGINT)) {
+            printf(_("fail to send SIGINT to jacques master process\n"));
+            printf("%s", strerror(errno));
+        } else {
+            printf(_("jacques quits\n"));
+        }
+    }
     exit(0);
 }
 

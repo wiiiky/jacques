@@ -39,9 +39,14 @@ typedef struct {
     JLogger *normal_logger;
     JLogger *error_logger;
 
-    int listenfd;
-    unsigned int listenport;
+    JSocket *listen_sock;
+    unsigned short listen_port;
+
+    JPoll *poll;
 } JacServer;
+
+#define jac_server_get_name(server) (server)->name
+#define jac_server_get_port(server) (server)->listen_port
 
 /*
  * Return a JacServer to master on success, NULL on error
@@ -50,6 +55,9 @@ JacServer *jac_server_start(const char *name, unsigned int port,
                             const char *normal, const char *error);
 
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
+
+
+void jac_server_end(JacServer * server);
 
 
 #endif

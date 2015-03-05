@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-02 17:35+0800\n"
+"POT-Creation-Date: 2015-03-05 17:03+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.c:83
+#: ../src/main.c:85
 #, c-format
 msgid ""
 "error: unknown command '%s'\n"
@@ -26,12 +26,12 @@ msgstr ""
 "错误: 无法识别的命令 '%s'\n"
 "\n"
 
-#: ../src/main.c:92 ../src/main.c:110
+#: ../src/main.c:94 ../src/main.c:112
 #, c-format
 msgid "%s version: %s/%s\n"
 msgstr "%s 版本: %s/%s\n"
 
-#: ../src/main.c:94
+#: ../src/main.c:96
 #, c-format
 msgid ""
 "Usage: %s start|stop|check [options]\n"
@@ -40,136 +40,164 @@ msgstr ""
 "使用方法: %s start|stop|check [选项]\n"
 "\n"
 
-#: ../src/main.c:95
+#: ../src/main.c:97
 #, c-format
 msgid "Command:\n"
 msgstr "命令:\n"
 
-#: ../src/main.c:96
+#: ../src/main.c:98
 #, c-format
 msgid "  start\t: start jacques daemon\n"
 msgstr "  start\t: 启动jacques\n"
 
-#: ../src/main.c:97
+#: ../src/main.c:99
 #, c-format
 msgid "  stop\t: stop jacques daemon and all server processes\n"
 msgstr "  stop\t: 停止jacques服务\n"
 
-#: ../src/main.c:99
+#: ../src/main.c:101
 #, c-format
 msgid "  check\t: check to see if the runtime environment is OK\n"
 msgstr "  check\t: 检查jacques的运行环境是否可行\n"
 
-#: ../src/main.c:101
+#: ../src/main.c:103
 #, c-format
 msgid "Options:\n"
 msgstr "选项:\n"
 
-#: ../src/main.c:102
+#: ../src/main.c:104
 #, c-format
 msgid "  -h\t: show this help\n"
 msgstr "  -h\t: 显示本帮助\n"
 
-#: ../src/main.c:103
+#: ../src/main.c:105
 #, c-format
 msgid "  -v\t: show version and exit\n"
 msgstr "  -v\t: 显示版本号并退出\n"
 
-#: ../src/main.c:126
+#: ../src/main.c:128
 #, c-format
 msgid "jacques is already running!\n"
 msgstr "jacques已在运行!\n"
 
-#: ../src/main.c:129
+#: ../src/main.c:131
 #, c-format
 msgid "unable to open %s: %s\n"
 msgstr "无法打开 %s: %s\n"
 
-#: ../src/main.c:137
+#: ../src/main.c:139
 #, c-format
 msgid "error occurs while parsing configuration - %s\n"
 msgstr "解析配置出错 - %s\n"
 
-#: ../src/main.c:139 ../src/main.c:144 ../src/main.c:148
+#: ../src/main.c:141 ../src/main.c:146 ../src/main.c:150
 #, c-format
 msgid "exit...\n"
 msgstr "退出...\n"
 
-#: ../src/main.c:177
+#: ../src/main.c:175
+msgid "jacques is not running!\n"
+msgstr "jacques未运行!\n"
+
+#: ../src/main.c:178
+msgid "fail to send SIGINT to jacques master process\n"
+msgstr "给jacques主进程发送SIGINT信号失败\n"
+
+#: ../src/main.c:181
+msgid "jacques quits\n"
+msgstr "jacques主进程退出\n"
+
+#: ../src/main.c:191
 #, c-format
 msgid "Checking configuration file:\n"
 msgstr "检查配置文件:\n"
 
-#: ../src/main.c:179 ../src/main.c:190 ../src/main.c:197 ../src/main.c:204
+#: ../src/main.c:193 ../src/main.c:204 ../src/main.c:211 ../src/main.c:218
 #, c-format
 msgid "[31m*ERROR*: %s - %s[0m\n"
 msgstr "[31m*错误*: %s - %s[0m\n"
 
-#: ../src/main.c:183
+#: ../src/main.c:197
 #, c-format
 msgid ""
 "configuration file is [32mOK[0m!\n"
 "\n"
 msgstr "配置文件[32m没有错误[0m!\n"
 
-#: ../src/main.c:184
+#: ../src/main.c:198
 #, c-format
 msgid "Checking %s:\n"
 msgstr "正在检查 %s:\n"
 
-#: ../src/main.c:188
+#: ../src/main.c:202
 #, c-format
 msgid "Checking necessary directory:\n"
 msgstr "检查必要的目录:\n"
 
-#: ../src/main.c:193
+#: ../src/main.c:207
 #, c-format
 msgid "configuration directory %s is [32mOK[0m\n"
 msgstr "\t配置目录 %s [32m没有错误[0m\n"
 
-#: ../src/main.c:200
+#: ../src/main.c:214
 #, c-format
 msgid "runtime directory %s is [32mOK[0m\n"
 msgstr "\t运行时目录 %s [32m没有错误[0m\n"
 
-#: ../src/main.c:207
+#: ../src/main.c:221
 #, c-format
 msgid "log directory %s is [32mOK[0m\n"
 msgstr "\t日志目录 %s [32m没有错误[0m\n"
 
-#: ../src/master.c:39 ../src/master.c:46
+#: ../src/master.c:43 ../src/master.c:50
 #, c-format
 msgid "invalid argument of %s\n"
 msgstr "%s的参数无效\n"
 
-#: ../src/master.c:57
+#: ../src/master.c:61
 msgid "fail to daemonize"
 msgstr "无法设置为守护进程"
 
-#: ../src/master.c:63
+#: ../src/master.c:67
 msgid "fail to start jacques, is it already running?"
 msgstr "无法启动jacques, jacques已在运行?"
 
-#: ../src/master.c:74
+#: ../src/master.c:79
 msgid "jacques daemon starts"
 msgstr "jacques守护进程启动"
 
-#: ../src/server.c:32
+#: ../src/master.c:134
+msgid "jacques MASTER quits"
+msgstr "jacques主进程退出"
+
+#: ../src/server.c:36
 msgid "unnamed"
 msgstr "未命名"
 
-#: ../src/server.c:39
+#: ../src/server.c:43
 #, c-format
 msgid "[31minvalid argument of %s in %s[0m\n"
 msgstr "[31m%s中的%s参数无效[0m\n"
 
+#: ../src/server.c:67
+#, c-format
+msgid "SERVER %s: unable to listen on port %u"
+msgstr "服务器 %s: 无法监听端口 %u"
+
+#: ../src/server.c:78
+#, c-format
+msgid "SERVER %s starts!"
+msgstr "服务器 %s 启动!"
+
 #: ../src/config.c:37
+#, c-format
 msgid "[31minvalid argument of %s[0m\n"
 msgstr "[31m%s的参数无效[0m\n"
 
 #: ../src/config.c:52
+#, c-format
 msgid "[31mno <%s> found[0m\n"
-msgstr "\033[31m没有发现 <%s>\033[0m\n"
+msgstr "[31m没有发现 <%s>[0m\n"
 
 #~ msgid "[31m%s not found in %s[0m\n"
 #~ msgstr "[31m%s 在%s中不存在[0m\n"

@@ -19,6 +19,7 @@
 #include "i18n.h"
 #include "utils.h"
 #include <jlib/jlib.h>
+#include <jio/jio.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -49,16 +50,37 @@ int jac_server_check_conf_virtualserver(JConfNode * vs)
 
 static JacServer *running_server = NULL;
 
-static inline void jac_server_initialize(JacServer * server)
+static inline void jac_server_init(JacServer * server,
+                                   const char *normal, const char *error)
 {
     running_server = server;
+
+    server->pid = getpid();
+    server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
+    server->error_logger = j_logger_open(error, "%0 [%l]: %m");
+    server->listen_sock = j_socket_listen_on(jac_server_get_port(server),
+                                             1024);
+    server->poll = j_poll_new();
+
+    if (server->listen_sock == NULL || server->poll == NULL) {
+        j_logger_error(server->error_logger,
+                       _("SERVER %s: unable to listen on port %u"),
+                       jac_server_get_name(server),
+                       jac_server_get_port(server));
+        jac_server_end(server);
+        exit(-1);
+    }
+
     signal(SIGINT, signal_handler);
+    set_proctitle(NULL, "jacques: server %s", jac_server_get_name(server));
     set_procuser(JACQUES_USER);
+
+    j_logger_verbose(server->normal_logger, _("SERVER %s starts!"),
+                     jac_server_get_name(server));
 }
 
 static inline void jac_server_main(JacServer * server)
 {
-    jac_server_initialize(server);
     while (1);
     exit(0);
 }
@@ -72,15 +94,9 @@ JacServer *jac_server_start(const char *name, unsigned int port,
     }
     JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
     server->name = j_strdup(name);
-    server->listenport = port;
+    server->listen_port = port;
     if (pid == 0) {
-        jac_close_fds();
-
-        server->pid = getpid();
-        server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
-        server->error_logger = j_logger_open(error, "%0 [%l]: %m");
-        set_proctitle(NULL, "jacques: server %s", name);
-        j_logger_verbose(server->normal_logger, "server starts!!!!");
+        jac_server_init(server, normal, error);
         jac_server_main(server);
     }
     server->pid = pid;
@@ -122,6 +138,20 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
     const char *error = jac_server_get_conf_err_log(root, vs);
     return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
                             port, normal, error);
+}
+
+void jac_server_end(JacServer * server)
+{
+    j_logger_close(server->normal_logger);
+    j_logger_close(server->error_logger);
+    if (server->listen_sock) {
+        j_socket_close(server->listen_sock);
+    }
+    if (server->poll) {
+        j_poll_close(server->poll);
+    }
+    j_free(server->name);
+    j_free(server);
 }
 
 static void signal_handler(int signum)
