@@ -41,4 +41,9 @@ void set_proctitle(char **argv,
                    const char *fmt, /* printf(3)-style format string for process title */
                    ... /* args to format string */ );
 
+/*
+ * Sets  the  effective  user ID of the calling process.
+ */
+int set_procuser(const char *username);
+
 #endif

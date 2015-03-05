@@ -49,10 +49,16 @@ int jac_server_check_conf_virtualserver(JConfNode * vs)
 
 static JacServer *running_server = NULL;
 
-static inline void jac_server_main(JacServer * server)
+static inline void jac_server_initialize(JacServer * server)
 {
     running_server = server;
     signal(SIGINT, signal_handler);
+    set_procuser(JACQUES_USER);
+}
+
+static inline void jac_server_main(JacServer * server)
+{
+    jac_server_initialize(server);
     while (1);
     exit(0);
 }

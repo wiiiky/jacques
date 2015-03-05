@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdarg.h>
+#include <pwd.h>
 
 
 /*
@@ -256,3 +257,21 @@ void set_proctitle(char **argv,
         }                       /*if */
     }                           /*if */
 }                               /*setproctitle */
+
+
+
+/*
+ * Sets  the  effective  user ID of the calling process.
+ */
+int set_procuser(const char *username)
+{
+    struct passwd *pwd = getpwnam(username);
+    if (pwd == NULL) {
+        return 0;
+    }
+    setgid(pwd->pw_gid);
+    setegid(pwd->pw_gid);
+    setuid(pwd->pw_uid);
+    seteuid(pwd->pw_uid);
+    return 1;
+}

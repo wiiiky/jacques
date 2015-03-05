@@ -31,6 +31,8 @@ JConfParser *jac_config_parser(void);
 #define PROGRAME_NAME   "jacques"
 #define PROGRAME_VERSION    "0.01"
 
+#define JACQUES_USER "jacques-user"
+
 /*********************** /etc *****************************/
 #ifndef CONFIG_LOCATION
 #define CONFIG_LOCATION "/etc/" PROGRAME_NAME
