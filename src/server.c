@@ -68,7 +68,6 @@ static inline void jac_server_init(JacServer * server,
                        jac_server_get_name(server),
                        jac_server_get_port(server));
         jac_server_end(server);
-        exit(-1);
     }
 
     signal(SIGINT, signal_handler);
@@ -81,8 +80,33 @@ static inline void jac_server_init(JacServer * server,
 
 static inline void jac_server_main(JacServer * server)
 {
-    while (1);
-    exit(0);
+    JPoll *poll = jac_server_get_poll(server);
+    JSocket *listen_sock = jac_server_get_sock(server);
+    if (!j_poll_ctl(poll, J_POLL_CTL_ADD, J_POLLIN, listen_sock)) {
+        j_logger_error(server->error_logger,
+                       "fail to add socket to epoll!");
+        jac_server_end(server);
+    }
+    JPollEvent events[1024];
+    int n;
+    while ((n = j_poll_wait(poll, events, 1024, 1)) >= 0) {
+        int i;
+        for (i = 0; i < n; i++) {
+            unsigned int evnts = events[i].events;
+            JSocket *sock = events[i].socket;
+            if (evnts & J_POLLIN) {
+                if (sock == listen_sock) {
+                    sock = j_socket_accept(listen_sock);
+                    j_logger_debug(server->normal_logger, "client: %s",
+                                   j_socket_get_peer_name(sock));
+                    j_socket_close(sock);
+                }
+            } else {            /* error */
+                jac_server_end(server);
+            }
+        }
+    }
+    jac_server_end(server);
 }
 
 JacServer *jac_server_start(const char *name, unsigned int port,
@@ -152,11 +176,15 @@ void jac_server_end(JacServer * server)
     }
     j_free(server->name);
     j_free(server);
+    exit(0);
 }
 
 static void signal_handler(int signum)
 {
+    if (running_server == NULL) {
+        return;
+    }
     if (signum == SIGINT) {
-        exit(0);
+        jac_server_end(running_server);
     }
 }
