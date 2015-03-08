@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include "i18n.h"
 #include "server.h"
 
@@ -76,7 +77,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
     master->servers = NULL;
     master->running = 1;
 
-    j_logger_verbose(normal_logger, _("jacques daemon starts"));
+    jac_master_info(master, _("jacques daemon starts"));
 
     set_proctitle(NULL, "jacques: master");
 
@@ -113,8 +114,11 @@ void jac_master_wait(JacMaster * master)
     running_master = master;
     signal(SIGINT, signal_handler);
     while (master->running) {
-        wait(NULL);
+        if (wait(NULL) < 0 && errno == ECHILD) {
+            break;
+        }
     }
+    jac_master_quit(master);
 }
 
 static void signal_handler(int signum)
@@ -130,12 +134,11 @@ static void signal_handler(int signum)
     }
     while (wait(NULL) > 0);
     running_master->running = 0;
-    j_logger_verbose(running_master->normal_logger,
-                     _("jacques MASTER quits"));
 }
 
 void jac_master_quit(JacMaster * master)
 {
+    jac_master_info(master, _("jacques MASTER quits"));
     j_conf_parser_free(master->cfg);
     j_logger_close(master->normal_logger);
     j_logger_close(master->error_logger);

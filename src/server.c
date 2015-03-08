@@ -63,10 +63,14 @@ static inline void jac_server_init(JacServer * server,
     server->poll = j_poll_new();
 
     if (server->listen_sock == NULL || server->poll == NULL) {
-        j_logger_error(server->error_logger,
-                       _("SERVER %s: unable to listen on port %u"),
-                       jac_server_get_name(server),
-                       jac_server_get_port(server));
+        jac_server_error(server,
+                         _("SERVER %s: unable to listen on port %u"),
+                         jac_server_get_name(server),
+                         jac_server_get_port(server));
+        jac_server_end(server);
+    } else if (!set_procuser(JACQUES_USER)) {
+        jac_server_error(server, _("SERVER %s: unable to set user %s"),
+                         jac_server_get_name(server), JACQUES_USER);
         jac_server_end(server);
     }
 
@@ -74,8 +78,8 @@ static inline void jac_server_init(JacServer * server,
     set_proctitle(NULL, "jacques: server %s", jac_server_get_name(server));
     set_procuser(JACQUES_USER);
 
-    j_logger_verbose(server->normal_logger, _("SERVER %s starts!"),
-                     jac_server_get_name(server));
+    jac_server_info(server, _("SERVER %s starts!"),
+                    jac_server_get_name(server));
 }
 
 static inline void jac_server_main(JacServer * server)
@@ -83,8 +87,9 @@ static inline void jac_server_main(JacServer * server)
     JPoll *poll = jac_server_get_poll(server);
     JSocket *listen_sock = jac_server_get_sock(server);
     if (!j_poll_ctl(poll, J_POLL_CTL_ADD, J_POLLIN, listen_sock)) {
-        j_logger_error(server->error_logger,
-                       "fail to add socket to epoll!");
+        jac_server_error(server,
+                         _("SERVER %s: fail to add socket to epoll!"),
+                         jac_server_get_name(server));
         jac_server_end(server);
     }
     JPollEvent events[1024];
@@ -97,8 +102,8 @@ static inline void jac_server_main(JacServer * server)
             if (evnts & J_POLLIN) {
                 if (sock == listen_sock) {
                     sock = j_socket_accept(listen_sock);
-                    j_logger_debug(server->normal_logger, "client: %s",
-                                   j_socket_get_peer_name(sock));
+                    jac_server_debug(server, "client: %s",
+                                     j_socket_get_peer_name(sock));
                     j_socket_close(sock);
                 }
             } else {            /* error */
@@ -166,6 +171,8 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
 
 void jac_server_end(JacServer * server)
 {
+    jac_server_info(server, _("jacques SERVER %s quits"),
+                    jac_server_get_name(server));
     j_logger_close(server->normal_logger);
     j_logger_close(server->error_logger);
     if (server->listen_sock) {

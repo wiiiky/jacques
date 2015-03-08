@@ -36,6 +36,15 @@ typedef struct {
     int running;
 } JacMaster;
 
+#define jac_master_error(master,fmt,...) \
+            j_logger_error((master)->error_logger,fmt,##__VA_ARGS__)
+#define jac_master_info(master,fmt,...) \
+            j_logger_verbose((master)->normal_logger,fmt,##__VA_ARGS__)
+#define jac_master_debug(master,fmt,...) \
+            j_logger_debug((master)->normal_logger,fmt,##__VA_ARGS__)
+#define jac_master_warning(master,fmt,...) \
+            j_logger_warning((master)->normal_logger,fmt,##__VA_ARGS__)
+
 
 JacMaster *jac_master_start(JConfParser * cfg);
 
