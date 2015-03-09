@@ -60,9 +60,8 @@ static inline void jac_server_init(JacServer * server,
     server->error_logger = j_logger_open(error, "%0 [%l]: %m");
     server->listen_sock = j_socket_listen_on(jac_server_get_port(server),
                                              1024);
-    server->poll = j_poll_new();
 
-    if (server->listen_sock == NULL || server->poll == NULL) {
+    if (server->listen_sock == NULL) {
         jac_server_error(server,
                          _("SERVER %s: unable to listen on port %u"),
                          jac_server_get_name(server),
@@ -83,35 +82,36 @@ static inline void jac_server_init(JacServer * server,
                     jac_server_get_name(server));
 }
 
+/*
+ * Callback of accepting connections
+ */
+static int jac_server_accept_callback(JSocket * listen, JSocket * client,
+                                      void *data)
+{
+    JacServer *server = (JacServer *) data;
+    if (client) {
+        jac_server_info(server, "SERVER %s: client %s!",
+                        jac_server_get_name(server),
+                        j_socket_get_peer_name(client));
+        j_socket_close(client);
+    } else {
+        jac_server_warning(server, "SERVER %s: accept error",
+                           jac_server_get_name(server));
+    }
+    return 1;
+}
+
+/*
+ * The main loop of server
+ * Server listens on the specified port and handle connections from client
+ */
 static inline void jac_server_main(JacServer * server)
 {
-    JPoll *poll = jac_server_get_poll(server);
     JSocket *listen_sock = jac_server_get_sock(server);
-    if (!j_poll_ctl(poll, J_POLL_CTL_ADD, J_POLLIN, listen_sock)) {
-        jac_server_error(server,
-                         _("SERVER %s: fail to add socket to epoll!"),
-                         jac_server_get_name(server));
-        jac_server_end(server);
-    }
-    JPollEvent events[1024];
-    int n;
-    while ((n = j_poll_wait(poll, events, 1024, 1)) >= 0) {
-        int i;
-        for (i = 0; i < n; i++) {
-            unsigned int evnts = events[i].events;
-            JSocket *sock = events[i].socket;
-            if (evnts & J_POLLIN) {
-                if (sock == listen_sock) {
-                    sock = j_socket_accept(listen_sock);
-                    jac_server_debug(server, "client: %s",
-                                     j_socket_get_peer_name(sock));
-                    j_socket_close(sock);
-                }
-            } else {            /* error */
-                jac_server_end(server);
-            }
-        }
-    }
+
+    /* main loop */
+    j_socket_accept_async(listen_sock, jac_server_accept_callback, server);
+    j_main();
     jac_server_end(server);
 }
 
@@ -133,7 +133,9 @@ JacServer *jac_server_start(const char *name, unsigned int port,
     return server;
 }
 
-
+/*
+ * Gets the log location of server
+ */
 static inline const char *jac_server_get_conf_log(JConfNode * root,
                                                   JConfNode * vs)
 {
@@ -146,6 +148,10 @@ static inline const char *jac_server_get_conf_log(JConfNode * root,
     return normal;
 }
 
+
+/*
+ * Gets the error log location of server
+ */
 static inline const char *jac_server_get_conf_err_log(JConfNode * root,
                                                       JConfNode * vs)
 {
@@ -170,6 +176,9 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
                             port, normal, error);
 }
 
+/*
+ * Server quits
+ */
 void jac_server_end(JacServer * server)
 {
     jac_server_info(server, _("jacques SERVER %s quits"),
@@ -178,9 +187,6 @@ void jac_server_end(JacServer * server)
     j_logger_close(server->error_logger);
     if (server->listen_sock) {
         j_socket_close(server->listen_sock);
-    }
-    if (server->poll) {
-        j_poll_close(server->poll);
     }
     j_free(server->name);
     j_free(server);

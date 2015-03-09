@@ -41,8 +41,6 @@ typedef struct {
 
     JSocket *listen_sock;
     unsigned short listen_port;
-
-    JPoll *poll;
 } JacServer;
 
 #define jac_server_error(server,fmt,...) \
@@ -57,7 +55,6 @@ typedef struct {
 #define jac_server_get_name(server) (server)->name
 #define jac_server_get_sock(server) (server)->listen_sock
 #define jac_server_get_port(server) (server)->listen_port
-#define jac_server_get_poll(server) (server)->poll
 
 /*
  * Return a JacServer to master on success, NULL on error

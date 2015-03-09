@@ -85,7 +85,7 @@ JConfParser *jac_config_parser(void);
 
 
 /******************* Directives ****************************/
-#define JAC_LOG_DIRECTIVE   "NormalLog"
+#define JAC_LOG_DIRECTIVE   "CustomLog"
 #define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
 
 
