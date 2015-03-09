@@ -68,15 +68,16 @@ static inline void jac_server_init(JacServer * server,
                          jac_server_get_name(server),
                          jac_server_get_port(server));
         jac_server_end(server);
-    } else if (!set_procuser(JACQUES_USER)) {
-        jac_server_error(server, _("SERVER %s: unable to set user %s"),
-                         jac_server_get_name(server), JACQUES_USER);
+    } else if (!set_procuser(JACQUES_USER, JACQUES_GROUP)) {
+        jac_server_error(server,
+                         _("SERVER %s: unable to set user/group %s/%s"),
+                         jac_server_get_name(server), JACQUES_USER,
+                         JACQUES_GROUP);
         jac_server_end(server);
     }
 
     signal(SIGINT, signal_handler);
     set_proctitle(NULL, "jacques: server %s", jac_server_get_name(server));
-    set_procuser(JACQUES_USER);
 
     jac_server_info(server, _("SERVER %s starts!"),
                     jac_server_get_name(server));

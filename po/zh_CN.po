@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-05 17:03+0800\n"
+"POT-Creation-Date: 2015-03-09 09:11+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -96,14 +96,17 @@ msgid "exit...\n"
 msgstr "退出...\n"
 
 #: ../src/main.c:175
+#, c-format
 msgid "jacques is not running!\n"
 msgstr "jacques未运行!\n"
 
 #: ../src/main.c:178
+#, c-format
 msgid "fail to send SIGINT to jacques master process\n"
 msgstr "给jacques主进程发送SIGINT信号失败\n"
 
 #: ../src/main.c:181
+#, c-format
 msgid "jacques quits\n"
 msgstr "jacques主进程退出\n"
 
@@ -149,24 +152,24 @@ msgstr "\t运行时目录 %s [32m没有错误[0m\n"
 msgid "log directory %s is [32mOK[0m\n"
 msgstr "\t日志目录 %s [32m没有错误[0m\n"
 
-#: ../src/master.c:43 ../src/master.c:50
+#: ../src/master.c:44 ../src/master.c:51
 #, c-format
 msgid "invalid argument of %s\n"
 msgstr "%s的参数无效\n"
 
-#: ../src/master.c:61
+#: ../src/master.c:62
 msgid "fail to daemonize"
 msgstr "无法设置为守护进程"
 
-#: ../src/master.c:67
+#: ../src/master.c:68
 msgid "fail to start jacques, is it already running?"
 msgstr "无法启动jacques, jacques已在运行?"
 
-#: ../src/master.c:79
+#: ../src/master.c:80
 msgid "jacques daemon starts"
 msgstr "jacques守护进程启动"
 
-#: ../src/master.c:134
+#: ../src/master.c:141
 msgid "jacques MASTER quits"
 msgstr "jacques主进程退出"
 
@@ -184,10 +187,22 @@ msgstr "[31m%s中的%s参数无效[0m\n"
 msgid "SERVER %s: unable to listen on port %u"
 msgstr "服务器 %s: 无法监听端口 %u"
 
-#: ../src/server.c:78
+#: ../src/server.c:73
+msgid "SERVER %s: unable to set user/group %s/%s"
+msgstr "服务器 %s: 无法设置用户/组 %s%s"
+
+#: ../src/server.c:82
 #, c-format
 msgid "SERVER %s starts!"
 msgstr "服务器 %s 启动!"
+
+#: ../src/server.c:92
+msgid "SERVER %s: fail to add socket to epoll!"
+msgstr "服务器 %s: 添加套接字到epoll失败!"
+
+#: ../src/server.c:175
+msgid "jacques SERVER %s quits"
+msgstr "jacques 服务进程 %s 退出"
 
 #: ../src/config.c:37
 #, c-format

@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <pwd.h>
+#include <grp.h>
 
 
 /*
@@ -273,14 +274,17 @@ void set_proctitle(char **argv,
 /*
  * Sets  the  effective  user ID of the calling process.
  */
-int set_procuser(const char *username)
+int set_procuser(const char *username, const char *groupname)
 {
     struct passwd *pwd = getpwnam(username);
-    if (pwd == NULL) {
+    struct group *grp = getgrnam(groupname);
+
+    if (pwd == NULL || grp == NULL) {
         return 0;
     }
-    setgid(pwd->pw_gid);
-    setegid(pwd->pw_gid);
+    setgid(grp->gr_gid);
+    setegid(grp->gr_gid);
+
     setuid(pwd->pw_uid);
     seteuid(pwd->pw_uid);
     return 1;

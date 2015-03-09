@@ -44,6 +44,6 @@ void set_proctitle(char **argv,
 /*
  * Sets  the  effective  user ID of the calling process.
  */
-int set_procuser(const char *username);
+int set_procuser(const char *username, const char *groupname);
 
 #endif
