@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-09 09:11+0800\n"
+"POT-Creation-Date: 2015-03-14 23:35+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -188,6 +188,7 @@ msgid "SERVER %s: unable to listen on port %u"
 msgstr "服务器 %s: 无法监听端口 %u"
 
 #: ../src/server.c:73
+#, c-format
 msgid "SERVER %s: unable to set user/group %s/%s"
 msgstr "服务器 %s: 无法设置用户/组 %s%s"
 
@@ -196,11 +197,8 @@ msgstr "服务器 %s: 无法设置用户/组 %s%s"
 msgid "SERVER %s starts!"
 msgstr "服务器 %s 启动!"
 
-#: ../src/server.c:92
-msgid "SERVER %s: fail to add socket to epoll!"
-msgstr "服务器 %s: 添加套接字到epoll失败!"
-
-#: ../src/server.c:175
+#: ../src/server.c:185
+#, c-format
 msgid "jacques SERVER %s quits"
 msgstr "jacques 服务进程 %s 退出"
 
@@ -213,6 +211,9 @@ msgstr "[31m%s的参数无效[0m\n"
 #, c-format
 msgid "[31mno <%s> found[0m\n"
 msgstr "[31m没有发现 <%s>[0m\n"
+
+#~ msgid "SERVER %s: fail to add socket to epoll!"
+#~ msgstr "服务器 %s: 添加套接字到epoll失败!"
 
 #~ msgid "[31m%s not found in %s[0m\n"
 #~ msgstr "[31m%s 在%s中不存在[0m\n"
