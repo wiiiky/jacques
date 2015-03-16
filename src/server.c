@@ -62,7 +62,7 @@ static inline void jac_server_init(JacServer * server,
                                              1024);
 
     if (server->listen_sock == NULL ||
-        !j_socket_set_block(server->listen_sock, 0)) {
+        !j_socket_set_blocking(server->listen_sock, 0)) {
         jac_server_error(server,
                          _("SERVER %s: unable to listen on port %u"),
                          jac_server_get_name(server),
