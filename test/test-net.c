@@ -14,6 +14,7 @@ static void recv_callback (JSocket * sock, const void *data, unsigned int len,
         j_free(buf);
     }
     j_main_quit();
+    j_socket_close(sock);
 }
 
 static int accept_callback(JSocket *sock,JSocket *conn,void *user_data)
