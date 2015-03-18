@@ -18,6 +18,7 @@
 #include "server.h"
 #include "i18n.h"
 #include "utils.h"
+#include "net.h"
 #include <jlib/jlib.h>
 #include <jio/jio.h>
 #include <stdio.h>
@@ -26,6 +27,13 @@
 #include <signal.h>
 
 static void signal_handler(int signum);
+static void on_recv_package(JSocket * sock,
+                            const void *data,
+                            unsigned int len,
+                            JSocketRecvResultType type, void *user_data);
+static void on_send_package(JSocket * sock, int res, void *user_data);
+static int on_accept_client(JSocket * listen, JSocket * client,
+                            void *data);
 
 static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 {
@@ -85,21 +93,51 @@ static inline void jac_server_init(JacServer * server,
 
 /*
  * Callback of accepting connections
+ * 接受到客户端连接
  */
-static int jac_server_accept_callback(JSocket * listen, JSocket * client,
-                                      void *data)
+static int on_accept_client(JSocket * listen, JSocket * client, void *data)
 {
     JacServer *server = (JacServer *) data;
     if (client) {
         jac_server_info(server, "SERVER %s: client %s!",
                         jac_server_get_name(server),
                         j_socket_get_peer_name(client));
-        j_socket_close(client);
+        j_socket_recv_package(client, on_recv_package, server);
     } else {
         jac_server_warning(server, "SERVER %s: accept error",
                            jac_server_get_name(server));
     }
     return 1;
+}
+
+/*
+ * 收到客户端数据
+ */
+static void on_recv_package(JSocket * sock,
+                            const void *data,
+                            unsigned int len,
+                            JSocketRecvResultType type, void *user_data)
+{
+    if (data == NULL || len == 0 || type == J_SOCKET_RECV_ERR) {    /* 没有数据接受到或者出现了错误 */
+        j_socket_close(sock);
+        return;
+    } else if (type == J_SOCKET_RECV_EOF) { /* 有数据接受到，但是客户端关闭了链接 */
+        j_socket_close(sock);
+        return;
+    }
+    j_socket_send_package(sock, on_send_package, data, len, user_data);
+}
+
+/*
+ * 给客户端发送数据
+ */
+static void on_send_package(JSocket * sock, int res, void *user_data)
+{
+    if (res) {
+        j_socket_recv_package(sock, on_recv_package, user_data);
+    } else {
+        j_socket_close(sock);
+    }
 }
 
 /*
@@ -111,7 +149,7 @@ static inline void jac_server_main(JacServer * server)
     JSocket *listen_sock = jac_server_get_sock(server);
 
     /* main loop */
-    j_socket_accept_async(listen_sock, jac_server_accept_callback, server);
+    j_socket_accept_async(listen_sock, on_accept_client, server);
     j_main();
     jac_server_end(server);
 }
