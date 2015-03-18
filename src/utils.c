@@ -170,8 +170,8 @@ int jac_save_pid(int pid)
     }
 
     char buf[16];
-    snprintf(buf, sizeof(buf) / sizeof(char), "%d", pid);
-    return write(fd, buf, sizeof(buf) / sizeof(char));
+    int len = snprintf(buf, sizeof(buf) / sizeof(char), "%d", pid);
+    return write(fd, buf, len);
 }
 
 static inline int lockfile(int fd)

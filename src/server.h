@@ -65,6 +65,7 @@ JacServer *jac_server_start(const char *name, unsigned int port,
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
 
 
+void jac_server_free(JacServer * server);
 void jac_server_end(JacServer * server);
 
 

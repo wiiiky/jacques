@@ -126,6 +126,9 @@ JacServer *jac_server_start(const char *name, unsigned int port,
     JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
     server->name = j_strdup(name);
     server->listen_port = port;
+    server->listen_sock = NULL;
+    server->normal_logger = NULL;
+    server->error_logger = NULL;
     if (pid == 0) {
         jac_server_init(server, normal, error);
         jac_server_main(server);
@@ -177,13 +180,8 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
                             port, normal, error);
 }
 
-/*
- * Server quits
- */
-void jac_server_end(JacServer * server)
+void jac_server_free(JacServer * server)
 {
-    jac_server_info(server, _("jacques SERVER %s quits"),
-                    jac_server_get_name(server));
     j_logger_close(server->normal_logger);
     j_logger_close(server->error_logger);
     if (server->listen_sock) {
@@ -191,6 +189,16 @@ void jac_server_end(JacServer * server)
     }
     j_free(server->name);
     j_free(server);
+}
+
+/*
+ * Server quits
+ */
+void jac_server_end(JacServer * server)
+{
+    jac_server_info(server, _("jacques SERVER %s quits"),
+                    jac_server_get_name(server));
+    jac_server_free(server);
     exit(0);
 }
 

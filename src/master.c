@@ -142,6 +142,7 @@ void jac_master_quit(JacMaster * master)
     j_conf_parser_free(master->cfg);
     j_logger_close(master->normal_logger);
     j_logger_close(master->error_logger);
+    j_list_free_full(master->servers, (JListDestroy) jac_server_free);
     j_free(master);
     exit(0);
 }
