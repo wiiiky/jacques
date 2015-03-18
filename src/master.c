@@ -28,6 +28,19 @@
 #include "i18n.h"
 #include "server.h"
 
+/*
+ * 日志输出
+ */
+static inline void jac_master_log(JacMaster * master, JLogLevel level,
+                                  const char *fmt, ...);
+#define jac_master_info(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_VERBOSE,fmt,##__VA_ARGS__)
+#define jac_master_debug(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
+#define jac_master_warning(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_WARNING,##__VA_ARGS__)
+#define jac_master_error(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_ERROR,##__VA_ARGS__)
 
 static inline void jac_master_fork_servers(JacMaster * master);
 static void signal_handler(int signum);
@@ -65,7 +78,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     if (!jac_save_pid(pid)) {
         j_logger_error(error_logger,
-                       _("fail to start jacques, is it already running?"));
+                       _("fail to start, is it already running?"));
         goto ERROR;
     }
 
@@ -77,7 +90,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
     master->servers = NULL;
     master->running = 1;
 
-    jac_master_info(master, _("jacques daemon starts"));
+    jac_master_info(master, _("starts"));
 
     set_proctitle(NULL, "jacques: master");
 
@@ -90,6 +103,9 @@ JacMaster *jac_master_start(JConfParser * cfg)
     return NULL;
 }
 
+/*
+ * 创建服务进程
+ */
 static inline void jac_master_fork_servers(JacMaster * master)
 {
     JConfNode *root = j_conf_parser_get_root(master->cfg);
@@ -109,6 +125,12 @@ static inline void jac_master_fork_servers(JacMaster * master)
 
 static JacMaster *running_master = NULL;
 
+
+/*
+ * 主进程等待信号的发生，
+ * 可能是管理员发送了相关的控制信号，而可能是服务进程结束产生的信号
+ * TODO
+ */
 void jac_master_wait(JacMaster * master)
 {
     running_master = master;
@@ -121,6 +143,9 @@ void jac_master_wait(JacMaster * master)
     jac_master_quit(master);
 }
 
+/*
+ * 信号处理函数
+ */
 static void signal_handler(int signum)
 {
     if (running_master == NULL) {
@@ -136,13 +161,43 @@ static void signal_handler(int signum)
     running_master->running = 0;
 }
 
+/*
+ * 主进程退出，在此之前做一些清理
+ */
 void jac_master_quit(JacMaster * master)
 {
-    jac_master_info(master, _("jacques MASTER quits"));
+    jac_master_info(master, _("quits"));
     j_conf_parser_free(master->cfg);
     j_logger_close(master->normal_logger);
     j_logger_close(master->error_logger);
     j_list_free_full(master->servers, (JListDestroy) jac_server_free);
     j_free(master);
     exit(0);
+}
+
+static inline void jac_master_log(JacMaster * master, JLogLevel level,
+                                  const char *fmt, ...)
+{
+    JLogger *normal = master->normal_logger;
+    JLogger *error = master->error_logger;
+
+    char buf[1024];
+    snprintf(buf, sizeof(buf) / sizeof(char), "MASTER: %s", fmt);
+    va_list ap;
+    va_start(ap, fmt);
+    switch (level) {
+    case J_LOG_LEVEL_VERBOSE:
+        j_logger_vlog(normal, J_LOG_LEVEL_VERBOSE, buf, ap);
+        break;
+    case J_LOG_LEVEL_WARNING:
+        j_logger_vlog(normal, J_LOG_LEVEL_WARNING, buf, ap);
+        break;
+    case J_LOG_LEVEL_ERROR:
+        j_logger_vlog(error, J_LOG_LEVEL_ERROR, buf, ap);
+        break;
+    default:
+        j_logger_vlog(normal, J_LOG_LEVEL_DEBUG, buf, ap);
+        break;
+    }
+    va_end(ap);
 }
