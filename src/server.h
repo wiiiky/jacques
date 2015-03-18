@@ -43,15 +43,6 @@ typedef struct {
     unsigned short listen_port;
 } JacServer;
 
-#define jac_server_error(server,fmt,...) \
-            j_logger_error((server)->error_logger,fmt,##__VA_ARGS__)
-#define jac_server_info(server,fmt,...) \
-            j_logger_verbose((server)->normal_logger,fmt,##__VA_ARGS__)
-#define jac_server_debug(server,fmt,...) \
-            j_logger_debug((server)->normal_logger,fmt,##__VA_ARGS__)
-#define jac_server_warning(server,fmt,...) \
-            j_logger_warning((server)->normal_logger,fmt,##__VA_ARGS__)
-
 #define jac_server_get_name(server) (server)->name
 #define jac_server_get_sock(server) (server)->listen_sock
 #define jac_server_get_port(server) (server)->listen_port

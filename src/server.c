@@ -25,6 +25,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdarg.h>
+
+
+/* 日志输出函数 */
+static inline void jac_server_log(JacServer * server, JLogLevel level,
+                                  const char *fmt, ...);
+#define jac_server_info(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_VERBOSE,fmt,##__VA_ARGS__)
+#define jac_server_warning(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_WARNING,fmt,##__VA_ARGS__)
+#define jac_server_error(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_ERROR,fmt,##__VA_ARGS__)
+#define jac_server_debug(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
 
 static void signal_handler(int signum);
 static void on_recv_package(JSocket * sock,
@@ -58,6 +68,9 @@ int jac_server_check_conf_virtualserver(JConfNode * vs)
 
 static JacServer *running_server = NULL;
 
+/*
+ * 初始化服务进程
+ */
 static inline void jac_server_init(JacServer * server,
                                    const char *normal, const char *error)
 {
@@ -72,23 +85,20 @@ static inline void jac_server_init(JacServer * server,
     if (server->listen_sock == NULL ||
         !j_socket_set_blocking(server->listen_sock, 0)) {
         jac_server_error(server,
-                         _("SERVER %s: unable to listen on port %u"),
-                         jac_server_get_name(server),
+                         _("unable to listen on port %u"),
                          jac_server_get_port(server));
         jac_server_end(server);
     } else if (!set_procuser(JACQUES_USER, JACQUES_GROUP)) {
         jac_server_error(server,
-                         _("SERVER %s: unable to set user/group %s/%s"),
-                         jac_server_get_name(server), JACQUES_USER,
-                         JACQUES_GROUP);
+                         _("unable to set user/group %s/%s"),
+                         JACQUES_USER, JACQUES_GROUP);
         jac_server_end(server);
     }
 
     signal(SIGINT, signal_handler);
     set_proctitle(NULL, "jacques: server %s", jac_server_get_name(server));
 
-    jac_server_info(server, _("SERVER %s starts!"),
-                    jac_server_get_name(server));
+    jac_server_info(server, _("starts!"));
 }
 
 /*
@@ -99,13 +109,11 @@ static int on_accept_client(JSocket * listen, JSocket * client, void *data)
 {
     JacServer *server = (JacServer *) data;
     if (client) {
-        jac_server_info(server, "SERVER %s: client %s!",
-                        jac_server_get_name(server),
+        jac_server_info(server, "client %s accepted!",
                         j_socket_get_peer_name(client));
         j_socket_recv_package(client, on_recv_package, server);
     } else {
-        jac_server_warning(server, "SERVER %s: accept error",
-                           jac_server_get_name(server));
+        jac_server_warning(server, "accept error");
     }
     return 1;
 }
@@ -118,13 +126,21 @@ static void on_recv_package(JSocket * sock,
                             unsigned int len,
                             JSocketRecvResultType type, void *user_data)
 {
-    if (data == NULL || len == 0 || type == J_SOCKET_RECV_ERR) {    /* 没有数据接受到或者出现了错误 */
+    JacServer *server = (JacServer *) user_data;
+
+    if (type == J_SOCKET_RECV_ERR) {    /* 没有数据接受到或者出现了错误 */
+        jac_server_info(server, "receive ERROR from %s",
+                        j_socket_get_peer_name(sock));
         j_socket_close(sock);
         return;
-    } else if (type == J_SOCKET_RECV_EOF) { /* 有数据接受到，但是客户端关闭了链接 */
+    } else if (data == NULL || len == 0 || type == J_SOCKET_RECV_EOF) { /* 有数据接受到，但是客户端关闭了链接 */
+        jac_server_info(server, "receive data with EOF from %s",
+                        j_socket_get_peer_name(sock));
         j_socket_close(sock);
         return;
     }
+    jac_server_info(server, "received data from %s; echoing",
+                    j_socket_get_peer_name(sock));
     j_socket_send_package(sock, on_send_package, data, len, user_data);
 }
 
@@ -133,10 +149,13 @@ static void on_recv_package(JSocket * sock,
  */
 static void on_send_package(JSocket * sock, int res, void *user_data)
 {
+    JacServer *server = (JacServer *) user_data;
     if (res) {
         j_socket_recv_package(sock, on_recv_package, user_data);
     } else {
         j_socket_close(sock);
+        jac_server_warning(server, "send data to %s error",
+                           j_socket_get_peer_name(sock));
     }
 }
 
@@ -234,8 +253,7 @@ void jac_server_free(JacServer * server)
  */
 void jac_server_end(JacServer * server)
 {
-    jac_server_info(server, _("jacques SERVER %s quits"),
-                    jac_server_get_name(server));
+    jac_server_info(server, _("quits"));
     jac_server_free(server);
     exit(0);
 }
@@ -248,4 +266,31 @@ static void signal_handler(int signum)
     if (signum == SIGINT) {
         jac_server_end(running_server);
     }
+}
+
+
+static inline void jac_server_log(JacServer * server, JLogLevel level,
+                                  const char *fmt, ...)
+{
+    JLogger *logger = server->normal_logger;
+    JLogger *error = server->error_logger;
+    char buf[1024];
+    snprintf(buf, sizeof(buf) / sizeof(char), "SERVER %s: %s",
+             jac_server_get_name(server), fmt);
+    va_list ap;
+    va_start(ap, fmt);
+    switch (level) {
+    case J_LOG_LEVEL_VERBOSE:
+        j_logger_vlog(logger, J_LOG_LEVEL_VERBOSE, buf, ap);
+        break;
+    case J_LOG_LEVEL_WARNING:
+        j_logger_vlog(logger, J_LOG_LEVEL_WARNING, buf, ap);
+        break;
+    case J_LOG_LEVEL_ERROR:
+        j_logger_vlog(error, J_LOG_LEVEL_ERROR, buf, ap);
+        break;
+    default:
+        j_logger_vlog(logger, J_LOG_LEVEL_DEBUG, buf, ap);
+    }
+    va_end(ap);
 }
