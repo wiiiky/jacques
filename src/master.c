@@ -28,13 +28,17 @@
 #include "i18n.h"
 #include "server.h"
 
+
+static JacMaster *running_master = NULL;
+
+
 /*
  * 日志输出
  */
 static inline void jac_master_log(JacMaster * master, JLogLevel level,
                                   const char *fmt, ...);
 #define jac_master_info(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_VERBOSE,fmt,##__VA_ARGS__)
+            jac_master_log(master,J_LOG_LEVEL_INFO,fmt,##__VA_ARGS__)
 #define jac_master_debug(master,fmt,...) \
             jac_master_log(master,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
 #define jac_master_warning(master,fmt,...) \
@@ -68,7 +72,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
     /* daemonize */
     int pid = jac_daemonize();
 
-    JLogger *normal_logger = j_logger_open(normal, "%0 [%l]: %m");
+    JLogger *custom_logger = j_logger_open(normal, "%0 [%l]: %m");
     JLogger *error_logger = j_logger_open(error, "%0 [%l]: %m");
 
     if (!pid) {
@@ -85,7 +89,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
     JacMaster *master = (JacMaster *) j_malloc(sizeof(JacMaster));
     master->pid = pid;
     master->cfg = cfg;
-    master->normal_logger = normal_logger;
+    master->custom_logger = custom_logger;
     master->error_logger = error_logger;
     master->servers = NULL;
     master->running = 1;
@@ -98,7 +102,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     return master;
   ERROR:
-    j_logger_close(normal_logger);
+    j_logger_close(custom_logger);
     j_logger_close(error_logger);
     return NULL;
 }
@@ -123,13 +127,11 @@ static inline void jac_master_fork_servers(JacMaster * master)
     j_list_free(virtualservers);
 }
 
-static JacMaster *running_master = NULL;
-
 
 /*
  * 主进程等待信号的发生，
  * 可能是管理员发送了相关的控制信号，而可能是服务进程结束产生的信号
- * TODO
+ * FIXME
  */
 void jac_master_wait(JacMaster * master)
 {
@@ -168,7 +170,7 @@ void jac_master_quit(JacMaster * master)
 {
     jac_master_info(master, _("quits"));
     j_conf_parser_free(master->cfg);
-    j_logger_close(master->normal_logger);
+    j_logger_close(master->custom_logger);
     j_logger_close(master->error_logger);
     j_list_free_full(master->servers, (JListDestroy) jac_server_free);
     j_free(master);
@@ -178,7 +180,7 @@ void jac_master_quit(JacMaster * master)
 static inline void jac_master_log(JacMaster * master, JLogLevel level,
                                   const char *fmt, ...)
 {
-    JLogger *normal = master->normal_logger;
+    JLogger *normal = master->custom_logger;
     JLogger *error = master->error_logger;
 
     char buf[1024];
@@ -186,8 +188,8 @@ static inline void jac_master_log(JacMaster * master, JLogLevel level,
     va_list ap;
     va_start(ap, fmt);
     switch (level) {
-    case J_LOG_LEVEL_VERBOSE:
-        j_logger_vlog(normal, J_LOG_LEVEL_VERBOSE, buf, ap);
+    case J_LOG_LEVEL_INFO:
+        j_logger_vlog(normal, J_LOG_LEVEL_INFO, buf, ap);
         break;
     case J_LOG_LEVEL_WARNING:
         j_logger_vlog(normal, J_LOG_LEVEL_WARNING, buf, ap);

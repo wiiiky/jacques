@@ -28,7 +28,7 @@
 typedef struct {
     int pid;
     JConfParser *cfg;
-    JLogger *normal_logger;
+    JLogger *custom_logger;
     JLogger *error_logger;
 
     JList *servers;

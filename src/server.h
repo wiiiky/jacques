@@ -36,7 +36,7 @@ typedef struct {
     int pid;
     char *name;
 
-    JLogger *normal_logger;
+    JLogger *custom_logger;
     JLogger *error_logger;
 
     JSocket *listen_sock;

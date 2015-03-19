@@ -31,7 +31,7 @@
 /* 日志输出函数 */
 static inline void jac_server_log(JacServer * server, JLogLevel level,
                                   const char *fmt, ...);
-#define jac_server_info(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_VERBOSE,fmt,##__VA_ARGS__)
+#define jac_server_info(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_INFO,fmt,##__VA_ARGS__)
 #define jac_server_warning(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_WARNING,fmt,##__VA_ARGS__)
 #define jac_server_error(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_ERROR,fmt,##__VA_ARGS__)
 #define jac_server_debug(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
@@ -77,7 +77,7 @@ static inline void jac_server_init(JacServer * server,
     running_server = server;
 
     server->pid = getpid();
-    server->normal_logger = j_logger_open(normal, "%0 [%l]: %m");
+    server->custom_logger = j_logger_open(normal, "%0 [%l]: %m");
     server->error_logger = j_logger_open(error, "%0 [%l]: %m");
     server->listen_sock = j_socket_listen_on(jac_server_get_port(server),
                                              1024);
@@ -184,7 +184,7 @@ JacServer *jac_server_start(const char *name, unsigned int port,
     server->name = j_strdup(name);
     server->listen_port = port;
     server->listen_sock = NULL;
-    server->normal_logger = NULL;
+    server->custom_logger = NULL;
     server->error_logger = NULL;
     if (pid == 0) {
         jac_server_init(server, normal, error);
@@ -239,7 +239,7 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
 
 void jac_server_free(JacServer * server)
 {
-    j_logger_close(server->normal_logger);
+    j_logger_close(server->custom_logger);
     j_logger_close(server->error_logger);
     if (server->listen_sock) {
         j_socket_close(server->listen_sock);
@@ -272,7 +272,7 @@ static void signal_handler(int signum)
 static inline void jac_server_log(JacServer * server, JLogLevel level,
                                   const char *fmt, ...)
 {
-    JLogger *logger = server->normal_logger;
+    JLogger *logger = server->custom_logger;
     JLogger *error = server->error_logger;
     char buf[1024];
     snprintf(buf, sizeof(buf) / sizeof(char), "SERVER %s: %s",
@@ -280,8 +280,8 @@ static inline void jac_server_log(JacServer * server, JLogLevel level,
     va_list ap;
     va_start(ap, fmt);
     switch (level) {
-    case J_LOG_LEVEL_VERBOSE:
-        j_logger_vlog(logger, J_LOG_LEVEL_VERBOSE, buf, ap);
+    case J_LOG_LEVEL_INFO:
+        j_logger_vlog(logger, J_LOG_LEVEL_INFO, buf, ap);
         break;
     case J_LOG_LEVEL_WARNING:
         j_logger_vlog(logger, J_LOG_LEVEL_WARNING, buf, ap);
