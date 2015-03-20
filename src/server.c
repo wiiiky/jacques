@@ -19,8 +19,10 @@
 #include "i18n.h"
 #include "utils.h"
 #include "net.h"
+#include "module.h"
 #include <jlib/jlib.h>
 #include <jio/jio.h>
+#include <jmod/jmod.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -45,7 +47,13 @@ static void on_send_package(JSocket * sock, int res, void *user_data);
 static int on_accept_client(JSocket * listen, JSocket * client,
                             void *data);
 
-static const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
+/*
+ * the log function for modules
+ */
+static void jac_server_module_log(JLogLevel level, const char *fmt,
+                                  va_list ap);
+
+const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 {
     JConfData *name_data = j_conf_node_get_argument_first(vs);
     if (name_data) {
@@ -72,10 +80,10 @@ static JacServer *running_server = NULL;
  * 初始化服务进程
  */
 static inline void jac_server_init(JacServer * server,
+                                   JConfNode * root,
+                                   JConfNode * vs,
                                    const char *normal, const char *error)
 {
-    running_server = server;
-
     server->pid = getpid();
     server->custom_logger = j_logger_open(normal, "%0 [%l]: %m");
     server->error_logger = j_logger_open(error, "%0 [%l]: %m");
@@ -93,6 +101,14 @@ static inline void jac_server_init(JacServer * server,
                          _("unable to set user/group %s/%s"),
                          JACQUES_USER, JACQUES_GROUP);
         jac_server_end(server);
+    }
+
+    running_server = server;
+    j_mod_set_log_func(jac_server_module_log);
+    if (!jac_load_modules_from_scope(vs)) { /* 载入服务内的模块 */
+        jac_server_warning(server,
+                           _
+                           ("error occurs while loading server specified modules"));
     }
 
     signal(SIGINT, signal_handler);
@@ -173,27 +189,6 @@ static inline void jac_server_main(JacServer * server)
     jac_server_end(server);
 }
 
-JacServer *jac_server_start(const char *name, unsigned int port,
-                            const char *normal, const char *error)
-{
-    int pid = fork();
-    if (pid < 0) {
-        return NULL;
-    }
-    JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
-    server->name = j_strdup(name);
-    server->listen_port = port;
-    server->listen_sock = NULL;
-    server->custom_logger = NULL;
-    server->error_logger = NULL;
-    if (pid == 0) {
-        jac_server_init(server, normal, error);
-        jac_server_main(server);
-    }
-    server->pid = pid;
-    return server;
-}
-
 /*
  * Gets the log location of server
  */
@@ -225,6 +220,10 @@ static inline const char *jac_server_get_conf_err_log(JConfNode * root,
                                  ERR_FILEPATH);
 }
 
+
+/*
+ * 启动服务进程 Starts the server process
+ */
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
 {
     int port = jac_config_get_integer(vs, LISTEN_PORT_DIRECTIVE, -1);
@@ -233,8 +232,24 @@ JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
     }
     const char *normal = jac_server_get_conf_log(root, vs);
     const char *error = jac_server_get_conf_err_log(root, vs);
-    return jac_server_start(jac_server_get_conf_virtualserver_name(vs),
-                            port, normal, error);
+    const char *name = jac_server_get_conf_virtualserver_name(vs);
+
+    int pid = fork();
+    if (pid < 0) {
+        return NULL;
+    }
+    JacServer *server = (JacServer *) j_malloc(sizeof(JacServer));
+    server->name = j_strdup(name);
+    server->listen_port = port;
+    server->listen_sock = NULL;
+    server->custom_logger = NULL;
+    server->error_logger = NULL;
+    if (pid == 0) {
+        jac_server_init(server, root, vs, normal, error);
+        jac_server_main(server);
+    }
+    server->pid = pid;
+    return server;
 }
 
 void jac_server_free(JacServer * server)
@@ -293,4 +308,27 @@ static inline void jac_server_log(JacServer * server, JLogLevel level,
         j_logger_vlog(logger, J_LOG_LEVEL_DEBUG, buf, ap);
     }
     va_end(ap);
+}
+
+static void jac_server_module_log(JLogLevel level, const char *fmt,
+                                  va_list ap)
+{
+    if (running_server == NULL) {
+        return;
+    }
+    JLogger *logger = running_server->custom_logger;
+    JLogger *error = running_server->error_logger;
+    switch (level) {
+    case J_LOG_LEVEL_INFO:
+        j_logger_vlog(logger, J_LOG_LEVEL_INFO, fmt, ap);
+        break;
+    case J_LOG_LEVEL_WARNING:
+        j_logger_vlog(logger, J_LOG_LEVEL_WARNING, fmt, ap);
+        break;
+    case J_LOG_LEVEL_ERROR:
+        j_logger_vlog(error, J_LOG_LEVEL_ERROR, fmt, ap);
+        break;
+    default:
+        j_logger_vlog(logger, J_LOG_LEVEL_DEBUG, fmt, ap);
+    }
 }

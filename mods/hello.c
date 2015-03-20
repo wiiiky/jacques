@@ -3,10 +3,12 @@
 
 void init(void)
 {
-    printf("hello\n");
+    j_mod_log(J_LOG_LEVEL_INFO,"hello world!");
 }
 
 JModule module_struct={
     "hello",
-    init
+    init,
+    NULL,
+    NULL
 };

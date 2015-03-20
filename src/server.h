@@ -30,7 +30,10 @@
  */
 int jac_server_check_conf_virtualserver(JConfNode * vs);
 
-
+/*
+ * 获取配置中的服务名
+ */
+const char *jac_server_get_conf_virtualserver_name(JConfNode * vs);
 
 typedef struct {
     int pid;
@@ -50,9 +53,6 @@ typedef struct {
 /*
  * Return a JacServer to master on success, NULL on error
  */
-JacServer *jac_server_start(const char *name, unsigned int port,
-                            const char *normal, const char *error);
-
 JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
 
 

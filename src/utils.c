@@ -159,7 +159,7 @@ int jac_check_instance(void)
 
 int jac_save_pid(int pid)
 {
-    int fd = open(PID_FILEPATH, O_RDWR | O_CREAT,
+    int fd = open(PID_FILEPATH, O_RDWR | O_CREAT | O_TRUNC,
                   S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         return 0;

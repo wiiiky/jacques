@@ -15,20 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "module.h"
-#include "config.h"
 #include "i18n.h"
 #include <stdio.h>
-#include <jlib/jlib.h>
 #include <jio/jio.h>
 #include <jmod/jmod.h>
 
 
 static JList *mods = NULL;
 
+JList *jac_all_modules(void)
+{
+    return mods;
+}
+
 static inline void jac_module_register(JModule * mod)
 {
     mods = j_list_append(mods, mod);
-    JModuleRegister init = mod->init;
+    JModuleInit init = mod->init;
     init();
 }
 
@@ -50,8 +53,13 @@ int jac_load_module(const char *name)
  */
 int jac_load_modules(JConfParser * parser)
 {
-    int ret = 1;
     JConfNode *root = j_conf_parser_get_root(parser);
+    return jac_load_modules_from_scope(root);
+}
+
+int jac_load_modules_from_scope(JConfNode * root)
+{
+    int ret = 1;
     JList *mods = j_conf_node_get_directive(root, LOAD_MODULE_DIRECTIVE);
     JList *ptr = mods;
     while (ptr) {

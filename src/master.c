@@ -18,15 +18,18 @@
 
 #include "master.h"
 #include "utils.h"
+#include "module.h"
+#include "i18n.h"
+#include "server.h"
 #include <jlib/jlib.h>
+#include <jmod/jmod.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <stdarg.h>
 #include <errno.h>
-#include "i18n.h"
-#include "server.h"
 
 
 static JacMaster *running_master = NULL;
@@ -42,9 +45,12 @@ static inline void jac_master_log(JacMaster * master, JLogLevel level,
 #define jac_master_debug(master,fmt,...) \
             jac_master_log(master,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
 #define jac_master_warning(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_WARNING,##__VA_ARGS__)
+            jac_master_log(master,J_LOG_LEVEL_WARNING,fmt,##__VA_ARGS__)
 #define jac_master_error(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_ERROR,##__VA_ARGS__)
+            jac_master_log(master,J_LOG_LEVEL_ERROR,fmt,##__VA_ARGS__)
+
+static void jac_master_module_log(JLogLevel level, const char *fmt,
+                                  va_list ap);
 
 static inline void jac_master_fork_servers(JacMaster * master);
 static void signal_handler(int signum);
@@ -93,6 +99,14 @@ JacMaster *jac_master_start(JConfParser * cfg)
     master->error_logger = error_logger;
     master->servers = NULL;
     master->running = 1;
+    running_master = master;
+
+    /* 设置模块的输出函数，并载入模块 */
+    j_mod_set_log_func(jac_master_module_log);
+    if (!jac_load_modules(cfg)) {
+        jac_master_warning(master,
+                           _("error occurs while loading modules"));
+    }
 
     jac_master_info(master, _("starts"));
 
@@ -121,6 +135,11 @@ static inline void jac_master_fork_servers(JacMaster * master)
         JacServer *server = jac_server_start_from_conf(root, vs);
         if (server) {
             master->servers = j_list_append(master->servers, server);
+        } else {
+            jac_master_error(master,
+                             _
+                             ("unable to start SERVER %s. Check configuration!"),
+                             jac_server_get_conf_virtualserver_name(vs));
         }
         ptr = j_list_next(ptr);
     }
@@ -135,7 +154,6 @@ static inline void jac_master_fork_servers(JacMaster * master)
  */
 void jac_master_wait(JacMaster * master)
 {
-    running_master = master;
     signal(SIGINT, signal_handler);
     while (master->running) {
         if (wait(NULL) < 0 && errno == ECHILD) {
@@ -202,4 +220,29 @@ static inline void jac_master_log(JacMaster * master, JLogLevel level,
         break;
     }
     va_end(ap);
+}
+
+static void jac_master_module_log(JLogLevel level, const char *fmt,
+                                  va_list ap)
+{
+    if (running_master == NULL) {
+        return;
+    }
+    JLogger *normal = running_master->custom_logger;
+    JLogger *error = running_master->error_logger;
+
+    switch (level) {
+    case J_LOG_LEVEL_INFO:
+        j_logger_vlog(normal, J_LOG_LEVEL_INFO, fmt, ap);
+        break;
+    case J_LOG_LEVEL_WARNING:
+        j_logger_vlog(normal, J_LOG_LEVEL_WARNING, fmt, ap);
+        break;
+    case J_LOG_LEVEL_ERROR:
+        j_logger_vlog(error, J_LOG_LEVEL_ERROR, fmt, ap);
+        break;
+    default:
+        j_logger_vlog(normal, J_LOG_LEVEL_DEBUG, fmt, ap);
+        break;
+    }
 }

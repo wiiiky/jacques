@@ -146,10 +146,6 @@ static inline JConfParser *initialize_jacques(void)
         printf(_("exit...\n"));
         exit(-1);
     }
-    if (!jac_load_modules(parser)) {
-        printf(_("exit...\n"));
-        exit(-1);
-    }
     return parser;
 }
 

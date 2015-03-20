@@ -21,10 +21,14 @@
  * Something about module
  */
 
-#include <jconf/jconf.h>
+#include "config.h"
+#include <jlib/jlib.h>
 
 
-#define LOAD_MODULE_DIRECTIVE   "LoadModule"
+/*
+ * Gets the list of modules
+ */
+JList *jac_all_modules(void);
 
 
 /*
@@ -36,6 +40,6 @@ int jac_load_module(const char *path);
  * Loads modules from config
  */
 int jac_load_modules(JConfParser * parser);
-
+int jac_load_modules_from_scope(JConfNode * node);
 
 #endif

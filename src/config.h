@@ -88,6 +88,10 @@ JConfParser *jac_config_parser(void);
 #define JAC_LOG_DIRECTIVE   "CustomLog"
 #define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
 
+#define LOAD_MODULE_DIRECTIVE   "LoadModule"
+
+/************************************************************/
+
 
 /* functions */
 
