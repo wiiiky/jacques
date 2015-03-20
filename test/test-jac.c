@@ -18,7 +18,7 @@ static void recv_callback (JSocket * sock, const void *data, unsigned int len,
     j_main_quit();
 }
 
-static void send_callback(JSocket *sock,int res, void *user_data)
+static void send_callback(JSocket *sock,const char *data, unsigned int count,unsigned int len, void *user_data)
 {
     if(res){
         printf("success!\n");

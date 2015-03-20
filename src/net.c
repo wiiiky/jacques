@@ -127,7 +127,7 @@ static void send_package_callback(JSocket * sock, const void *data,
         (JSocketSendPackageNotify) pdata->notify;
     void *user_data = pdata->user_data;
 
-    notify(sock, count == n, user_data);
+    notify(sock, data, count, n, user_data);
 
     j_socket_package_data_free(pdata);
 }

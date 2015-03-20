@@ -43,7 +43,9 @@ static void on_recv_package(JSocket * sock,
                             const void *data,
                             unsigned int len,
                             JSocketRecvResultType type, void *user_data);
-static void on_send_package(JSocket * sock, int res, void *user_data);
+static void on_send_package(JSocket * sock, const char *dadta,
+                            unsigned int count, unsigned int len,
+                            void *user_data);
 static int on_accept_client(JSocket * listen, JSocket * client,
                             void *data);
 
@@ -167,10 +169,12 @@ static void on_recv_package(JSocket * sock,
 /*
  * 给客户端发送数据
  */
-static void on_send_package(JSocket * sock, int res, void *user_data)
+static void on_send_package(JSocket * sock, const char *dadta,
+                            unsigned int count, unsigned int len,
+                            void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    if (res) {
+    if (count == len) {
         j_socket_recv_package(sock, on_recv_package, user_data);
     } else {
         j_socket_close(sock);

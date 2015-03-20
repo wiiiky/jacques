@@ -40,7 +40,9 @@ void j_socket_recv_package(JSocket * sock, JSocketRecvPackageNotify notify,
 /*
  * res 为1表示发送成功，为0表示发送失败
  */
-typedef void (*JSocketSendPackageNotify) (JSocket * sock, int res,
+typedef void (*JSocketSendPackageNotify) (JSocket * sock, const char *data,
+                                          unsigned int count,
+                                          unsigned int len,
                                           void *user_data);
 void j_socket_send_package(JSocket * sock, JSocketSendPackageNotify notify,
                            const void *data, unsigned int len,

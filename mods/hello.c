@@ -1,3 +1,7 @@
+/*
+ * 测试用模块
+ * the module for testing
+ */
 #include <jmod/jmod.h>
 #include <stdio.h>
 

@@ -29,9 +29,9 @@ static int accept_callback(JSocket *sock,JSocket *conn,void *user_data)
     return 0;
 }
 
-static void send_callback(JSocket *sock,int res, void *user_data)
+static void send_callback(JSocket *sock,const char *data,unsigned int count ,unsigned int len, void *user_data)
 {
-    if(res){
+    if(count==len){
         printf("success!\n");
     }else{
         printf("fail!\n");
