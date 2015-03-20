@@ -53,6 +53,13 @@ static int on_accept_client(JSocket * listen, JSocket * client,
 static void jac_server_module_log(JLogLevel level, const char *fmt,
                                   va_list ap);
 
+/*
+ * 载入服务内模块，并完成模块的配置解析
+ */
+static inline void jac_server_load_modules(JacServer * server,
+                                           JConfNode * root,
+                                           JConfNode * vs);
+
 const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
 {
     JConfData *name_data = j_conf_node_get_argument_first(vs);
@@ -104,12 +111,9 @@ static inline void jac_server_init(JacServer * server,
     }
 
     running_server = server;
-    j_mod_set_log_func(jac_server_module_log);
-    if (!jac_load_modules_from_scope(vs)) { /* 载入服务内的模块 */
-        jac_server_warning(server,
-                           _
-                           ("error occurs while loading server specified modules"));
-    }
+
+    /* 载入服务内模块 */
+    jac_server_load_modules(server, root, vs);
 
     signal(SIGINT, signal_handler);
     set_proctitle(NULL, "jacques: server %s", jac_server_get_name(server));
@@ -330,5 +334,123 @@ static void jac_server_module_log(JLogLevel level, const char *fmt,
         break;
     default:
         j_logger_vlog(logger, J_LOG_LEVEL_DEBUG, fmt, ap);
+    }
+}
+
+
+/*
+ * 为模块载入配置
+ */
+static inline void jac_server_module_load_directives(JModuleLoadDirective
+                                                     load,
+                                                     const char *scope,
+                                                     JList * sargs,
+                                                     const char *directive,
+                                                     JList * nodes)
+{
+    JList *ptr = nodes;
+    while (ptr) {
+        JConfNode *d = (JConfNode *) j_list_data(ptr);
+        load(scope, sargs, directive, j_conf_node_get_arguments(d));
+        ptr = j_list_next(ptr);
+    }
+}
+
+static inline void jac_server_module_load_scope(JModuleLoadDirective load,
+                                                JList * scopes)
+{
+    JList *ptr = scopes;
+    while (ptr) {
+        JConfNode *s = (JConfNode *) j_list_data(ptr);
+        JList *children = j_conf_node_get_children(s);
+        while (children) {
+            JConfNode *d = (JConfNode *) j_list_data(children);
+            if (j_conf_node_is_directive(d)) {
+                jac_server_module_load_directives(load,
+                                                  j_conf_node_get_name
+                                                  (s),
+                                                  j_conf_node_get_arguments
+                                                  (s),
+                                                  j_conf_node_get_name
+                                                  (d),
+                                                  j_conf_node_get_arguments
+                                                  (d));
+            }
+            children = j_list_next(children);
+        }
+        ptr = j_list_next(ptr);
+    }
+}
+
+static inline void jac_server_module_load_config(JModuleConfigHandler *
+                                                 handler, JConfNode * root,
+                                                 JConfNode * vs)
+{
+    JModuleConfigInit init = handler->init;
+    JModuleLoadDirective load = handler->func;
+    JModuleConfigSummary summary = handler->summary;
+
+    if (init) {
+        init();
+    }
+
+    if (load) {
+        char **directives = handler->directives;
+        char **scopes = handler->scopes;
+
+        if (directives) {
+            while (*directives) {
+                JList *rets = j_conf_node_get_directive(root, *directives);
+                jac_server_module_load_directives(load, NULL, NULL,
+                                                  *directives, rets);
+                j_list_free(rets);
+
+                rets = j_conf_node_get_directive(vs, *directives);
+                jac_server_module_load_directives(load, NULL, NULL,
+                                                  *directives, rets);
+                j_list_free(rets);
+                directives++;
+            }
+        }
+
+        if (scopes) {
+            while (*scopes) {
+                JList *rets = j_conf_node_get_scope(root, *scopes);
+                jac_server_module_load_scope(load, rets);
+                j_list_free(rets);
+
+                rets = j_conf_node_get_scope(vs, *scopes);
+                jac_server_module_load_scope(load, rets);
+                j_list_free(rets);
+
+                scopes++;
+            }
+        }
+    }
+
+    if (summary) {
+        summary();
+    }
+}
+
+static inline void jac_server_load_modules(JacServer * server,
+                                           JConfNode * root,
+                                           JConfNode * vs)
+{
+    j_mod_set_log_func(jac_server_module_log);
+    if (!jac_load_modules_from_scope(vs)) { /* 载入服务内的模块 */
+        jac_server_warning(server,
+                           _
+                           ("error occurs while loading server specified modules"));
+    }
+    JList *mods = jac_all_modules();
+    JList *ptr = mods;
+    while (ptr) {
+        JModule *mod = (JModule *) j_list_data(ptr);
+        JModuleConfigHandler *handler = mod->config_handler;
+        if (handler) {
+            jac_server_module_load_config(handler, root, vs);
+        }
+        ptr = j_list_next(ptr);
     }
 }

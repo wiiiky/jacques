@@ -32,7 +32,9 @@ static inline void jac_module_register(JModule * mod)
 {
     mods = j_list_append(mods, mod);
     JModuleInit init = mod->init;
-    init();
+    if (init) {
+        init();
+    }
 }
 
 /*
