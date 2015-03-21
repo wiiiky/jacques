@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "net.h"
 #include "module.h"
+#include "hook.h"
 #include <jlib/jlib.h>
 #include <jio/jio.h>
 #include <jmod/jmod.h>
@@ -281,6 +282,9 @@ void jac_server_end(JacServer * server)
     exit(0);
 }
 
+/*
+ * 处理信号
+ */
 static void signal_handler(int signum)
 {
     if (running_server == NULL) {
@@ -292,6 +296,9 @@ static void signal_handler(int signum)
 }
 
 
+/*
+ * 服务进程的日志函数
+ */
 static inline void jac_server_log(JacServer * server, JLogLevel level,
                                   const char *fmt, ...)
 {
@@ -318,6 +325,9 @@ static inline void jac_server_log(JacServer * server, JLogLevel level,
     va_end(ap);
 }
 
+/*
+ *  由模块调用的日志记录函数
+ */
 static void jac_server_module_log(JLogLevel level, const char *fmt,
                                   va_list ap)
 {
@@ -360,6 +370,9 @@ static inline void jac_server_module_load_directives(JModuleLoadDirective
     }
 }
 
+/*
+ * 为模块载入配置组
+ */
 static inline void jac_server_module_load_scope(JModuleLoadDirective load,
                                                 JList * scopes)
 {
@@ -386,6 +399,9 @@ static inline void jac_server_module_load_scope(JModuleLoadDirective load,
     }
 }
 
+/*
+ * 为模块载入配置
+ */
 static inline void jac_server_module_load_config(JModuleConfigHandler *
                                                  handler, JConfNode * root,
                                                  JConfNode * vs)

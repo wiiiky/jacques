@@ -21,7 +21,8 @@ jacques_SOURCES = \
 	module.c \
 	utils.c \
 	master.c \
-	net.c
+	net.c \
+	hook.c
 
 jacques_LDFLAGS =
 

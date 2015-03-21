@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: jacques 0.01\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-03-18 13:35+0800\n"
+"POT-Creation-Date: 2015-03-22 16:59+0800\n"
 "PO-Revision-Date: 2015-02-12 17:38+0800\n"
 "Last-Translator: Wiky L <wiiiky@outlook.com>\n"
 "Language-Team: Chinese (simplified)\n"
@@ -90,115 +90,124 @@ msgstr "无法打开 %s: %s\n"
 msgid "error occurs while parsing configuration - %s\n"
 msgstr "解析配置出错 - %s\n"
 
-#: ../src/main.c:141 ../src/main.c:146 ../src/main.c:150
+#: ../src/main.c:141 ../src/main.c:146
 #, c-format
 msgid "exit...\n"
 msgstr "退出...\n"
 
-#: ../src/main.c:175
+#: ../src/main.c:171
 #, c-format
 msgid "jacques is not running!\n"
 msgstr "jacques未运行!\n"
 
-#: ../src/main.c:178
+#: ../src/main.c:174
 #, c-format
 msgid "fail to send SIGINT to jacques master process\n"
 msgstr "给jacques主进程发送SIGINT信号失败\n"
 
-#: ../src/main.c:181
+#: ../src/main.c:177
 #, c-format
 msgid "jacques quits\n"
 msgstr "jacques主进程退出\n"
 
-#: ../src/main.c:191
+#: ../src/main.c:187
 #, c-format
 msgid "Checking configuration file:\n"
 msgstr "检查配置文件:\n"
 
-#: ../src/main.c:193 ../src/main.c:204 ../src/main.c:211 ../src/main.c:218
+#: ../src/main.c:189 ../src/main.c:200 ../src/main.c:207 ../src/main.c:214
 #, c-format
 msgid "[31m*ERROR*: %s - %s[0m\n"
 msgstr "[31m*错误*: %s - %s[0m\n"
 
-#: ../src/main.c:197
+#: ../src/main.c:193
 #, c-format
 msgid ""
 "configuration file is [32mOK[0m!\n"
 "\n"
 msgstr "配置文件[32m没有错误[0m!\n"
 
-#: ../src/main.c:198
+#: ../src/main.c:194
 #, c-format
 msgid "Checking %s:\n"
 msgstr "正在检查 %s:\n"
 
-#: ../src/main.c:202
+#: ../src/main.c:198
 #, c-format
 msgid "Checking necessary directory:\n"
 msgstr "检查必要的目录:\n"
 
-#: ../src/main.c:207
+#: ../src/main.c:203
 #, c-format
 msgid "configuration directory %s is [32mOK[0m\n"
 msgstr "\t配置目录 %s [32m没有错误[0m\n"
 
-#: ../src/main.c:214
+#: ../src/main.c:210
 #, c-format
 msgid "runtime directory %s is [32mOK[0m\n"
 msgstr "\t运行时目录 %s [32m没有错误[0m\n"
 
-#: ../src/main.c:221
+#: ../src/main.c:217
 #, c-format
 msgid "log directory %s is [32mOK[0m\n"
 msgstr "\t日志目录 %s [32m没有错误[0m\n"
 
-#: ../src/master.c:44 ../src/master.c:51
+#: ../src/master.c:67 ../src/master.c:74
 #, c-format
 msgid "invalid argument of %s\n"
 msgstr "%s的参数无效\n"
 
-#: ../src/master.c:62
+#: ../src/master.c:85
 msgid "fail to daemonize"
 msgstr "无法设置为守护进程"
 
-#: ../src/master.c:68
-msgid "fail to start jacques, is it already running?"
-msgstr "无法启动jacques, jacques已在运行?"
+#: ../src/master.c:91
+msgid "fail to start, is it already running?"
+msgstr "无法启动, jacques已在运行?"
 
-#: ../src/master.c:80
-msgid "jacques daemon starts"
-msgstr "jacques守护进程启动"
+#: ../src/master.c:108
+msgid "error occurs while loading modules"
+msgstr "载入模块时出错"
+
+#: ../src/master.c:111
+msgid "starts"
+msgstr "启动"
 
 #: ../src/master.c:141
-msgid "jacques MASTER quits"
-msgstr "jacques主进程退出"
+#, c-format
+msgid "unable to start SERVER %s. Check configuration!"
+msgstr "无法启动服务 %s. 检查配置!"
 
-#: ../src/server.c:54
+#: ../src/master.c:189 ../src/server.c:279
+msgid "quits"
+msgstr "退出"
+
+#: ../src/server.c:71
 msgid "unnamed"
 msgstr "未命名"
 
-#: ../src/server.c:61
+#: ../src/server.c:78
 #, c-format
 msgid "[31minvalid argument of %s in %s[0m\n"
 msgstr "[31m%s中的%s参数无效[0m\n"
 
-#: ../src/server.c:88
+#: ../src/server.c:105
 #, c-format
 msgid "unable to listen on port %u"
 msgstr "无法监听端口 %u"
 
-#: ../src/server.c:93
+#: ../src/server.c:110
 #, c-format
 msgid "unable to set user/group %s/%s"
 msgstr "无法设置用户/组 %s%s"
 
-#: ../src/server.c:101
+#: ../src/server.c:123
 msgid "starts!"
 msgstr "启动!"
 
-#: ../src/server.c:256
-msgid "quits"
-msgstr "退出"
+#: ../src/server.c:448
+msgid "error occurs while loading server specified modules"
+msgstr "载入服务特定模块时发生错误"
 
 #: ../src/config.c:37
 #, c-format
@@ -209,6 +218,12 @@ msgstr "[31m%s的参数无效[0m\n"
 #, c-format
 msgid "[31mno <%s> found[0m\n"
 msgstr "[31m没有发现 <%s>[0m\n"
+
+#~ msgid "jacques daemon starts"
+#~ msgstr "jacques守护进程启动"
+
+#~ msgid "jacques MASTER quits"
+#~ msgstr "jacques主进程退出"
 
 #~ msgid "SERVER %s starts!"
 #~ msgstr "服务器 %s 启动!"
