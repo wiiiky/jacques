@@ -47,3 +47,36 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
     j_module_accept_free(acc);
     return ret;
 }
+
+/*
+ * 接受到客户端数据的回调函数
+ */
+int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
+                   JSocketRecvResultType type, JacServer * server)
+{
+    JModuleRecv *r = j_module_recv_new();
+    JList *hooks = j_mod_get_hooks(J_HOOK_RECV);
+
+    while (hooks) {
+        JModuleRecvHook hook = (JModuleRecvHook) j_list_data(hooks);
+        hook(conn, data, len, type, r);
+        hooks = j_list_next(hooks);
+    }
+    int ret = 1;
+    if (data == NULL || len == 0 || type == J_SOCKET_RECV_ERR
+        || type == J_SOCKET_RECV_EOF) {
+        j_socket_close(conn);
+        ret = 0;
+    } else if (j_module_recv_is_recv(r)) {
+        j_socket_recv_package(conn, on_recv_package, server);
+    } else if (j_module_recv_is_send(r)) {
+        j_socket_send_package(conn, on_send_package,
+                              j_module_recv_get_data(r),
+                              j_module_recv_get_len(r), server);
+    } else {
+        j_socket_close(conn);
+        ret = 0;
+    }
+    j_module_recv_free(r);
+    return ret;
+}

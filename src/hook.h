@@ -25,5 +25,10 @@
  */
 int jac_accept_hooks(JSocket * conn, JacServer * server);
 
+/*
+ * 接受到客户端数据的回调函数
+ */
+int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
+                   JSocketRecvResultType type, JacServer * server);
 
 #endif

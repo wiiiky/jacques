@@ -20,7 +20,7 @@ static void recv_callback (JSocket * sock, const void *data, unsigned int len,
 
 static void send_callback(JSocket *sock,const char *data, unsigned int count,unsigned int len, void *user_data)
 {
-    if(res){
+    if(count==len){
         printf("success!\n");
         j_socket_recv_package(sock,recv_callback,user_data);
     }else{

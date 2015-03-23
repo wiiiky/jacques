@@ -136,20 +136,7 @@ void on_recv_package(JSocket * sock,
 {
     JacServer *server = (JacServer *) user_data;
 
-    if (type == J_SOCKET_RECV_ERR) {    /* 没有数据接受到或者出现了错误 */
-        jac_server_info(server, "receive ERROR from %s",
-                        j_socket_get_peer_name(sock));
-        j_socket_close(sock);
-        return;
-    } else if (data == NULL || len == 0 || type == J_SOCKET_RECV_EOF) { /* 有数据接受到，但是客户端关闭了链接 */
-        jac_server_info(server, "receive data with EOF from %s",
-                        j_socket_get_peer_name(sock));
-        j_socket_close(sock);
-        return;
-    }
-    jac_server_info(server, "received data from %s; echoing",
-                    j_socket_get_peer_name(sock));
-    j_socket_send_package(sock, on_send_package, data, len, user_data);
+    jac_recv_hooks(sock, data, len, type, server);
 }
 
 /*
