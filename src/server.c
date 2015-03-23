@@ -40,15 +40,7 @@ static inline void jac_server_log(JacServer * server, JLogLevel level,
 #define jac_server_debug(server,fmt,...) jac_server_log(server,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
 
 static void signal_handler(int signum);
-static void on_recv_package(JSocket * sock,
-                            const void *data,
-                            unsigned int len,
-                            JSocketRecvResultType type, void *user_data);
-static void on_send_package(JSocket * sock, const char *dadta,
-                            unsigned int count, unsigned int len,
-                            void *user_data);
-static int on_accept_client(JSocket * listen, JSocket * client,
-                            void *data);
+
 
 /*
  * the log function for modules
@@ -128,26 +120,19 @@ static inline void jac_server_init(JacServer * server,
  * Callback of accepting connections
  * 接受到客户端连接
  */
-static int on_accept_client(JSocket * listen, JSocket * client, void *data)
+int on_accept_connection(JSocket * listen, JSocket * conn, void *data)
 {
-    JacServer *server = (JacServer *) data;
-    if (client) {
-        jac_server_info(server, "client %s accepted!",
-                        j_socket_get_peer_name(client));
-        j_socket_recv_package(client, on_recv_package, server);
-    } else {
-        jac_server_warning(server, "accept error");
-    }
+    jac_accept_hooks(conn, data);
     return 1;
 }
 
 /*
  * 收到客户端数据
  */
-static void on_recv_package(JSocket * sock,
-                            const void *data,
-                            unsigned int len,
-                            JSocketRecvResultType type, void *user_data)
+void on_recv_package(JSocket * sock,
+                     const void *data,
+                     unsigned int len,
+                     JSocketRecvResultType type, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
 
@@ -170,9 +155,8 @@ static void on_recv_package(JSocket * sock,
 /*
  * 给客户端发送数据
  */
-static void on_send_package(JSocket * sock, const char *dadta,
-                            unsigned int count, unsigned int len,
-                            void *user_data)
+void on_send_package(JSocket * sock, const char *dadta,
+                     unsigned int count, unsigned int len, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
     if (count == len) {
@@ -193,7 +177,7 @@ static inline void jac_server_main(JacServer * server)
     JSocket *listen_sock = jac_server_get_sock(server);
 
     /* main loop */
-    j_socket_accept_async(listen_sock, on_accept_client, server);
+    j_socket_accept_async(listen_sock, on_accept_connection, server);
     j_main();
     jac_server_end(server);
 }

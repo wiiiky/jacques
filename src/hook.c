@@ -15,3 +15,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "hook.h"
+#include "net.h"
+
+/*
+ * 接受客户端连接的回调函数
+ */
+int jac_accept_hooks(JSocket * conn, JacServer * server)
+{
+    JModuleAccept *acc = j_module_accept_new();
+    JList *hooks = j_mod_get_hooks(J_HOOK_ACCEPT);
+
+    while (hooks) {
+        JModuleAcceptHook hook = (JModuleAcceptHook) j_list_data(hooks);
+        hook(conn, acc);
+        hooks = j_list_next(hooks);
+    }
+
+    int ret = 1;
+    if (conn == NULL) {
+        ret = 0;
+    } else if (j_module_accept_is_recv(acc)) {
+        j_socket_recv_package(conn, on_recv_package, server);
+    } else if (j_module_accept_is_send(acc)) {
+        j_socket_send_package(conn, on_send_package,
+                              j_module_accept_get_data(acc),
+                              j_module_accept_get_len(acc), server);
+    } else {
+        j_socket_close(conn);
+        ret = 0;
+    }
+    j_module_accept_free(acc);
+    return ret;
+}

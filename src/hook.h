@@ -17,5 +17,13 @@
 #ifndef __JAC_HOOK_H__
 #define __JAC_HOOK_H__
 
+#include <jmod/jmod.h>
+#include "server.h"
+
+/*
+ * 接受客户端连接的回调函数
+ */
+int jac_accept_hooks(JSocket * conn, JacServer * server);
+
 
 #endif

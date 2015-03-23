@@ -60,4 +60,17 @@ void jac_server_free(JacServer * server);
 void jac_server_end(JacServer * server);
 
 
+/*
+ * callbacks 
+ */
+void on_recv_package(JSocket * conn,
+                     const void *data,
+                     unsigned int len,
+                     JSocketRecvResultType type, void *user_data);
+void on_send_package(JSocket * conn, const char *dadta,
+                     unsigned int count, unsigned int len,
+                     void *user_data);
+int on_accept_connection(JSocket * listen, JSocket * conn, void *data);
+
+
 #endif
