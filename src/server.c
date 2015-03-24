@@ -135,24 +135,17 @@ void on_recv_package(JSocket * sock,
                      JSocketRecvResultType type, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-
     jac_recv_hooks(sock, data, len, type, server);
 }
 
 /*
  * 给客户端发送数据
  */
-void on_send_package(JSocket * sock, const char *dadta,
+void on_send_package(JSocket * sock, const char *data,
                      unsigned int count, unsigned int len, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    if (count == len) {
-        j_socket_recv_package(sock, on_recv_package, user_data);
-    } else {
-        j_socket_close(sock);
-        jac_server_warning(server, "send data to %s error",
-                           j_socket_get_peer_name(sock));
-    }
+    jac_send_hooks(sock, data, count, len, server);
 }
 
 /*

@@ -38,7 +38,9 @@ void j_socket_recv_package(JSocket * sock, JSocketRecvPackageNotify notify,
  */
 
 /*
- * res 为1表示发送成功，为0表示发送失败
+ * count 为数据包的长度
+ * len 为成功发送出去的长度
+ * len == count 表示发送成功
  */
 typedef void (*JSocketSendPackageNotify) (JSocket * sock, const char *data,
                                           unsigned int count,

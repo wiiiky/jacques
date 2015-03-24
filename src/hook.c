@@ -50,6 +50,7 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
 
 /*
  * 接受到客户端数据的回调函数
+ * 如果出错，则链接一定会被关闭，而不管模块如何指定操作
  */
 int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
                    JSocketRecvResultType type, JacServer * server)
@@ -78,5 +79,39 @@ int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
         ret = 0;
     }
     j_module_recv_free(r);
+    return ret;
+}
+
+/*
+ * 发送数据完成的回调函数
+ * 如果出错，则链接一定会被关闭，而不管模块如何指定操作
+ */
+int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
+                   unsigned int len, JacServer * server)
+{
+    JModuleSend *s = j_module_send_new();
+    JList *hooks = j_mod_get_hooks(J_HOOK_SEND);
+
+    while (hooks) {
+        JModuleSendHook hook = (JModuleSendHook) j_list_data(hooks);
+        hook(conn, data, count, len, s);
+        hooks = j_list_next(hooks);
+    }
+
+    int ret = 1;
+    if (count != len) {
+        j_socket_close(conn);
+        ret = 0;
+    } else if (j_module_send_is_recv(s)) {
+        j_socket_recv_package(conn, on_recv_package, server);
+    } else if (j_module_send_is_send(s)) {
+        j_socket_send_package(conn, on_send_package,
+                              j_module_send_get_data(s),
+                              j_module_send_get_len(s), server);
+    } else {
+        j_socket_close(conn);
+        ret = 0;
+    }
+    j_module_send_free(s);
     return ret;
 }
