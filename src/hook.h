@@ -24,17 +24,22 @@
  * 接受客户端连接的回调函数
  */
 int jac_accept_hooks(JSocket * conn, JacServer * server);
+int jac_accept_error_hooks(void);
 
 /*
  * 接受到客户端数据的回调函数
  */
 int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
                    JSocketRecvResultType type, JacServer * server);
+int jac_recv_error_hooks(JSocket * conn, const void *data,
+                         unsigned int len, JSocketRecvResultType type);
 
 /*
  * 发送数据完成的回调函数
  */
 int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
                    unsigned int len, JacServer * server);
+int jac_send_error_hooks(JSocket * conn, const void *data,
+                         unsigned int count, unsigned int len);
 
 #endif

@@ -135,7 +135,11 @@ void on_recv_package(JSocket * sock,
                      JSocketRecvResultType type, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    jac_recv_hooks(sock, data, len, type, server);
+    if (data && len && type == J_SOCKET_RECV_NORMAL) {
+        jac_recv_hooks(sock, data, len, type, server);
+    } else {
+        jac_recv_error_hooks(sock, data, len, type);
+    }
 }
 
 /*
@@ -145,7 +149,11 @@ void on_send_package(JSocket * sock, const char *data,
                      unsigned int count, unsigned int len, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    jac_send_hooks(sock, data, count, len, server);
+    if (count == len) {
+        jac_send_hooks(sock, data, count, len, server);
+    } else {
+        jac_send_error_hooks(sock, data, count, len);
+    }
 }
 
 /*

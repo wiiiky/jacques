@@ -32,9 +32,7 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
     }
 
     int ret = 1;
-    if (conn == NULL) {
-        ret = 0;
-    } else if (j_module_accept_is_recv(acc)) {
+    if (j_module_accept_is_recv(acc)) {
         j_socket_recv_package(conn, on_recv_package, server);
     } else if (j_module_accept_is_send(acc)) {
         j_socket_send_package(conn, on_send_package,
@@ -46,6 +44,18 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
     }
     j_module_accept_free(acc);
     return ret;
+}
+
+int jac_accept_error_hooks(void)
+{
+    JList *hooks = j_mod_get_hooks(J_HOOK_ACCEPT_ERROR);
+    while (hooks) {
+        JModuleAcceptErrorHook hook =
+            (JModuleAcceptErrorHook) j_list_data(hooks);
+        hook();
+        hooks = j_list_next(hooks);
+    }
+    return 0;
 }
 
 /*
@@ -64,11 +74,7 @@ int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
         hooks = j_list_next(hooks);
     }
     int ret = 1;
-    if (data == NULL || len == 0 || type == J_SOCKET_RECV_ERR
-        || type == J_SOCKET_RECV_EOF) {
-        j_socket_close(conn);
-        ret = 0;
-    } else if (j_module_recv_is_recv(r)) {
+    if (j_module_recv_is_recv(r)) {
         j_socket_recv_package(conn, on_recv_package, server);
     } else if (j_module_recv_is_send(r)) {
         j_socket_send_package(conn, on_send_package,
@@ -80,6 +86,20 @@ int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
     }
     j_module_recv_free(r);
     return ret;
+}
+
+int jac_recv_error_hooks(JSocket * conn, const void *data,
+                         unsigned int len, JSocketRecvResultType type)
+{
+    JList *hooks = j_mod_get_hooks(J_HOOK_RECV_ERROR);
+    while (hooks) {
+        JModuleRecvErrorHook hook =
+            (JModuleRecvErrorHook) j_list_data(hooks);
+        hook(conn, data, len, type);
+        hooks = j_list_next(hooks);
+    }
+    j_socket_close(conn);
+    return 0;
 }
 
 /*
@@ -99,10 +119,7 @@ int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
     }
 
     int ret = 1;
-    if (count != len) {
-        j_socket_close(conn);
-        ret = 0;
-    } else if (j_module_send_is_recv(s)) {
+    if (j_module_send_is_recv(s)) {
         j_socket_recv_package(conn, on_recv_package, server);
     } else if (j_module_send_is_send(s)) {
         j_socket_send_package(conn, on_send_package,
@@ -114,4 +131,18 @@ int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
     }
     j_module_send_free(s);
     return ret;
+}
+
+int jac_send_error_hooks(JSocket * conn, const void *data,
+                         unsigned int count, unsigned int len)
+{
+    JList *hooks = j_mod_get_hooks(J_HOOK_SEND_ERROR);
+    while (hooks) {
+        JModuleSendErrorHook hook =
+            (JModuleSendErrorHook) j_list_data(hooks);
+        hook(conn, data, count, len);
+        hooks = j_list_next(hooks);
+    }
+    j_socket_close(conn);
+    return 0;
 }
