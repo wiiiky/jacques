@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "hook.h"
-#include "net.h"
+#include <jio/jio.h>
 
 /*
  * 接受客户端连接的回调函数

@@ -92,7 +92,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_jacques_OBJECTS = main.$(OBJEXT) config.$(OBJEXT) server.$(OBJEXT) \
 	module.$(OBJEXT) utils.$(OBJEXT) master.$(OBJEXT) \
-	net.$(OBJEXT) hook.$(OBJEXT)
+	hook.$(OBJEXT)
 jacques_OBJECTS = $(am_jacques_OBJECTS)
 am__DEPENDENCIES_1 =
 jacques_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -291,7 +291,6 @@ jacques_SOURCES = \
 	module.c \
 	utils.c \
 	master.c \
-	net.c \
 	hook.c
 
 jacques_LDFLAGS = 
@@ -388,7 +387,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/master.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/net.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
 

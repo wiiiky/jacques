@@ -18,7 +18,6 @@
 #include "server.h"
 #include "i18n.h"
 #include "utils.h"
-#include "net.h"
 #include "module.h"
 #include "hook.h"
 #include <jlib/jlib.h>
