@@ -7,7 +7,7 @@ AM_CPPFLAGS = \
 
 
 all-local: hello.c
-	gcc -shared -fPIC hello.c -o hello.so $(JACQUES_CFLAGS)
+	gcc -O0 -g -shared -fPIC hello.c -o hello.so $(JACQUES_CFLAGS)
 
 install-exec-local:
 	mv hello.so /etc/jacques/modules

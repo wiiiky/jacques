@@ -1,7 +1,7 @@
-#include "../src/net.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <jlib/jlib.h>
+#include <jio/jio.h>
 
 #define PORT 22222
 
