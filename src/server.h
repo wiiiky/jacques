@@ -70,7 +70,7 @@ void on_recv_package(JSocket * conn,
 void on_send_package(JSocket * conn, const char *dadta,
                      unsigned int count, unsigned int len,
                      void *user_data);
-int on_accept_connection(JSocket * listen, JSocket * conn, void *data);
+void on_accept_connection(JSocket * listen, JSocket * conn, void *data);
 
 
 #endif

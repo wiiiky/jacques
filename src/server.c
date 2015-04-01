@@ -119,10 +119,9 @@ static inline void jac_server_init(JacServer * server,
  * Callback of accepting connections
  * 接受到客户端连接
  */
-int on_accept_connection(JSocket * listen, JSocket * conn, void *data)
+void on_accept_connection(JSocket * listen, JSocket * conn, void *data)
 {
     jac_accept_hooks(conn, data);
-    return 1;
 }
 
 /*
