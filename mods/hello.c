@@ -7,21 +7,24 @@
 #include <stdio.h>
 
 static void on_recv(JSocket *conn,const void *data,unsigned int len,
-                    JSocketRecvResultType type,JModuleRecv *r)
+                    JModuleRecv *r)
 {
-    if(data==NULL||len==0||type==J_SOCKET_RECV_ERR){
-        return;
-    }
     JByteArray *array=j_module_recv_get_byte_array(r);
     j_byte_array_append(array,data,len);
     j_module_recv_set_action(r,J_MODULE_RECV_SEND);
     j_mod_log(J_LOG_LEVEL_INFO,"hello echoing");
 }
 
+static void on_recv_error(JSocket *conn,const void *data, unsigned int len)
+{
+    j_mod_log(J_LOG_LEVEL_WARNING,"recv error from: %s",j_socket_get_peer_name(conn));
+}
+
 void init(void)
 {
     j_mod_log(J_LOG_LEVEL_INFO,"hello world!");
     j_mod_register_hook(J_HOOK_RECV,on_recv);
+    j_mod_register_hook(J_HOOK_RECV_ERROR,on_recv_error);
 }
 
 void config_init(void)

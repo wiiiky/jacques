@@ -128,16 +128,17 @@ void on_accept_connection(JSocket * listen, JSocket * conn, void *data)
  * 收到客户端数据
  */
 void on_recv_package(JSocket * sock,
-                     const void *data,
-                     unsigned int len,
-                     JSocketRecvResultType type, void *user_data)
+                     const void *data, unsigned int len, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    if (data && len && type == J_SOCKET_RECV_NORMAL) {
-        jac_recv_hooks(sock, data, len, type, server);
-    } else {
-        jac_recv_error_hooks(sock, data, len, type);
-    }
+    jac_recv_hooks(sock, data, len, server);
+}
+
+void on_recv_package_error(JSocket * sock,
+                           const void *data,
+                           unsigned int len, void *user_data)
+{
+    jac_recv_error_hooks(sock, data, len);
 }
 
 /*

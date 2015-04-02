@@ -30,9 +30,9 @@ int jac_accept_error_hooks(void);
  * 接受到客户端数据的回调函数
  */
 int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
-                   JSocketRecvResultType type, JacServer * server);
+                   JacServer * server);
 int jac_recv_error_hooks(JSocket * conn, const void *data,
-                         unsigned int len, JSocketRecvResultType type);
+                         unsigned int len);
 
 /*
  * 发送数据完成的回调函数

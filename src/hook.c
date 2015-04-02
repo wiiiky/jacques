@@ -33,7 +33,8 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
 
     int ret = 1;
     if (j_module_accept_is_recv(acc)) {
-        j_socket_recv_package(conn, on_recv_package, server);
+        j_socket_recv_package(conn, on_recv_package, on_recv_package_error,
+                              server);
     } else if (j_module_accept_is_send(acc)) {
         j_socket_send_package(conn, on_send_package,
                               j_module_accept_get_data(acc),
@@ -63,19 +64,20 @@ int jac_accept_error_hooks(void)
  * 如果出错，则链接一定会被关闭，而不管模块如何指定操作
  */
 int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
-                   JSocketRecvResultType type, JacServer * server)
+                   JacServer * server)
 {
     JModuleRecv *r = j_module_recv_new();
     JList *hooks = j_mod_get_hooks(J_HOOK_RECV);
 
     while (hooks) {
         JModuleRecvHook hook = (JModuleRecvHook) j_list_data(hooks);
-        hook(conn, data, len, type, r);
+        hook(conn, data, len, r);
         hooks = j_list_next(hooks);
     }
     int ret = 1;
     if (j_module_recv_is_recv(r)) {
-        j_socket_recv_package(conn, on_recv_package, server);
+        j_socket_recv_package(conn, on_recv_package, on_recv_package_error,
+                              server);
     } else if (j_module_recv_is_send(r)) {
         j_socket_send_package(conn, on_send_package,
                               j_module_recv_get_data(r),
@@ -89,13 +91,13 @@ int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
 }
 
 int jac_recv_error_hooks(JSocket * conn, const void *data,
-                         unsigned int len, JSocketRecvResultType type)
+                         unsigned int len)
 {
     JList *hooks = j_mod_get_hooks(J_HOOK_RECV_ERROR);
     while (hooks) {
         JModuleRecvErrorHook hook =
             (JModuleRecvErrorHook) j_list_data(hooks);
-        hook(conn, data, len, type);
+        hook(conn, data, len);
         hooks = j_list_next(hooks);
     }
     j_socket_close(conn);
@@ -120,7 +122,8 @@ int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
 
     int ret = 1;
     if (j_module_send_is_recv(s)) {
-        j_socket_recv_package(conn, on_recv_package, server);
+        j_socket_recv_package(conn, on_recv_package, on_recv_package_error,
+                              server);
     } else if (j_module_send_is_send(s)) {
         j_socket_send_package(conn, on_send_package,
                               j_module_send_get_data(s),
