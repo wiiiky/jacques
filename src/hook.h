@@ -38,7 +38,7 @@ int jac_recv_error_hooks(JSocket * conn, const void *data,
  * 发送数据完成的回调函数
  */
 int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
-                   unsigned int len, JacServer * server);
+                   JacServer * server);
 int jac_send_error_hooks(JSocket * conn, const void *data,
                          unsigned int count, unsigned int len);
 

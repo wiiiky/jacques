@@ -6,27 +6,30 @@
 #define PORT 22222
 
 static void recv_callback (JSocket * sock, const void *data, unsigned int len,
-                           JSocketRecvResultType type, void *user_data)
+                            void *user_data)
 {
-    if(type!=J_SOCKET_RECV_ERR && len>0 && data!=NULL){
-        char *buf =j_strndup((const char*)data,len);
-        printf("%s\n",buf);
-        j_free(buf);
-    }else{
-        printf("recv error!\n");
-    }
+    char *buf =j_strndup((const char*)data,len);
+    printf("%s\n",buf);
+    j_free(buf);
     j_main_quit();
 }
 
-static void send_callback(JSocket *sock,const char *data, unsigned int count,unsigned int len, void *user_data)
+static void recv_error_callback(JSocket *sock, const void *data,unsigned int len, void *user_data)
 {
-    if(count==len){
+    printf("recv error!\n");
+    j_main_quit();
+}
+
+static void send_callback(JSocket *sock,const char *data, unsigned int count, void *user_data)
+{
         printf("success!\n");
-        j_socket_recv_package(sock,recv_callback,user_data);
-    }else{
-        printf("fail!\n");
-        j_main_quit();
-    }
+        j_socket_recv_package(sock,recv_callback,recv_error_callback,user_data);
+}
+
+static void send_error_callback(JSocket *sock,const char *data, unsigned int count,unsigned int len, void *user_data)
+{
+    printf("fail!\n");
+    j_main_quit();
 }
 
 int main(int argc, char *argv[])
@@ -36,7 +39,7 @@ int main(int argc, char *argv[])
         printf("fail to connect to server!\n");
         return -1;
     }
-    j_socket_send_package(client,send_callback,"hello world",11,NULL);
+    j_socket_send_package(client,send_callback,send_error_callback,"hello world",11,NULL);
     
     j_main();
     

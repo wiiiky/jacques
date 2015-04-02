@@ -145,14 +145,17 @@ void on_recv_package_error(JSocket * sock,
  * 给客户端发送数据
  */
 void on_send_package(JSocket * sock, const char *data,
-                     unsigned int count, unsigned int len, void *user_data)
+                     unsigned int count, void *user_data)
 {
     JacServer *server = (JacServer *) user_data;
-    if (count == len) {
-        jac_send_hooks(sock, data, count, len, server);
-    } else {
-        jac_send_error_hooks(sock, data, count, len);
-    }
+    jac_send_hooks(sock, data, count, server);
+}
+
+void on_send_package_error(JSocket * sock, const char *data,
+                           unsigned int count,
+                           unsigned int len, void *user_data)
+{
+    jac_send_error_hooks(sock, data, count, len);
 }
 
 /*

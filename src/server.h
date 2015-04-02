@@ -68,9 +68,11 @@ void on_recv_package(JSocket * conn,
 void on_recv_package_error(JSocket * conn,
                            const void *data,
                            unsigned int len, void *user_data);
-void on_send_package(JSocket * conn, const char *dadta,
-                     unsigned int count, unsigned int len,
-                     void *user_data);
+void on_send_package(JSocket * conn, const char *data,
+                     unsigned int count, void *user_data);
+void on_send_package_error(JSocket * sock, const char *data,
+                           unsigned int count,
+                           unsigned int len, void *user_data);
 void on_accept_connection(JSocket * listen, JSocket * conn, void *data);
 
 

@@ -37,6 +37,7 @@ int jac_accept_hooks(JSocket * conn, JacServer * server)
                               server);
     } else if (j_module_accept_is_send(acc)) {
         j_socket_send_package(conn, on_send_package,
+                              on_send_package_error,
                               j_module_accept_get_data(acc),
                               j_module_accept_get_len(acc), server);
     } else {
@@ -80,6 +81,7 @@ int jac_recv_hooks(JSocket * conn, const void *data, unsigned int len,
                               server);
     } else if (j_module_recv_is_send(r)) {
         j_socket_send_package(conn, on_send_package,
+                              on_send_package_error,
                               j_module_recv_get_data(r),
                               j_module_recv_get_len(r), server);
     } else {
@@ -109,14 +111,14 @@ int jac_recv_error_hooks(JSocket * conn, const void *data,
  * 如果出错，则链接一定会被关闭，而不管模块如何指定操作
  */
 int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
-                   unsigned int len, JacServer * server)
+                   JacServer * server)
 {
     JModuleSend *s = j_module_send_new();
     JList *hooks = j_mod_get_hooks(J_HOOK_SEND);
 
     while (hooks) {
         JModuleSendHook hook = (JModuleSendHook) j_list_data(hooks);
-        hook(conn, data, count, len, s);
+        hook(conn, data, count, s);
         hooks = j_list_next(hooks);
     }
 
@@ -126,6 +128,7 @@ int jac_send_hooks(JSocket * conn, const void *data, unsigned int count,
                               server);
     } else if (j_module_send_is_send(s)) {
         j_socket_send_package(conn, on_send_package,
+                              on_send_package_error,
                               j_module_send_get_data(s),
                               j_module_send_get_len(s), server);
     } else {
