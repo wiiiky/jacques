@@ -32,4 +32,5 @@ AC_OUTPUT([
            src/Makefile
            mods/Makefile
            po/Makefile.in
+           tests/Makefile
            ])
