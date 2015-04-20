@@ -50,34 +50,50 @@ int jac_load_module(const char *name)
     return 1;
 }
 
-/*
- * Loads modules from config
- */
-int jac_load_modules(JConfParser * parser)
+static inline int jac_load_modules_from_list(JList * mods)
 {
-    JConfNode *root = j_conf_parser_get_root(parser);
-    return jac_load_modules_from_scope(root);
-}
-
-int jac_load_modules_from_scope(JConfNode * root)
-{
-    int ret = 1;
-    JList *mods = j_conf_node_get_directive(root, LOAD_MODULE_DIRECTIVE);
     JList *ptr = mods;
     while (ptr) {
         JConfNode *node = (JConfNode *) j_list_data(ptr);
-        JList *args = j_conf_node_get_arguments(node);
-        while (args) {
-            JConfData *arg = (JConfData *) j_list_data(args);
-            const char *name = j_conf_data_get_raw(arg);
-            if (!jac_load_module(name)) {
-                printf(_("\033[31mfail to load module %s\033[m\n"), name);
-                ret = 0;
+        if (j_conf_node_is_string(node)) {
+            if (!jac_load_module(j_conf_string_get(node))) {
+                return 0;
             }
-            args = j_list_next(args);
+        } else if (j_conf_node_is_array(node)) {
+            JList *children = j_conf_node_get_children(node);
+            while (children) {
+                JConfNode *node = (JConfNode *) j_list_data(children);
+                if (j_conf_node_is_string(node)) {
+                    if (!jac_load_module(j_conf_string_get(node))) {
+                        return 0;
+                    }
+                } else {
+                    return 0;
+                }
+                children = j_list_next(children);
+            }
+        } else {
+            return 0;
         }
         ptr = j_list_next(ptr);
     }
+}
+
+/*
+ * Loads modules from config
+ */
+int jac_load_modules(JConfRoot * root)
+{
+    JList *mods = j_conf_root_get_list(root, DIRECTIVE_LOAD_MODULE);
+    jac_load_modules_from_list(mods);
     j_list_free(mods);
-    return ret;
+    return 1;
+}
+
+int jac_load_modules_from_node(JConfNode * node)
+{
+    JList *mods = j_conf_object_get_list(node, DIRECTIVE_LOAD_MODULE);
+    jac_load_modules_from_list(mods);
+    j_list_free(mods);
+    return 1;
 }

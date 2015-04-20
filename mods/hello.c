@@ -17,7 +17,7 @@ static void on_recv(JSocket *conn,const void *data,unsigned int len,
 
 static void on_recv_error(JSocket *conn,const void *data, unsigned int len)
 {
-    j_mod_log(J_LOG_LEVEL_WARNING,"recv error from: %s",j_socket_get_peer_name(conn));
+    j_mod_log(J_LOG_LEVEL_WARNING,"%s closed",j_socket_get_peer_name(conn));
 }
 
 void init(void)
@@ -27,34 +27,8 @@ void init(void)
     j_mod_register_hook(J_HOOK_RECV_ERROR,on_recv_error);
 }
 
-void config_init(void)
-{
-    j_mod_log(J_LOG_LEVEL_WARNING,"config init");
-}
-
-void config_summary(void)
-{
-    j_mod_log(J_LOG_LEVEL_DEBUG,"config summary");
-}
-
-void config_load(const char *scope,JList *sargs,const char *directive,JList *dargs)
-{
-    j_mod_log(J_LOG_LEVEL_WARNING,"%s/%s",scope?scope:"NULL",directive);
-}
-
-static char *directives[]={"Hello","World",NULL};
-
-JModuleConfigHandler config_handler={
-    directives,
-    NULL,
-    config_init,
-    config_load,
-    config_summary
-};
-
 JModule module_struct={
     "hello",
-    &config_handler,
     init,
     NULL
 };

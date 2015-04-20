@@ -46,7 +46,7 @@ static inline void show_version(void);
 
 
 
-static inline JConfParser *initialize_jacques(void);
+static inline JConfRoot *initialize_jacques(void);
 
 /*
  * Commands handler
@@ -81,9 +81,10 @@ int main(int argc, char *argv[])
         stop_jacques();
     } else if (j_strcmp0(cmd, "check") == 0) {
         check_jacques();
+    } else {
+        printf(_("error: unknown command \'%s\'\n\n"), cmd);
+        show_help();
     }
-    printf(_("error: unknown command \'%s\'\n\n"), cmd);
-    show_help();
 
     return 0;
 }
@@ -115,11 +116,11 @@ static inline void show_version(void)
 }
 
 
-static inline JConfParser *initialize_jacques(void)
+static inline JConfRoot *initialize_jacques(void)
 {
     if (!j_mkdir_with_parents(RUNTIME_LOCATION, 0755) ||
         !j_mkdir_with_parents(LOG_LOCATION, 0755)) {
-        printf("%s\n", strerror(errno));
+        fprintf(stderr, "%s\n", strerror(errno));
         exit(-1);
     }
 
@@ -133,28 +134,22 @@ static inline JConfParser *initialize_jacques(void)
         exit(-1);
     }
 
-    JConfParser *parser = jac_config_parser();
-    char *error = NULL;
-    if (!j_conf_parser_parse(parser, CONFIG_FILEPATH, &error)) {
+    JConfRoot *root = jac_config_root();
+    if (!j_conf_root_load(root)) {
         printf(_("error occurs while parsing configuration - %s\n"),
-               error);
-        printf(_("exit...\n"));
-        j_free(error);
-        exit(-1);
-    }
-    if (!jac_config_check(parser)) {
+               j_conf_strerror());
         printf(_("exit...\n"));
         exit(-1);
     }
-    return parser;
+    return root;
 }
 
 static inline void start_jacques(char **argv)
 {
-    JConfParser *parser = initialize_jacques();
+    JConfRoot *root = initialize_jacques();
 
     set_proctitle(argv, "starting jacques master");
-    JacMaster *master = jac_master_start(parser);
+    JacMaster *master = jac_master_start(root);
     if (master == NULL) {
         exit(-1);
     }
@@ -182,17 +177,13 @@ static inline void stop_jacques(void)
 
 static inline void check_jacques(void)
 {
-    JConfParser *parser = jac_config_parser();
-    char *error = NULL;
+    JConfRoot *root = jac_config_root();
     printf(_("Checking configuration file:\n"));
-    if (!j_conf_parser_parse(parser, CONFIG_FILEPATH, &error)) {
+    if (!j_conf_root_load(root)) {
         printf(_("\033[31m*ERROR*: %s - %s\033[0m\n"),
-               CONFIG_FILEPATH, error);
-        j_free(error);
+               CONFIG_FILEPATH, j_conf_strerror());
     } else {
         printf(_("configuration file is \033[32mOK\033[0m!\n\n"));
-        printf(_("Checking %s:\n"), JAC_VIRTUAL_SERVER_SCOPE);
-        jac_config_check(parser);
     }
     printf("\n");
     printf(_("Checking necessary directory:\n"));

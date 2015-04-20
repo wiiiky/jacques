@@ -21,19 +21,10 @@
 #include <jio/jio.h>
 
 
-#define JAC_VIRTUAL_SERVER_SCOPE    "VirtualServer"
-#define LISTEN_PORT_DIRECTIVE  "ListenPort"
+#define DIRECTIVE_VIRTUAL_SERVER    "VirtualServer"
+#define DIRECTIVE_LISTEN_PORT  "ListenPort"
+#define DIRECTIVE_SERVER_NAME "Name"
 
-/*
- * Checks to see if the config of servers are correct
- * If no <VirtualServer> found or directive error, returns 0
- */
-int jac_server_check_conf_virtualserver(JConfNode * vs);
-
-/*
- * 获取配置中的服务名
- */
-const char *jac_server_get_conf_virtualserver_name(JConfNode * vs);
 
 typedef struct {
     int pid;
@@ -53,7 +44,7 @@ typedef struct {
 /*
  * Return a JacServer to master on success, NULL on error
  */
-JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs);
+JacServer *jac_server_start_from_conf(JConfRoot * root, JConfNode * vs);
 
 
 void jac_server_free(JacServer * server);
@@ -61,7 +52,7 @@ void jac_server_end(JacServer * server);
 
 
 /*
- * callbacks 
+ * callbacks
  */
 void on_recv_package(JSocket * conn,
                      const void *data, unsigned int len, void *user_data);

@@ -51,29 +51,8 @@ static void jac_server_module_log(JLogLevel level, const char *fmt,
  * 载入服务内模块，并完成模块的配置解析
  */
 static inline void jac_server_load_modules(JacServer * server,
-                                           JConfNode * root,
+                                           JConfRoot * root,
                                            JConfNode * vs);
-
-const char *jac_server_get_conf_virtualserver_name(JConfNode * vs)
-{
-    JConfData *name_data = j_conf_node_get_argument_first(vs);
-    if (name_data) {
-        return j_conf_data_get_raw(name_data);
-    }
-    return _("unnamed");
-}
-
-int jac_server_check_conf_virtualserver(JConfNode * vs)
-{
-    int port = jac_config_get_integer(vs, LISTEN_PORT_DIRECTIVE, -1);
-    if (port <= 0 || port > 65535) {
-        printf(_("\033[31minvalid argument of %s in %s\033[0m\n"),
-               LISTEN_PORT_DIRECTIVE,
-               jac_server_get_conf_virtualserver_name(vs));
-        return 0;
-    }
-    return 1;
-}
 
 static JacServer *running_server = NULL;
 
@@ -81,7 +60,7 @@ static JacServer *running_server = NULL;
  * 初始化服务进程
  */
 static inline void jac_server_init(JacServer * server,
-                                   JConfNode * root,
+                                   JConfRoot * root,
                                    JConfNode * vs,
                                    const char *normal, const char *error)
 {
@@ -173,49 +152,23 @@ static inline void jac_server_main(JacServer * server)
 }
 
 /*
- * Gets the log location of server
- */
-static inline const char *jac_server_get_conf_log(JConfNode * root,
-                                                  JConfNode * vs)
-{
-    const char *normal = jac_config_get_string(vs, JAC_LOG_DIRECTIVE,
-                                               NULL);
-    if (normal) {
-        return normal;
-    }
-    normal = jac_config_get_string(root, JAC_LOG_DIRECTIVE, LOG_FILEPATH);
-    return normal;
-}
-
-
-/*
- * Gets the error log location of server
- */
-static inline const char *jac_server_get_conf_err_log(JConfNode * root,
-                                                      JConfNode * vs)
-{
-    const char *error = jac_config_get_string(vs, JAC_ERROR_LOG_DIRECTIVE,
-                                              NULL);
-    if (error) {
-        return error;
-    }
-    return jac_config_get_string(root, JAC_ERROR_LOG_DIRECTIVE,
-                                 ERR_FILEPATH);
-}
-
-
-/*
  * 启动服务进程 Starts the server process
  */
-JacServer *jac_server_start_from_conf(JConfNode * root, JConfNode * vs)
+JacServer *jac_server_start_from_conf(JConfRoot * root, JConfNode * vs)
 {
-    int port = jac_config_get_integer(vs, LISTEN_PORT_DIRECTIVE, -1);
+    int64_t port = jac_config_get_int(root, vs, DIRECTIVE_LISTEN_PORT, -1);
     if (port <= 0 || port > 65535) {
         return NULL;
     }
-    const char *normal = jac_server_get_conf_log(root, vs);
-    const char *error = jac_server_get_conf_err_log(root, vs);
-    const char *name = jac_server_get_conf_virtualserver_name(vs);
+    const char *normal = jac_config_get_string(root, vs,
+                                               DIRECTIVE_LOGFILE,
+                                               LOG_FILEPATH);
+    const char *error = jac_config_get_string(root, vs,
+                                              DIRECTIVE_ERROR_LOGFILE,
+                                              ERR_FILEPATH);
+    const char *name = jac_config_get_string(root, vs,
+                                             DIRECTIVE_SERVER_NAME,
+                                             _("unnamed"));
 
     int pid = fork();
     if (pid < 0) {
@@ -326,125 +279,11 @@ static void jac_server_module_log(JLogLevel level, const char *fmt,
 }
 
 
-/*
- * 为模块载入配置
- */
-static inline void jac_server_module_load_directives(JModuleLoadDirective
-                                                     load,
-                                                     const char *scope,
-                                                     JList * sargs,
-                                                     const char *directive,
-                                                     JList * nodes)
-{
-    JList *ptr = nodes;
-    while (ptr) {
-        JConfNode *d = (JConfNode *) j_list_data(ptr);
-        load(scope, sargs, directive, j_conf_node_get_arguments(d));
-        ptr = j_list_next(ptr);
-    }
-}
-
-/*
- * 为模块载入配置组
- */
-static inline void jac_server_module_load_scope(JModuleLoadDirective load,
-                                                JList * scopes)
-{
-    JList *ptr = scopes;
-    while (ptr) {
-        JConfNode *s = (JConfNode *) j_list_data(ptr);
-        JList *children = j_conf_node_get_children(s);
-        while (children) {
-            JConfNode *d = (JConfNode *) j_list_data(children);
-            if (j_conf_node_is_directive(d)) {
-                jac_server_module_load_directives(load,
-                                                  j_conf_node_get_name
-                                                  (s),
-                                                  j_conf_node_get_arguments
-                                                  (s),
-                                                  j_conf_node_get_name
-                                                  (d),
-                                                  j_conf_node_get_arguments
-                                                  (d));
-            }
-            children = j_list_next(children);
-        }
-        ptr = j_list_next(ptr);
-    }
-}
-
-/*
- * 为模块载入配置
- */
-static inline void jac_server_module_load_config(JModuleConfigHandler *
-                                                 handler, JConfNode * root,
-                                                 JConfNode * vs)
-{
-    JModuleConfigInit init = handler->init;
-    JModuleLoadDirective load = handler->func;
-    JModuleConfigSummary summary = handler->summary;
-
-    if (init) {
-        init();
-    }
-
-    if (load) {
-        char **directives = handler->directives;
-        char **scopes = handler->scopes;
-
-        if (directives) {
-            while (*directives) {
-                JList *rets = j_conf_node_get_directive(root, *directives);
-                jac_server_module_load_directives(load, NULL, NULL,
-                                                  *directives, rets);
-                j_list_free(rets);
-
-                rets = j_conf_node_get_directive(vs, *directives);
-                jac_server_module_load_directives(load, NULL, NULL,
-                                                  *directives, rets);
-                j_list_free(rets);
-                directives++;
-            }
-        }
-
-        if (scopes) {
-            while (*scopes) {
-                JList *rets = j_conf_node_get_scope(root, *scopes);
-                jac_server_module_load_scope(load, rets);
-                j_list_free(rets);
-
-                rets = j_conf_node_get_scope(vs, *scopes);
-                jac_server_module_load_scope(load, rets);
-                j_list_free(rets);
-
-                scopes++;
-            }
-        }
-    }
-
-    if (summary) {
-        summary();
-    }
-}
 
 static inline void jac_server_load_modules(JacServer * server,
-                                           JConfNode * root,
+                                           JConfRoot * root,
                                            JConfNode * vs)
 {
     j_mod_set_log_func(jac_server_module_log);
-    if (!jac_load_modules_from_scope(vs)) { /* 载入服务内的模块 */
-        jac_server_warning(server,
-                           _
-                           ("error occurs while loading server specified modules"));
-    }
-    JList *mods = jac_all_modules();
-    JList *ptr = mods;
-    while (ptr) {
-        JModule *mod = (JModule *) j_list_data(ptr);
-        JModuleConfigHandler *handler = mod->config_handler;
-        if (handler) {
-            jac_server_module_load_config(handler, root, vs);
-        }
-        ptr = j_list_next(ptr);
-    }
+    jac_load_modules_from_node(vs);
 }

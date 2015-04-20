@@ -27,7 +27,6 @@
 
 typedef struct {
     int pid;
-    JConfParser *cfg;
     JLogger *custom_logger;
     JLogger *error_logger;
 
@@ -36,8 +35,22 @@ typedef struct {
     int running;
 } JacMaster;
 
+/*
+ * 日志输出
+ */
+void jac_master_log(JacMaster * master, JLogLevel level,
+                    const char *fmt, ...);
+#define jac_master_info(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_INFO,fmt,##__VA_ARGS__)
+#define jac_master_debug(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
+#define jac_master_warning(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_WARNING,fmt,##__VA_ARGS__)
+#define jac_master_error(master,fmt,...) \
+            jac_master_log(master,J_LOG_LEVEL_ERROR,fmt,##__VA_ARGS__)
 
-JacMaster *jac_master_start(JConfParser * cfg);
+
+JacMaster *jac_master_start();
 
 
 void jac_master_wait(JacMaster * master);

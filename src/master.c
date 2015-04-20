@@ -35,20 +35,6 @@
 static JacMaster *running_master = NULL;
 
 
-/*
- * 日志输出
- */
-static inline void jac_master_log(JacMaster * master, JLogLevel level,
-                                  const char *fmt, ...);
-#define jac_master_info(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_INFO,fmt,##__VA_ARGS__)
-#define jac_master_debug(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_DEBUG,fmt,##__VA_ARGS__)
-#define jac_master_warning(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_WARNING,fmt,##__VA_ARGS__)
-#define jac_master_error(master,fmt,...) \
-            jac_master_log(master,J_LOG_LEVEL_ERROR,fmt,##__VA_ARGS__)
-
 static void jac_master_module_log(JLogLevel level, const char *fmt,
                                   va_list ap);
 
@@ -56,30 +42,22 @@ static inline void jac_master_fork_servers(JacMaster * master);
 static void signal_handler(int signum);
 
 
-JacMaster *jac_master_start(JConfParser * cfg)
+JacMaster *jac_master_start()
 {
-    JConfNode *root = j_conf_parser_get_root(cfg);
+    JConfRoot *root = jac_config_root();
 
-    const char *normal = jac_config_get_string(root,
-                                               JAC_LOG_DIRECTIVE,
-                                               LOG_FILEPATH);
-    if (normal == NULL) {
-        printf(_("invalid argument of %s\n"), JAC_LOG_DIRECTIVE);
-        return NULL;
-    }
-    const char *error =
-        jac_config_get_string(root, JAC_ERROR_LOG_DIRECTIVE,
-                              ERR_FILEPATH);
-    if (error == NULL) {
-        printf(_("invalid argument of %s\n"), JAC_ERROR_LOG_DIRECTIVE);
-        return NULL;
-    }
+    const char *logfile = j_conf_root_get_string(root,
+                                                 DIRECTIVE_LOGFILE,
+                                                 LOG_FILEPATH);
+    const char *errfile =
+        j_conf_root_get_string(root, DIRECTIVE_ERROR_LOGFILE,
+                               ERR_FILEPATH);
 
     /* daemonize */
     int pid = jac_daemonize();
 
-    JLogger *custom_logger = j_logger_open(normal, "%0 [%l]: %m");
-    JLogger *error_logger = j_logger_open(error, "%0 [%l]: %m");
+    JLogger *logger = j_logger_open(logfile, "%0 [%l]: %m");
+    JLogger *error_logger = j_logger_open(errfile, "%0 [%l]: %m");
 
     if (!pid) {
         j_logger_error(error_logger, _("fail to daemonize"));
@@ -88,14 +66,13 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     if (!jac_save_pid(pid)) {
         j_logger_error(error_logger,
-                       _("fail to start, is it already running?"));
+                       _("fail to start, is jacques already running?"));
         goto ERROR;
     }
 
     JacMaster *master = (JacMaster *) j_malloc(sizeof(JacMaster));
     master->pid = pid;
-    master->cfg = cfg;
-    master->custom_logger = custom_logger;
+    master->custom_logger = logger;
     master->error_logger = error_logger;
     master->servers = NULL;
     master->running = 1;
@@ -103,7 +80,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     /* 设置模块的输出函数，并载入模块 */
     j_mod_set_log_func(jac_master_module_log);
-    if (!jac_load_modules(cfg)) {
+    if (!jac_load_modules(root)) {
         jac_master_warning(master,
                            _("error occurs while loading modules"));
     }
@@ -116,7 +93,7 @@ JacMaster *jac_master_start(JConfParser * cfg)
 
     return master;
   ERROR:
-    j_logger_close(custom_logger);
+    j_logger_close(logger);
     j_logger_close(error_logger);
     return NULL;
 }
@@ -126,9 +103,9 @@ JacMaster *jac_master_start(JConfParser * cfg)
  */
 static inline void jac_master_fork_servers(JacMaster * master)
 {
-    JConfNode *root = j_conf_parser_get_root(master->cfg);
+    JConfRoot *root = jac_config_root();
     JList *virtualservers =
-        j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
+        j_conf_root_get_list(root, DIRECTIVE_VIRTUAL_SERVER);
     JList *ptr = virtualservers;
     while (ptr) {
         JConfNode *vs = (JConfNode *) j_list_data(ptr);
@@ -139,7 +116,7 @@ static inline void jac_master_fork_servers(JacMaster * master)
             jac_master_error(master,
                              _
                              ("unable to start SERVER %s. Check configuration!"),
-                             jac_server_get_conf_virtualserver_name(vs));
+                             jac_config_get_virtual_server_name(vs));
         }
         ptr = j_list_next(ptr);
     }
@@ -187,16 +164,16 @@ static void signal_handler(int signum)
 void jac_master_quit(JacMaster * master)
 {
     jac_master_info(master, _("quits"));
-    j_conf_parser_free(master->cfg);
     j_logger_close(master->custom_logger);
     j_logger_close(master->error_logger);
     j_list_free_full(master->servers, (JListDestroy) jac_server_free);
     j_free(master);
+    jac_config_free();
     exit(0);
 }
 
-static inline void jac_master_log(JacMaster * master, JLogLevel level,
-                                  const char *fmt, ...)
+void jac_master_log(JacMaster * master, JLogLevel level,
+                    const char *fmt, ...)
 {
     JLogger *normal = master->custom_logger;
     JLogger *error = master->error_logger;

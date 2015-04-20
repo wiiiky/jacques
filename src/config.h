@@ -22,11 +22,6 @@
 
 #include <jconf/jconf.h>
 
-/*
- * Gets the static JConfParser
- */
-JConfParser *jac_config_parser(void);
-
 
 #define PROGRAME_NAME   "jacques"
 #define PROGRAME_VERSION    "0.01"
@@ -85,21 +80,29 @@ JConfParser *jac_config_parser(void);
 
 
 /******************* Directives ****************************/
-#define JAC_LOG_DIRECTIVE   "CustomLog"
-#define JAC_ERROR_LOG_DIRECTIVE "ErrorLog"
+#define DIRECTIVE_LOGFILE   "CustomLog"
+#define DIRECTIVE_ERROR_LOGFILE "ErrorLog"
 
-#define LOAD_MODULE_DIRECTIVE   "LoadModule"
+#define DIRECTIVE_LOAD_MODULE   "LoadModule"
 
 /************************************************************/
 
 
-/* functions */
 
-int jac_config_check(JConfParser * cfg);
+/*
+ * Gets the static JConfRoot
+ */
+JConfRoot *jac_config_root(void);
+void jac_config_free(void);
 
-const char *jac_config_get_string(JConfNode * root,
+JConfNode *jac_config_get_last(JConfRoot * root, JConfNode * node,
+                               const char *name);
+int64_t jac_config_get_int(JConfRoot * root, JConfNode * node,
+                           const char *name, int64_t def);
+const char *jac_config_get_string(JConfRoot * root, JConfNode * node,
                                   const char *name, const char *def);
-int jac_config_get_integer(JConfNode * node, const char *name, int def);
 
+
+const char *jac_config_get_virtual_server_name(JConfNode * node);
 
 #endif

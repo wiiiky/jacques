@@ -22,6 +22,7 @@
  */
 
 #include "config.h"
+#include "master.h"
 #include <jlib/jlib.h>
 
 
@@ -39,7 +40,7 @@ int jac_load_module(const char *path);
 /*
  * Loads modules from config
  */
-int jac_load_modules(JConfParser * parser);
-int jac_load_modules_from_scope(JConfNode * node);
+int jac_load_modules(JConfRoot * root);
+int jac_load_modules_from_node(JConfNode * node);
 
 #endif

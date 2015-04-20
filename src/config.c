@@ -22,94 +22,61 @@
 #include <stdlib.h>
 
 
-static JConfParser *gConfigParser = NULL;
-
-
-/*
- * Checks to see if the JConfNode root has and only has a string arugment
- */
-static inline int jac_config_check_directive_string(JConfNode * root,
-                                                    const char *name)
+static JConfRoot *root_config = NULL;
+JConfRoot *jac_config_root(void)
 {
-    const char *str = jac_config_get_string(root, name,
-                                            (const char *) 1);
-    if (str == NULL) {
-        printf(_("\033[31minvalid argument of %s\033[0m\n"), name);
-        return 0;
+    if (root_config == NULL) {
+        root_config = j_conf_root_new(CONFIG_FILEPATH);
+        j_conf_root_add_vars(root_config, "LogLocation", LOG_LOCATION,
+                             "RunLocation", RUNTIME_LOCATION, NULL);
     }
-    return 1;
+    return root_config;
 }
 
-/*
- * Checks to see if the config is correct
- */
-int jac_config_check(JConfParser * cfg)
+void jac_config_free(void)
 {
-    int ret = 1;
-    JConfNode *root = j_conf_parser_get_root(cfg);
-    JList *vs = j_conf_node_get_scope(root, JAC_VIRTUAL_SERVER_SCOPE);
-    if (vs == NULL) {
-        printf(_("\033[31mno <%s> found\033[0m\n"),
-               JAC_VIRTUAL_SERVER_SCOPE);
-    } else {
-        JList *ptr = vs;
-        while (ptr) {
-            JConfNode *node = (JConfNode *) j_list_data(ptr);
-            if (!jac_server_check_conf_virtualserver(node)) {
-                ret = 0;
-            }
-            ptr = j_list_next(ptr);
-        }
-        j_list_free(vs);
+    if (root_config != NULL) {
+        j_conf_root_free(root_config);
+        root_config = NULL;
     }
+}
 
-    ret =
-        ret & jac_config_check_directive_string(root,
-                                                JAC_LOG_DIRECTIVE) &
-        jac_config_check_directive_string(root, JAC_ERROR_LOG_DIRECTIVE);
-
-
+JConfNode *jac_config_get_last(JConfRoot * root, JConfNode * node,
+                               const char *name)
+{
+    JConfNode *ret = NULL;
+    if (node != NULL) {
+        ret = j_conf_object_get(node, name);
+    }
+    if (ret == NULL && root != NULL) {
+        ret = j_conf_root_get(root, name);
+    }
     return ret;
 }
 
-JConfParser *jac_config_parser(void)
+int64_t jac_config_get_int(JConfRoot * root, JConfNode * node,
+                           const char *name, int64_t def)
 {
-    if (gConfigParser == NULL) {
-        gConfigParser = j_conf_parser_new();
-        j_conf_parser_add_env(gConfigParser, CONFIG_LOCATION);
-        j_conf_parser_add_env(gConfigParser, ".");
-        j_conf_parser_add_variable(gConfigParser,
-                                   "LogLocation=" LOG_LOCATION);
-        j_conf_parser_add_variable(gConfigParser,
-                                   "RunLocation=" RUNTIME_LOCATION);
+    JConfNode *n = jac_config_get_last(root, node, name);
+    if (n == NULL || !j_conf_node_is_int(n)) {
+        return def;
     }
-    return gConfigParser;
+    return j_conf_int_get(n);
 }
 
-const char *jac_config_get_string(JConfNode * root,
+const char *jac_config_get_string(JConfRoot * root, JConfNode * node,
                                   const char *name, const char *def)
 {
-    JConfNode *node = j_conf_node_get_directive_last(root, name);
-    if (node) {
-        if (j_conf_node_get_arguments_count(node) != 1) {
-            return NULL;
-        }
-        JConfData *data = j_conf_node_get_argument_first(node);
-        return j_conf_data_get_raw(data);
+    JConfNode *n = jac_config_get_last(root, node, name);
+    if (n == NULL || !j_conf_node_is_string(n)) {
+        return def;
     }
-    return def;
+    return j_conf_string_get(n);
 }
 
-int jac_config_get_integer(JConfNode * node, const char *name, int def)
+
+const char *jac_config_get_virtual_server_name(JConfNode * node)
 {
-    JConfNode *d = j_conf_node_get_directive_last(node, name);
-    if (d) {
-        JConfData *data = j_conf_node_get_argument_first(d);
-        if (j_conf_node_get_arguments_count(d) != 1 ||
-            !j_conf_data_is_int(data)) {
-            return -1;
-        }
-        return j_conf_data_get_int(data);
-    }
-    return def;
+    return jac_config_get_string(NULL, node, DIRECTIVE_SERVER_NAME,
+                                 _("unname"));
 }
