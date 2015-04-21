@@ -66,5 +66,7 @@ void on_send_package_error(JSocket * sock, const char *data,
                            unsigned int len, void *user_data);
 void on_accept_connection(JSocket * listen, JSocket * conn, void *data);
 
+void on_keep_socket(JSocket * conn, void *user_data);
+
 
 #endif

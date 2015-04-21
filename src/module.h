@@ -35,12 +35,12 @@ JList *jac_all_modules(void);
 /*
  * Loads a module from path
  */
-int jac_load_module(const char *path);
+int jac_load_module(JConfRoot * root, JConfNode * node, const char *path);
 
 /*
  * Loads modules from config
  */
 int jac_load_modules(JConfRoot * root);
-int jac_load_modules_from_node(JConfNode * node);
+int jac_load_modules_from_node(JConfRoot * root, JConfNode * node);
 
 #endif

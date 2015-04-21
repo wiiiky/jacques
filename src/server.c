@@ -137,6 +137,11 @@ void on_send_package_error(JSocket * sock, const char *data,
     jac_send_error_hooks(sock, data, count, len);
 }
 
+void on_keep_socket(JSocket * conn, void *user_data)
+{
+    j_socket_close(conn);
+}
+
 /*
  * The main loop of server
  * Server listens on the specified port and handle connections from client
@@ -285,5 +290,5 @@ static inline void jac_server_load_modules(JacServer * server,
                                            JConfNode * vs)
 {
     j_mod_set_log_func(jac_server_module_log);
-    jac_load_modules_from_node(vs);
+    jac_load_modules_from_node(root, vs);
 }
