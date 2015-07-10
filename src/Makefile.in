@@ -293,7 +293,7 @@ AM_CFLAGS = \
 	 -g
 
 jacques_SOURCES = \
-	main.c 
+	main.c
 
 jacques_LDFLAGS = 
 jacques_LDADD = $(JACQUES_LIBS)
@@ -607,7 +607,7 @@ uninstall-am: uninstall-binPROGRAMS
 
 
 clean-local:
-	indent -kr -ts4 -nut *.c *.h
+	-indent -kr -ts4 -nut *.c *.h
 	rm *~
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

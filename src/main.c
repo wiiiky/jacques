@@ -17,12 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#include <stdio.h>
-#include <libintl.h>
-#include <locale.h>
-
-#define _(STRING) gettext(STRING)
-
+#include <jlib/jlib.h>
+#include <jlib/ji18n.h>
 
 int main(int argc, const char *argv[])
 {
