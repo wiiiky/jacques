@@ -8,12 +8,14 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS =\
 	 -Wall\
+	 -O0 \
 	 -g
 
 bin_PROGRAMS = jacques
 
 jacques_SOURCES = \
-	main.c
+	main.c \
+	socket.c
 
 jacques_LDFLAGS =
 
