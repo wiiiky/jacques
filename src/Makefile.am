@@ -23,5 +23,5 @@ jacques_LDADD = $(JACQUES_LIBS)
 
 
 clean-local:
-	-indent -kr -ts4 -nut *.c *.h
+	-astyle --style=google -n *.c *.h
 	-rm *~

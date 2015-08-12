@@ -1,12 +1,12 @@
 /*
- * Copyright (C) 2015 Wiky L <wiiiky@outlook.com>
+ * Copyright (C) 2015 Wiky L
  *
- * jacques is free software: you can redistribute it and/or modify it
+ * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * jacques is distributed in the hope that it will be useful, but
+ * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,8 +27,7 @@ static jboolean jac_receive_callback(JSocket * socket,
 static void jac_socket_send_callback(JSocket * socket, jint ret,
                                      jpointer user_data);
 
-int main(int argc, const char *argv[])
-{
+int main(int argc, const char *argv[]) {
     printf(_("hello world!\n"));
     JSocket *socket = jac_socket_listen("0.0.0.0", 23456);
     j_socket_accept_async(socket, jac_accept_callback, NULL);
@@ -39,12 +38,11 @@ int main(int argc, const char *argv[])
 static jint client_count = 0;
 
 static jboolean jac_accept_callback(JSocket * server, JSocket * client,
-                                    jpointer user_data)
-{
+                                    jpointer user_data) {
     if (client == NULL) {
         j_printf("accept connection error!\n");
         j_socket_unref(server);
-        j_quit();
+        j_main_quit();
         return FALSE;
     } else {
         client_count++;
@@ -60,8 +58,7 @@ static jboolean jac_accept_callback(JSocket * server, JSocket * client,
 
 static jboolean jac_receive_callback(JSocket * socket,
                                      const jchar * buffer, jint size,
-                                     jpointer user_data)
-{
+                                     jpointer user_data) {
     JSocketAddress raddr;
     j_socket_get_remote_address(socket, &raddr);
     jchar *remote = j_inet_socket_address_to_string(&raddr);
@@ -79,8 +76,7 @@ static jboolean jac_receive_callback(JSocket * socket,
 }
 
 static void jac_socket_send_callback(JSocket * socket, jint ret,
-                                     jpointer user_data)
-{
+                                     jpointer user_data) {
     if (ret <= 0) {
         j_printf("send error!\n");
     }

@@ -4,7 +4,7 @@ dnl Created by Anjuta application wizard.
 
 AC_INIT(jacques, 0.01)
 
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/config.h])
 
 AM_INIT_AUTOMAKE
 
@@ -27,6 +27,13 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [GETTEXT package name])
 
 PKG_CHECK_MODULES(JACQUES, [jlib-0.1 jio-0.1])
 
+
+INSTALL_ROOT='$(prefix)/$(PACKAGE)'
+INSTALL_SBIN='$(INSTALL_ROOT)/sbin'
+INSTALL_CONF='$(INSTALL_ROOT)/conf'
+AC_SUBST(INSTALL_ROOT)
+AC_SUBST(INSTALL_SBIN)
+AC_SUBST(INSTALL_CONF)
 
 AC_OUTPUT([
            Makefile

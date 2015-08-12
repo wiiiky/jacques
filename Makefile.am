@@ -25,6 +25,15 @@ DISTCLEANFILES = intltool-extract \
 	po/.intltool-merge-cache
 
 
-# Remove doc directory on uninstall
-uninstall-local:
-	-rm -r $(docdir)
+uninstall:
+	-rm -r $(INSTALL_ROOT)
+
+TARGET="$(INSTALL_SBIN)/$(PACKAGE)"
+install: all
+	mkdir -p $(INSTALL_SBIN)
+	mkdir -p $(INSTALL_CONF)
+	if [ -f $(TARGET) ] ; \
+	then \
+	    mv $(TARGET) $(TARGET).old; \
+	fi
+	mv src/$(PACKAGE) $(TARGET)
