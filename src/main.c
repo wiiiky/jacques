@@ -15,69 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
+#include <stdlib.h>
 #include <jlib/jlib.h>
-#include "socket.h"
 #include <jlib/ji18n.h>
+#include <getopt.h>
+#include "socket.h"
+#include "config.h"
 
-static jboolean jac_accept_callback(JSocket * server, JSocket * client,
-                                    jpointer user_data);
-static jboolean jac_receive_callback(JSocket * socket,
-                                     const jchar * buffer, jint size,
-                                     jpointer user_data);
-static void jac_socket_send_callback(JSocket * socket, jint ret,
-                                     jpointer user_data);
+static struct option long_options[] = {
+    {"help", no_argument, 0, 'h'},
+    {"verbose", no_argument, 0, 'v'},
+};
 
-int main(int argc, const char *argv[]) {
-    printf(_("hello world!\n"));
-    JSocket *socket = jac_socket_listen("0.0.0.0", 23456);
-    j_socket_accept_async(socket, jac_accept_callback, NULL);
-    j_main();
+
+static inline void show_help(jboolean show);
+
+int main(int argc, char *argv[]) {
+    jint opt, long_index;
+
+    jboolean help=FALSE;
+    while((opt=getopt_long(argc, argv, "h",
+                           long_options, &long_index))!=-1) {
+        switch(opt) {
+        case 'h':
+            help = TRUE;
+            break;
+        default:
+            break;
+        }
+    }
+
+    show_help(help);
     return 0;
 }
 
-static jint client_count = 0;
 
-static jboolean jac_accept_callback(JSocket * server, JSocket * client,
-                                    jpointer user_data) {
-    if (client == NULL) {
-        j_printf("accept connection error!\n");
-        j_socket_unref(server);
-        j_main_quit();
-        return FALSE;
-    } else {
-        client_count++;
-        JSocketAddress raddr;
-        j_socket_get_remote_address(client, &raddr);
-        jchar *remote = j_inet_socket_address_to_string(&raddr);
-        j_printf("%s connected!\n", remote);
-        j_socket_receive_async(client, jac_receive_callback, NULL);
-        j_free(remote);
+/*
+ * 显示帮助信息
+ */
+static inline void show_help(jboolean show) {
+    if(!show) {
+        return;
     }
-    return TRUE;
-}
-
-static jboolean jac_receive_callback(JSocket * socket,
-                                     const jchar * buffer, jint size,
-                                     jpointer user_data) {
-    JSocketAddress raddr;
-    j_socket_get_remote_address(socket, &raddr);
-    jchar *remote = j_inet_socket_address_to_string(&raddr);
-    if (size <= 0) {
-        j_socket_unref(socket);
-        j_printf("%s closed!\n", remote);
-        j_free(remote);
-        return FALSE;
-    }
-    j_printf("%s => %.*s\n", remote, size, buffer);
-    j_free(remote);
-    j_socket_send_async(socket, buffer, size, jac_socket_send_callback,
-                        NULL);
-    return TRUE;
-}
-
-static void jac_socket_send_callback(JSocket * socket, jint ret,
-                                     jpointer user_data) {
-    if (ret <= 0) {
-        j_printf("send error!\n");
-    }
+    j_printf("%s %s\n", PACKAGE, VERSION);
+    j_printf(_("\t--help\t-h\tShow this Help\n"));
+    j_printf("\n");
+    exit(0);
 }

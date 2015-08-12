@@ -4,6 +4,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
+	-DCONFIG_DIR=\""$(INSTALL_CONF)"\" \
 	$(JACQUES_CFLAGS)
 
 AM_CFLAGS =\
@@ -15,7 +16,8 @@ bin_PROGRAMS = jacques
 
 jacques_SOURCES = \
 	main.c \
-	socket.c
+	socket.c \
+	config.c
 
 jacques_LDFLAGS =
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-10 18:11+0800\n"
+"POT-Creation-Date: 2015-08-12 18:31+0800\n"
 "PO-Revision-Date: 2015-07-10 13:16+0800\n"
 "Last-Translator: Wiky <wiiiky@outlook.com>\n"
 "Language-Team: Jacques Translation TeamLanguage: \n"
@@ -15,7 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/main.c:29
-#, c-format
-msgid "hello world!\n"
-msgstr "你好世界!\n"
+#: ../src/main.c:52
+msgid "\t--help\t-h\tShow this Help\n"
+msgstr "\t--help\t-h\t显示此帮助\n"
