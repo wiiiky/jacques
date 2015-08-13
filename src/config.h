@@ -24,9 +24,12 @@
 #define LISTEN_PORT 1601
 #endif
 
+#define CONFIG_FILENAME CONFIG_DIR "/jacques.conf"
 
+/* 获取配置文件的错误信息 */
+jchar* config_message(void);
 /* 读取配置文件，出错返回NULL */
-JConfRoot *j_conf_read(void);
+JConfRoot *config_load(const jchar *path);
 
 
 #endif

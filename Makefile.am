@@ -22,4 +22,5 @@ install: all
 	then \
 	    mv $(TARGET) $(TARGET).old; \
 	fi
-	mv src/$(PACKAGE) $(TARGET)
+	cp src/$(PACKAGE) $(TARGET)
+	cp conf/$(PACKAGE).conf $(INSTALL_CONF)

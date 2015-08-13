@@ -24,32 +24,37 @@
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"verbose", no_argument, 0, 'v'},
+    {"test", no_argument, 0, 't'},
 };
 
+static jboolean OPT_HELP=FALSE;
 static jboolean OPT_VERBOSE=FALSE;
-
+static jboolean OPT_TEST=FALSE;
 
 static inline void show_help(jboolean show);
+static inline void test_config(jboolean test);
 
 int main(int argc, char *argv[]) {
     jint opt, long_index;
 
-    jboolean help=FALSE;
-    while((opt=getopt_long(argc, argv, "hv",
+    while((opt=getopt_long(argc, argv, "hvt",
                            long_options, &long_index))!=-1) {
         switch(opt) {
         case 'h':
-            help = TRUE;
+            OPT_HELP = TRUE;
             break;
         case 'v':
             OPT_VERBOSE=TRUE;
+            break;
+        case 't':
+            OPT_TEST=TRUE;
             break;
         default:
             break;
         }
     }
-
-    show_help(help);
+    show_help(OPT_HELP);
+    test_config(OPT_TEST);
     return 0;
 }
 
@@ -64,5 +69,23 @@ static inline void show_help(jboolean show) {
     j_printf("%s %s\n", PACKAGE, VERSION);
     j_printf("\t--help\t-h\tShow this Help\n");
     j_printf("\n");
+    exit(0);
+}
+
+static inline void test_config(jboolean test) {
+    if(!test) {
+        return;
+    }
+    JConfRoot *root=config_load(NULL);
+    if(root==NULL) {
+        jchar *msg=config_message();
+        j_printf("%s\n", msg);
+        j_free(msg);
+        exit(-1);
+    }
+    jchar *data=j_conf_node_dump((JConfNode*)root);
+    j_printf("%s\n",data);
+    j_free(data);
+    j_conf_node_unref((JConfNode*)root);
     exit(0);
 }

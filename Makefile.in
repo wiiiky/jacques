@@ -816,7 +816,8 @@ install: all
 	then \
 	    mv $(TARGET) $(TARGET).old; \
 	fi
-	mv src/$(PACKAGE) $(TARGET)
+	cp src/$(PACKAGE) $(TARGET)
+	cp conf/$(PACKAGE).conf $(INSTALL_CONF)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
