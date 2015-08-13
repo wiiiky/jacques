@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## Created by Anjuta
 
-SUBDIRS = src po tests
+SUBDIRS = src tests
 
 dist_doc_DATA = \
 	README \
@@ -10,20 +10,6 @@ dist_doc_DATA = \
 	ChangeLog \
 	INSTALL \
 	NEWS
-
-
-INTLTOOL_FILES = intltool-extract.in \
-	intltool-merge.in \
-	intltool-update.in
-
-EXTRA_DIST = \
-	$(INTLTOOL_FILES)
-
-DISTCLEANFILES = intltool-extract \
-	intltool-merge \
-	intltool-update \
-	po/.intltool-merge-cache
-
 
 uninstall:
 	-rm -r $(INSTALL_ROOT)

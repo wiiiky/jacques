@@ -17,7 +17,6 @@
 
 #include <stdlib.h>
 #include <jlib/jlib.h>
-#include <jlib/ji18n.h>
 #include <getopt.h>
 #include "socket.h"
 #include "config.h"
@@ -27,6 +26,8 @@ static struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
 };
 
+static jboolean OPT_VERBOSE=FALSE;
+
 
 static inline void show_help(jboolean show);
 
@@ -34,11 +35,14 @@ int main(int argc, char *argv[]) {
     jint opt, long_index;
 
     jboolean help=FALSE;
-    while((opt=getopt_long(argc, argv, "h",
+    while((opt=getopt_long(argc, argv, "hv",
                            long_options, &long_index))!=-1) {
         switch(opt) {
         case 'h':
             help = TRUE;
+            break;
+        case 'v':
+            OPT_VERBOSE=TRUE;
             break;
         default:
             break;
@@ -58,7 +62,7 @@ static inline void show_help(jboolean show) {
         return;
     }
     j_printf("%s %s\n", PACKAGE, VERSION);
-    j_printf(_("\t--help\t-h\tShow this Help\n"));
+    j_printf("\t--help\t-h\tShow this Help\n");
     j_printf("\n");
     exit(0);
 }
