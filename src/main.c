@@ -19,42 +19,54 @@
 #include <jlib/jlib.h>
 #include <getopt.h>
 #include "socket.h"
-#include "config.h"
+#include "server.h"
 
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"verbose", no_argument, 0, 'v'},
     {"test", no_argument, 0, 't'},
+    {"configuration", required_argument, 0, 'c'}
 };
 
-static jboolean OPT_HELP=FALSE;
-static jboolean OPT_VERBOSE=FALSE;
-static jboolean OPT_TEST=FALSE;
-
-static inline void show_help(jboolean show);
-static inline void test_config(jboolean test);
+static inline void show_help(CLOption *option);
+static inline void test_config(CLOption *option);
 
 int main(int argc, char *argv[]) {
     jint opt, long_index;
 
-    while((opt=getopt_long(argc, argv, "hvt",
+    CLOption OPTIONS = {
+        FALSE,
+        FALSE,
+        FALSE,
+        NULL
+    };
+
+    while((opt=getopt_long(argc, argv, "hvtc:",
                            long_options, &long_index))!=-1) {
         switch(opt) {
         case 'h':
-            OPT_HELP = TRUE;
+            OPTIONS.help = TRUE;
             break;
         case 'v':
-            OPT_VERBOSE=TRUE;
+            OPTIONS.verbose=TRUE;
+            break;
+        case 'c':
+            OPTIONS.config=j_strdup(optarg);
             break;
         case 't':
-            OPT_TEST=TRUE;
+            OPTIONS.test=TRUE;
             break;
         default:
             break;
         }
     }
-    show_help(OPT_HELP);
-    test_config(OPT_TEST);
+    /* 如果指定了--help，则显示帮助信息 */
+    show_help(&OPTIONS);
+    /* 如果指定了--test，则执行配置文件的测试 */
+    test_config(&OPTIONS);
+
+    /* 启动服务器 */
+    start_all(&OPTIONS);
     return 0;
 }
 
@@ -62,25 +74,29 @@ int main(int argc, char *argv[]) {
 /*
  * 显示帮助信息
  */
-static inline void show_help(jboolean show) {
-    if(!show) {
+static inline void show_help(CLOption *option) {
+    if(!option->help) {
         return;
     }
     j_printf("%s %s\n", PACKAGE, VERSION);
-    j_printf("\t--help\t-h\tShow this Help\n");
+    j_printf("Built on %s\n", __DATE__);
+    j_printf("\n");
+    j_printf("  --test\t-t\tTest configuration\n");
+    j_printf("  --verbose\t-v\tverbose log\n");
+    j_printf("  --config\t-c filename\n\t\t\tset configuration file (default: conf/%s.conf)", PACKAGE);
+    j_printf("\n");
+    j_printf("  --help\t-h\tShow this Help\n");
     j_printf("\n");
     exit(0);
 }
 
-static inline void test_config(jboolean test) {
-    if(!test) {
+static inline void test_config(CLOption *option) {
+    if(!option->test) {
         return;
     }
-    JConfRoot *root=config_load(NULL);
+    JConfRoot *root=config_load(option->config);
     if(root==NULL) {
-        jchar *msg=config_message();
-        j_printf("%s\n", msg);
-        j_free(msg);
+        j_printf("%s\n", config_message());
         exit(-1);
     }
     jchar *data=j_conf_node_dump((JConfNode*)root);
@@ -89,3 +105,4 @@ static inline void test_config(jboolean test) {
     j_conf_node_unref((JConfNode*)root);
     exit(0);
 }
+

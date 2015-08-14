@@ -17,7 +17,8 @@ bin_PROGRAMS = jacques
 jacques_SOURCES = \
 	main.c \
 	socket.c \
-	config.c
+	config.c \
+	server.c
 
 jacques_LDFLAGS =
 

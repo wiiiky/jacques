@@ -14,32 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_CONFIG_H__
-#define __JAC_CONFIG_H__
+#ifndef __JAC_SERVER_H__
+#define __JAC_SERVER_H__
 
-#include <jconf/jconf.h>
+#include "config.h"
 
-
-#ifndef LISTEN_PORT
-#define LISTEN_PORT 1601
-#endif
-
-#define CONFIG_FILENAME CONFIG_DIR "/" PACKAGE ".conf"
-
-/* 获取配置文件的错误信息 */
-jchar* config_message(void);
-/* 读取配置文件，出错返回NULL */
-JConfRoot *config_load(const jchar *path);
+/*
+ * 读取配置文件、启动服务器
+ */
+void start_all(CLOption *option);
 
 
-/* 命令行参数 */
-typedef struct {
-    jboolean help;      /* --help */
-    jboolean test;      /* --test */
-    jboolean verbose;   /* --verbose */
-    jchar *config;      /* --config filename*/
-} CLOption;
-
+/* 关闭所有服务进程 */
+void stop_all(void);
 
 
 #endif

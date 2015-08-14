@@ -18,12 +18,14 @@
 #include <stdlib.h>
 
 static JConfLoader *config_loader=NULL;
+static jchar *config_error=NULL;
 
 static void free_loader(void) {
     if(config_loader==NULL) {
         return;
     }
     j_conf_loader_unref(config_loader);
+    j_free(config_error);
 }
 
 
@@ -39,7 +41,9 @@ static inline JConfLoader *get_config_loader(void) {
 
 jchar* config_message(void) {
     JConfLoader *loader=get_config_loader();
-    return j_conf_loader_build_error_message(loader);
+    j_free(config_error);
+    config_error= j_conf_loader_build_error_message(loader);
+    return config_error;
 }
 
 /* 读取配置文件，出错返回NULL */
