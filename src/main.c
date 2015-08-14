@@ -67,6 +67,9 @@ int main(int argc, char *argv[]) {
 
     /* 启动服务器 */
     start_all(&OPTIONS);
+
+    /* 等待服务进程结束 */
+    wait_all();
     return 0;
 }
 

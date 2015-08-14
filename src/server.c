@@ -59,6 +59,7 @@ void start_all(CLOption *option) {
     atexit(stop_all);
 }
 
+/* 读取配置，创建一个服务进程 */
 static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption *option) {
     jint64 port = j_conf_object_get_integer(obj, "port", 0);
     if(port<=0||port>65536) {
@@ -73,6 +74,7 @@ static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption
     return server;
 }
 
+/* 关闭一个服务进程 */
 static void stop_server(Server *server) {
     j_free(server->name);
     if(server->pid>0) {
@@ -88,4 +90,26 @@ void stop_all(void) {
         ptr=j_list_next(ptr);
     }
     j_list_free(servers);
+}
+
+void wait_all(void) {
+    jint status;
+    pid_t pid;
+    while((pid=j_wait(&status))>0) {
+        JList *ptr=servers;
+        Server *server=NULL;
+        while(ptr) {
+            Server *s=((Server*)j_list_data(ptr));
+            if(s->pid==pid) {
+                server=server;
+                break;
+            }
+            ptr=j_list_next(ptr);
+        }
+        if(J_UNLIKELY(server==NULL)) {
+            j_printf("unknown server %d exits with status code %d\n", pid, status);
+        } else {
+            j_printf("server %s exits with status code %d\n", server->name, status);
+        }
+    }
 }

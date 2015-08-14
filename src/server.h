@@ -29,4 +29,8 @@ void start_all(CLOption *option);
 void stop_all(void);
 
 
+/* 等待服务进程 */
+void wait_all(void);
+
+
 #endif
