@@ -24,6 +24,10 @@ typedef struct {
     JObject parent;
     jchar *name;
     jushort port;
+
+    jchar *log;         /* 日志文件路径 */
+    jchar *error_log;   /* 错误日志路径 */
+
     pid_t pid;
 } Server;
 
@@ -71,12 +75,16 @@ static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption
     server->name=j_strdup(name);
     server->port=port;
     server->pid=-1;
+    server->log=j_strdup(j_conf_object_get_string(obj, "log", LOG_DIR "/" PACKAGE ".log"));
+    server->error_log=j_strdup(j_conf_object_get_string(obj, "error_log", LOG_DIR "/" PACKAGE ".err"));
     return server;
 }
 
 /* 关闭一个服务进程 */
 static void stop_server(Server *server) {
     j_free(server->name);
+    j_free(server->log);
+    j_free(server->error_log);
     if(server->pid>0) {
         kill(server->pid, SIGINT);
     }
@@ -101,7 +109,7 @@ void wait_all(void) {
         while(ptr) {
             Server *s=((Server*)j_list_data(ptr));
             if(s->pid==pid) {
-                server=server;
+                server=s;
                 break;
             }
             ptr=j_list_next(ptr);

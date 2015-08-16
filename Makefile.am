@@ -14,13 +14,13 @@ dist_doc_DATA = \
 uninstall:
 	-rm -r $(INSTALL_ROOT)
 
-TARGET="$(INSTALL_SBIN)/$(PACKAGE)"
+TARGET="$(SBIN_DIR)/$(PACKAGE)"
 install: all
-	mkdir -p $(INSTALL_SBIN)
-	mkdir -p $(INSTALL_CONF)
+	mkdir -p $(SBIN_DIR)
+	mkdir -p $(CONF_DIR)
 	if [ -f $(TARGET) ] ; \
 	then \
 	    mv $(TARGET) $(TARGET).old; \
 	fi
 	cp src/$(PACKAGE) $(TARGET)
-	cp conf/$(PACKAGE).conf $(INSTALL_CONF)
+	cp conf/$(PACKAGE).conf $(CONF_DIR)

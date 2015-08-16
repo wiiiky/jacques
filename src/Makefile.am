@@ -4,7 +4,8 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
-	-DCONFIG_DIR=\""$(INSTALL_CONF)"\" \
+	-DCONFIG_DIR=\""$(CONF_DIR)"\" \
+	-DLOG_DIR=\""$(LOGS_DIR)"\" \
 	$(JACQUES_CFLAGS)
 
 AM_CFLAGS =\

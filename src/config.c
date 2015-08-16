@@ -32,8 +32,14 @@ static void free_loader(void) {
 static inline JConfLoader *get_config_loader(void) {
     if(J_UNLIKELY(config_loader==NULL)) {
         config_loader = j_conf_loader_new();
-        j_conf_loader_put_string(config_loader, "ProgramName", PACKAGE);
-        j_conf_loader_put_string(config_loader, "ProgramVersion", VERSION);
+        j_conf_loader_allow_unknown_variable(config_loader, FALSE);
+        j_conf_loader_put_string(config_loader, "PROGRAM", PACKAGE);
+        j_conf_loader_put_string(config_loader, "PROGRAM_VERSION", VERSION);
+        j_conf_loader_put_string(config_loader, "LOGS_LOCATION", LOG_DIR);
+        j_conf_loader_put_integer(config_loader, "DEBUG", 1);
+        j_conf_loader_put_integer(config_loader, "INFO",2);
+        j_conf_loader_put_integer(config_loader, "ERROR",3);
+        j_conf_loader_put_integer(config_loader, "VERBOSE",4);
         atexit(free_loader);
     }
     return config_loader;
