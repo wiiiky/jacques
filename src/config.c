@@ -36,10 +36,11 @@ static inline JConfLoader *get_config_loader(void) {
         j_conf_loader_put_string(config_loader, "PROGRAM", PACKAGE);
         j_conf_loader_put_string(config_loader, "PROGRAM_VERSION", VERSION);
         j_conf_loader_put_string(config_loader, "LOGS_LOCATION", LOG_DIR);
-        j_conf_loader_put_integer(config_loader, "DEBUG", 1);
-        j_conf_loader_put_integer(config_loader, "INFO",2);
-        j_conf_loader_put_integer(config_loader, "ERROR",3);
-        j_conf_loader_put_integer(config_loader, "VERBOSE",4);
+        j_conf_loader_put_integer(config_loader, "ERROR", J_LOG_LEVEL_ERROR);
+        j_conf_loader_put_integer(config_loader, "INFO",J_LOG_LEVEL_INFO);
+        j_conf_loader_put_integer(config_loader, "DEBUG",J_LOG_LEVEL_DEBUG);
+        j_conf_loader_put_integer(config_loader, "CRITICAL",J_LOG_LEVEL_CRITICAL);
+        j_conf_loader_put_integer(config_loader, "WARNING", J_LOG_LEVEL_MESSAGE);
         atexit(free_loader);
     }
     return config_loader;

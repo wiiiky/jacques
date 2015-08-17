@@ -28,4 +28,4 @@ jacques_LDADD = $(JACQUES_LIBS)
 
 clean-local:
 	-astyle --style=google -n *.c *.h
-	-rm *~
+	-rm -f *~

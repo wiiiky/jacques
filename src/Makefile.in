@@ -589,7 +589,7 @@ uninstall-am: uninstall-binPROGRAMS
 
 clean-local:
 	-astyle --style=google -n *.c *.h
-	-rm *~
+	-rm -f *~
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

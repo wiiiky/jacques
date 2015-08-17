@@ -27,12 +27,19 @@ typedef struct {
 
     jchar *log;         /* 日志文件路径 */
     jchar *error_log;   /* 错误日志路径 */
+    JLogLevelFlag log_level;    /* 日志等级 */
+    jint logfd;
+    jint error_logfd;
 
     pid_t pid;
 } Server;
 
+#define DEFAULT_LOG_LEVEL (J_LOG_LEVEL_ERROR|J_LOG_LEVEL_INFO|J_LOG_LEVEL_WARNING)
+
 /* 创建服务器，失败返回NULL */
-static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption *option);
+static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, CLOption *option);
+/* 启动服务器 */
+static inline jboolean start_server(Server *server);
 /* 关闭服务器 */
 static void stop_server(Server *server);
 
@@ -52,7 +59,7 @@ void start_all(CLOption *option) {
     JList *ptr=keys;
     while(ptr) {
         const jchar *key=(const jchar*)j_list_data(ptr);
-        Server *server=start_server(key+7, j_conf_object_get(root, key), option);
+        Server *server=create_server(key+7,root, j_conf_object_get(root, key), option);
         if(server) {
             servers=j_list_append(servers, server);
         }
@@ -61,10 +68,17 @@ void start_all(CLOption *option) {
     j_list_free(keys);
 
     atexit(stop_all);
+
+    ptr=servers;
+    while(ptr) {
+        Server *server=(Server*)j_list_data(ptr);
+        start_server(server);
+        ptr=j_list_next(ptr);
+    }
 }
 
 /* 读取配置，创建一个服务进程 */
-static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption *option) {
+static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, CLOption *option) {
     jint64 port = j_conf_object_get_integer(obj, "port", 0);
     if(port<=0||port>65536) {
         j_fprintf(stderr, "invalid port in server %s\n", name);
@@ -75,9 +89,23 @@ static inline Server *start_server(const jchar *name, JConfObject *obj, CLOption
     server->name=j_strdup(name);
     server->port=port;
     server->pid=-1;
-    server->log=j_strdup(j_conf_object_get_string(obj, "log", LOG_DIR "/" PACKAGE ".log"));
-    server->error_log=j_strdup(j_conf_object_get_string(obj, "error_log", LOG_DIR "/" PACKAGE ".err"));
+    server->log=j_strdup(j_conf_object_get_string_priority(root, obj, "log", LOG_DIR "/" PACKAGE ".log"));
+    server->error_log=j_strdup(j_conf_object_get_string_priority(root, obj, "error_log", LOG_DIR "/" PACKAGE ".err"));
+    server->log_level=j_conf_object_get_integer_priority(root, obj, "log_level", DEFAULT_LOG_LEVEL);
+
     return server;
+}
+
+static inline jboolean start_server(Server *server) {
+    server->pid=fork();
+    if(server->pid<0) {
+        return FALSE;
+    } else if(server->pid>0) {
+        /* 主进程 */
+        return TRUE;
+    }
+    j_usleep(10000000);
+    exit(0);
 }
 
 /* 关闭一个服务进程 */
