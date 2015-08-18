@@ -15,12 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "server.h"
+#include "utils.h"
+#include "socket.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include "utils.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
+
 
 /* 一个服务相关的信息 */
 struct _Server {
@@ -34,17 +37,29 @@ struct _Server {
     jint logfd;
     jint error_logfd;
 
+    JSocket *socket;
+
     pid_t pid;
 };
 
 #define DEFAULT_LOG_LEVEL (J_LOG_LEVEL_ERROR|J_LOG_LEVEL_INFO|J_LOG_LEVEL_WARNING)
 
-/* 创建服务器，失败返回NULL */
+/* 创建服务，失败返回NULL */
 static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, CLOption *option);
-/* 启动服务器 */
+/* 启动服务 */
 static inline jboolean start_server(Server *server);
-/* 关闭服务器 */
+/* 关闭服务 */
 static void stop_server(Server *server);
+/* 服务的执行函数 */
+static inline void run_server(Server *server);
+
+/* 日志记录函数 */
+static void server_log_handler(const jchar *domain, JLogLevelFlag level,
+                               const jchar *message, jpointer user_data);
+#define server_debug(server, ...) j_log(server->name, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define server_info(server, ...) j_log(server->name, J_LOG_LEVEL_INFO, __VA_ARGS__)
+#define server_warning(server, ...) j_log(server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define server_error(server, ...) j_log(server->name, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 static JList *all_servers=NULL;
 static void stop_all(void);
@@ -85,6 +100,7 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
     server->log_level=j_conf_object_get_integer_priority(root, obj, "log_level", DEFAULT_LOG_LEVEL);
     server->logfd=logfd;
     server->error_logfd=error_logfd;
+    server->socket=NULL;
 
     return server;
 }
@@ -117,7 +133,8 @@ static inline jboolean start_server(Server *server) {
         /* 主进程 */
         return TRUE;
     }
-    j_usleep(5000000);
+    /* 执行服务 */
+    run_server(server);
     exit(0);
 }
 
@@ -130,6 +147,9 @@ static void stop_server(Server *server) {
     close(server->error_logfd);
     if(server->pid>0) {
         kill(server->pid, SIGINT);
+    }
+    if(server->socket) {
+        j_socket_unref(server->socket);
     }
 }
 
@@ -185,4 +205,51 @@ void dump_server(Server *server) {
         j_printf("WARNING");
     }
     j_printf("\n");
+}
+
+static void server_log_handler(const jchar *domain, JLogLevelFlag level, const jchar *message, jpointer user_data) {
+    jchar buf[4096];
+    time_t t=time(NULL);
+    ctime_r(&t, buf);
+    jint len=strlen(buf)-1;
+    Server *server=(Server*)user_data;
+    if(level&J_LOG_LEVEL_ERROR) {
+        if(server->error_logfd<0) {
+            return;
+        }
+        j_snprintf(buf+len, sizeof(buf)-len, " [%s]: %s", server->name, message);
+        j_write(server->error_logfd, buf, strlen(buf));
+        return;
+    } else if(server->logfd<0) {
+        return;
+    }
+
+    const jchar *flag="";
+    if(level & J_LOG_LEVEL_DEBUG) {
+        flag="DEBUG";
+    } else if(level & J_LOG_LEVEL_INFO) {
+        flag="INFO";
+    } else if(level & J_LOG_LEVEL_WARNING) {
+        flag="WARNING";
+    }
+    j_snprintf(buf+len, sizeof(buf)-len, " [%s] [%s]: %s", server->name,flag, message);
+    j_write(server->logfd, buf, strlen(buf));
+}
+
+static jboolean time_out(jpointer data) {
+    j_main_quit();
+    return FALSE;
+}
+
+static inline void run_server(Server *server) {
+    j_log_set_handler(server->name, server->log_level, server_log_handler, server);
+    server->socket=socket_listen("127.0.0.1", server->port);
+    if(server->socket==NULL) {
+        server_error(server, "unable to listen on port %d\n", server->port);
+        exit(1);
+    }
+    server_info(server, "listen on port %d\n", server->port);
+    j_timeout_add(5000, time_out, server);
+    j_main();
+    server_info(server, "exit");
 }
