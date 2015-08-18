@@ -14,24 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_SERVER_H__
-#define __JAC_SERVER_H__
+#include "utils.h"
+#include <jlib/jlib.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-#include "config.h"
 
-typedef struct _Server Server;
+jboolean make_dir(const jchar *path) {
+    jchar *dir=j_path_dirname(path);
+    jint ret=j_mkdir_with_parents(dir, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+    j_free(dir);
+    return ret==0;
+}
 
-/* 根据配置文件以及命令行选项载入服务设置 */
-JList *load_servers(JConfRoot *root, CLOption *option);
-/*
- * 读取配置文件、启动服务器
- */
-void start_all(JList *servers);
 
-/* 等待服务进程 */
-void wait_all(JList *servers);
-
-/* 输出服务设置 */
-void dump_server(Server *server);
-
-#endif
+jint append_file(const jchar *path) {
+    jint fd=open(path, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP);
+    return fd;
+}

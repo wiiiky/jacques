@@ -19,7 +19,8 @@ jacques_SOURCES = \
 	main.c \
 	socket.c \
 	config.c \
-	server.c
+	server.c \
+	utils.c
 
 jacques_LDFLAGS =
 

@@ -29,7 +29,7 @@ static struct option long_options[] = {
 };
 
 static inline void show_help(CLOption *option);
-static inline void test_config(CLOption *option);
+static inline void test_config(JConfRoot *root, JList *servers, CLOption *option);
 
 int main(int argc, char *argv[]) {
     jint opt, long_index;
@@ -62,14 +62,18 @@ int main(int argc, char *argv[]) {
     }
     /* 如果指定了--help，则显示帮助信息 */
     show_help(&OPTIONS);
+
+    JConfRoot *root=config_load(OPTIONS.config);
+    JList *servers=load_servers(root, &OPTIONS);
+
     /* 如果指定了--test，则执行配置文件的测试 */
-    test_config(&OPTIONS);
+    test_config(root, servers, &OPTIONS);
 
     /* 启动服务器 */
-    start_all(&OPTIONS);
+    start_all(servers);
 
     /* 等待服务进程结束 */
-    wait_all();
+    wait_all(servers);
     return 0;
 }
 
@@ -93,11 +97,10 @@ static inline void show_help(CLOption *option) {
     exit(0);
 }
 
-static inline void test_config(CLOption *option) {
+static inline void test_config(JConfRoot *root, JList *servers, CLOption *option) {
     if(!option->test) {
         return;
     }
-    JConfRoot *root=config_load(option->config);
     if(root==NULL) {
         j_printf("%s\n", config_message());
         exit(-1);
@@ -105,7 +108,14 @@ static inline void test_config(CLOption *option) {
     jchar *data=j_conf_node_dump((JConfNode*)root);
     j_printf("%s\n",data);
     j_free(data);
-    j_conf_node_unref((JConfNode*)root);
+
+    j_printf("==========================SERVERS==========================\n");
+    JList *ptr=servers;
+    while(ptr) {
+        Server *server=(Server*)j_list_data(ptr);
+        dump_server(server);
+        ptr=j_list_next(ptr);
+        j_printf("\n");
+    }
     exit(0);
 }
-

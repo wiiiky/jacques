@@ -14,24 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_SERVER_H__
-#define __JAC_SERVER_H__
+#ifndef __JAC_UTILS_H__
+#define __JAC_UTILS_H__
 
-#include "config.h"
+#include <jlib/jtypes.h>
 
-typedef struct _Server Server;
 
-/* 根据配置文件以及命令行选项载入服务设置 */
-JList *load_servers(JConfRoot *root, CLOption *option);
 /*
- * 读取配置文件、启动服务器
+ * path是一个文件路径，该函数创建该文件所需要的目录
+ * 路径存在或者创建成功，返回TRUE，否则返回FALSE
  */
-void start_all(JList *servers);
+jboolean make_dir(const jchar *path);
 
-/* 等待服务进程 */
-void wait_all(JList *servers);
 
-/* 输出服务设置 */
-void dump_server(Server *server);
+/* 以O_APPPEND打开文件 */
+jint append_file(const jchar *path);
+
 
 #endif
