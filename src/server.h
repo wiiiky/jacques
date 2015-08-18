@@ -19,18 +19,30 @@
 
 #include "config.h"
 
+/* 一个服务相关的信息 */
+struct _Server {
+    JObject parent;
+    jchar *name;
+    jushort port;
+
+    jchar *log;         /* 日志文件路径 */
+    jchar *error_log;   /* 错误日志路径 */
+    JLogLevelFlag log_level;    /* 日志等级 */
+    jint logfd;
+    jint error_logfd;
+
+    JSocket *socket;
+
+    pid_t pid;
+};
+
 typedef struct _Server Server;
 
+
 /* 根据配置文件以及命令行选项载入服务设置 */
-JList *load_servers(JConfRoot *root, CLOption *option);
-/*
- * 读取配置文件、启动服务器
- */
-void start_all(JList *servers);
+JList *load_servers(JConfRoot *root, const CLOption *option);
 
-/* 等待服务进程 */
-void wait_all(JList *servers);
-
+jboolean start_server(Server *server);
 /* 输出服务设置 */
 void dump_server(Server *server);
 

@@ -14,29 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_CONFIG_H__
-#define __JAC_CONFIG_H__
+#ifndef __JAC_MASTER_H__
+#define __JAC_MASTER_H__
 
 #include <jconf/jconf.h>
+#include <jlib/jlib.h>
+#include "config.h"
 
+struct _Master {
+    JConfLoader *config_loader;
+    jchar *config_error;
 
-#ifndef LISTEN_PORT
-#define LISTEN_PORT 1601
-#endif
+    JList *servers;
+    const CLOption *option;
+};
 
-#define CONFIG_FILENAME CONFIG_DIR "/" PACKAGE ".conf"
+typedef struct _Master Master;
 
-JConfLoader *create_config_loader(void);
+/* 初始化主进程 */
+Master *create_master(const CLOption *option);
 
-
-/* 命令行参数 */
-typedef struct {
-    jboolean help;      /* --help */
-    jboolean test;      /* --test */
-    jboolean verbose;   /* --verbose */
-    jchar *config;      /* --config filename*/
-} CLOption;
-
-
+/* 开始执行主控进程 */
+void run_master(Master *master);
 
 #endif

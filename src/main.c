@@ -20,6 +20,7 @@
 #include <getopt.h>
 #include "socket.h"
 #include "server.h"
+#include "master.h"
 
 static struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
@@ -29,7 +30,7 @@ static struct option long_options[] = {
 };
 
 static inline void show_help(CLOption *option);
-static inline void test_config(JConfRoot *root, JList *servers, CLOption *option);
+static inline void test_config(Master *master);
 
 int main(int argc, char *argv[]) {
     jint opt, long_index;
@@ -63,17 +64,12 @@ int main(int argc, char *argv[]) {
     /* 如果指定了--help，则显示帮助信息 */
     show_help(&OPTIONS);
 
-    JConfRoot *root=config_load(OPTIONS.config);
-    JList *servers=load_servers(root, &OPTIONS);
+    Master *master=create_master(&OPTIONS);
 
     /* 如果指定了--test，则执行配置文件的测试 */
-    test_config(root, servers, &OPTIONS);
+    test_config(master);
 
-    /* 启动服务器 */
-    start_all(servers);
-
-    /* 等待服务进程结束 */
-    wait_all(servers);
+    run_master(master);
     return 0;
 }
 
@@ -97,20 +93,22 @@ static inline void show_help(CLOption *option) {
     exit(0);
 }
 
-static inline void test_config(JConfRoot *root, JList *servers, CLOption *option) {
-    if(!option->test) {
+static inline void test_config(Master *master) {
+    if(!master->option->test) {
         return;
     }
-    if(root==NULL) {
-        j_printf("%s\n", config_message());
+    if(master->config_error!=NULL) {
+        j_printf("%s\n", master->config_error);
         exit(-1);
     }
-    jchar *data=j_conf_node_dump((JConfNode*)root);
+
+
+    jchar *data=j_conf_node_dump((JConfNode*)j_conf_loader_get_root(master->config_loader));
     j_printf("%s\n",data);
     j_free(data);
 
-    j_printf("==========================SERVERS==========================\n");
-    JList *ptr=servers;
+    j_printf("\n==========================SERVERS==========================\n");
+    JList *ptr=master->servers;
     while(ptr) {
         Server *server=(Server*)j_list_data(ptr);
         dump_server(server);

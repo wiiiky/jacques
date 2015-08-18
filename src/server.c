@@ -24,32 +24,10 @@
 #include <fcntl.h>
 #include <time.h>
 
-
-/* 一个服务相关的信息 */
-struct _Server {
-    JObject parent;
-    jchar *name;
-    jushort port;
-
-    jchar *log;         /* 日志文件路径 */
-    jchar *error_log;   /* 错误日志路径 */
-    JLogLevelFlag log_level;    /* 日志等级 */
-    jint logfd;
-    jint error_logfd;
-
-    JSocket *socket;
-
-    pid_t pid;
-};
-
 #define DEFAULT_LOG_LEVEL (J_LOG_LEVEL_ERROR|J_LOG_LEVEL_INFO|J_LOG_LEVEL_WARNING)
 
 /* 创建服务，失败返回NULL */
-static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, CLOption *option);
-/* 启动服务 */
-static inline jboolean start_server(Server *server);
-/* 关闭服务 */
-static void stop_server(Server *server);
+static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, const CLOption *option);
 /* 服务的执行函数 */
 static inline void run_server(Server *server);
 
@@ -61,20 +39,10 @@ static void server_log_handler(const jchar *domain, JLogLevelFlag level,
 #define server_warning(server, ...) j_log(server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define server_error(server, ...) j_log(server->name, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
-static JList *all_servers=NULL;
-static void stop_all(void);
-
-void start_all(JList *servers) {
-    JList *ptr=servers;
-    while(ptr) {
-        Server *server=(Server*)j_list_data(ptr);
-        start_server(server);
-        ptr=j_list_next(ptr);
-    }
-}
+static void stop_server(Server *server);
 
 /* 读取配置，创建一个服务进程 */
-static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, CLOption *option) {
+static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, const CLOption *option) {
     jint64 port = j_conf_object_get_integer(obj, "port", 0);
     if(port<=0||port>65536) {
         j_fprintf(stderr, "invalid port in server %s\n", name);
@@ -105,27 +73,24 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
     return server;
 }
 
-JList *load_servers(JConfRoot *root, CLOption *option) {
-    if(J_UNLIKELY(all_servers!=NULL)) {
-        return all_servers;
-    }
+JList *load_servers(JConfRoot *root, const CLOption *option) {
+    JList *servers=NULL;
     JList *keys=j_conf_object_lookup((JConfObject*)root, "^server-[[:alpha:]][[:alnum:]]*", J_CONF_NODE_TYPE_OBJECT);
     JList *ptr=keys;
     while(ptr) {
         const jchar *key=(const jchar*)j_list_data(ptr);
         Server *server=create_server(key+7,(JConfObject*)root, j_conf_object_get((JConfObject*)root, key), option);
         if(server) {
-            all_servers=j_list_append(all_servers, server);
+            servers=j_list_append(servers, server);
         }
         ptr=j_list_next(ptr);
     }
     j_list_free(keys);
-    atexit(stop_all);
 
-    return all_servers;
+    return servers;
 }
 
-static inline jboolean start_server(Server *server) {
+jboolean start_server(Server *server) {
     server->pid=fork();
     if(server->pid<0) {
         return FALSE;
@@ -153,60 +118,28 @@ static void stop_server(Server *server) {
     }
 }
 
-static void stop_all(void) {
-    JList *ptr=all_servers;
-    while(ptr) {
-        Server *server=(Server*)j_list_data(ptr);
-        J_OBJECT_UNREF(server);
-        ptr=j_list_next(ptr);
-    }
-    j_list_free(all_servers);
-    all_servers=NULL;
-}
-
-void wait_all(JList *servers) {
-    jint status;
-    pid_t pid;
-    while((pid=j_wait(&status))>0) {
-        JList *ptr=servers;
-        Server *server=NULL;
-        while(ptr) {
-            Server *s=((Server*)j_list_data(ptr));
-            if(s->pid==pid) {
-                server=s;
-                break;
-            }
-            ptr=j_list_next(ptr);
-        }
-        if(J_UNLIKELY(server==NULL)) {
-            j_printf("unknown server %d exits with status code %d\n", pid, status);
-        } else {
-            j_printf("server %s exits with status code %d\n", server->name, status);
-            server->pid=-1;
-        }
-    }
-}
-
+/* 在终端输出服务的配置信息 */
 void dump_server(Server *server) {
-    j_printf("\"%s\" listens on port %u\n", server->name, server->port);
-    j_printf("  log: %s\n",server->log);
-    j_printf("  error_log: %s\n",server->error_log);
+    j_printf("\033[34m%s\033[0m listens on port \033[32m%u\033[0m\n", server->name, server->port);
+    j_printf("  log: \033[31m%s\033[0m\n",server->log);
+    j_printf("  error_log: \033[31m%s\033[0m\n",server->error_log);
     j_printf("  log_level: ");
     if(server->log_level&J_LOG_LEVEL_INFO) {
-        j_printf("INFO|");
+        j_printf("\033[32mINFO\033[0m|");
     }
     if(server->log_level&J_LOG_LEVEL_DEBUG) {
-        j_printf("DEBUG|");
+        j_printf("\033[32mDEBUG\033[0m|");
     }
     if(server->log_level&J_LOG_LEVEL_ERROR) {
-        j_printf("ERROR|");
+        j_printf("\033[32mERROR\033[0m|");
     }
     if(server->log_level&J_LOG_LEVEL_WARNING) {
-        j_printf("WARNING");
+        j_printf("\033[32mWARNING\033[0m");
     }
     j_printf("\n");
 }
 
+/* 日志处理函数 */
 static void server_log_handler(const jchar *domain, JLogLevelFlag level, const jchar *message, jpointer user_data) {
     jchar buf[4096];
     time_t t=time(NULL);

@@ -17,51 +17,16 @@
 #include "config.h"
 #include <stdlib.h>
 
-static JConfLoader *config_loader=NULL;
-static jchar *config_error=NULL;
-
-static void free_loader(void) {
-    if(config_loader==NULL) {
-        return;
-    }
-    j_conf_loader_unref(config_loader);
-    j_free(config_error);
-}
-
-
-static inline JConfLoader *get_config_loader(void) {
-    if(J_UNLIKELY(config_loader==NULL)) {
-        config_loader = j_conf_loader_new();
-        j_conf_loader_allow_unknown_variable(config_loader, FALSE);
-        j_conf_loader_put_string(config_loader, "PROGRAM", PACKAGE);
-        j_conf_loader_put_string(config_loader, "PROGRAM_VERSION", VERSION);
-        j_conf_loader_put_string(config_loader, "LOGS_LOCATION", LOG_DIR);
-        j_conf_loader_put_integer(config_loader, "ERROR", J_LOG_LEVEL_ERROR);
-        j_conf_loader_put_integer(config_loader, "INFO",J_LOG_LEVEL_INFO);
-        j_conf_loader_put_integer(config_loader, "DEBUG",J_LOG_LEVEL_DEBUG);
-        j_conf_loader_put_integer(config_loader, "CRITICAL",J_LOG_LEVEL_CRITICAL);
-        j_conf_loader_put_integer(config_loader, "WARNING", J_LOG_LEVEL_MESSAGE);
-        atexit(free_loader);
-    }
-    return config_loader;
-}
-
-jchar* config_message(void) {
-    JConfLoader *loader=get_config_loader();
-    j_free(config_error);
-    config_error= j_conf_loader_build_error_message(loader);
-    return config_error;
-}
-
-/* 读取配置文件，出错返回NULL */
-JConfRoot *config_load(const jchar *path) {
-    if(path==NULL) {
-        path = CONFIG_FILENAME;
-    }
-    JConfLoader *loader = get_config_loader();
-    if(!j_conf_loader_loads(loader, path)) {
-        return NULL;
-    }
-    JConfRoot *root=j_conf_loader_get_root(loader);
-    return root;
+JConfLoader *create_config_loader(void) {
+    JConfLoader *loader = j_conf_loader_new();
+    j_conf_loader_allow_unknown_variable(loader, FALSE);
+    j_conf_loader_put_string(loader, "PROGRAM", PACKAGE);
+    j_conf_loader_put_string(loader, "PROGRAM_VERSION", VERSION);
+    j_conf_loader_put_string(loader, "LOGS_LOCATION", LOG_DIR);
+    j_conf_loader_put_integer(loader, "ERROR", J_LOG_LEVEL_ERROR);
+    j_conf_loader_put_integer(loader, "INFO",J_LOG_LEVEL_INFO);
+    j_conf_loader_put_integer(loader, "DEBUG",J_LOG_LEVEL_DEBUG);
+    j_conf_loader_put_integer(loader, "CRITICAL",J_LOG_LEVEL_CRITICAL);
+    j_conf_loader_put_integer(loader, "WARNING", J_LOG_LEVEL_MESSAGE);
+    return loader;
 }
