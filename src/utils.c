@@ -16,6 +16,7 @@
  */
 #include "utils.h"
 #include <jlib/jlib.h>
+#include <jio/jio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>

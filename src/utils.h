@@ -18,6 +18,7 @@
 #define __JAC_UTILS_H__
 
 #include <jlib/jtypes.h>
+#include <jio/jsocket.h>
 
 
 /*

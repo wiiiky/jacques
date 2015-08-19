@@ -133,10 +133,9 @@ void dump_server(Server *server) {
     j_printf("\n");
 }
 
-static jboolean time_out(jpointer data) {
-    j_main_quit();
-    return FALSE;
-}
+static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data);
+static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint size, jpointer user_data);
+static inline void server_send(JSocket *socket, jint ret, jpointer user_data);
 
 static inline void run_server(Server *server) {
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
@@ -146,9 +145,36 @@ static inline void run_server(Server *server) {
         exit(1);
     }
     server_info(server, "listen on port %d", server->port);
-    j_timeout_add(5000, time_out, server);
+    j_socket_accept_async(server->socket, server_accept, server);
     j_main();
     server_info(server, "exit");
+}
+
+static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data) {
+    Server *server=(Server*)user_data;
+    if(cli==NULL) {
+        server_error(server, "socket accept error");
+        return FALSE;
+    }
+    server_info(server, "establish connection with %s", j_socket_get_remote_address_string(cli));
+    j_socket_receive_async(cli, server_receive, server);
+    j_socket_unref(cli);
+    return TRUE;
+}
+
+static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint size, jpointer user_data) {
+    Server *server=(Server*)user_data;
+    if(size<=0) {
+        server_info(server, "client %s closed", j_socket_get_remote_address_string(socket));
+        return FALSE;
+    }
+    j_socket_send_async(socket, buffer, size,server_send ,server);
+    return TRUE;
+}
+
+static inline void server_send(JSocket *socket, jint ret, jpointer user_data) {
+    Server *server=(Server*)user_data;
+    server_debug(server, "%d bytes sent to %s", ret, j_socket_get_remote_address_string(socket));
 }
 
 
