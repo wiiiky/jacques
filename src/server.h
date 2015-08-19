@@ -43,6 +43,7 @@ typedef struct _Server Server;
 JList *load_servers(JConfRoot *root, const CLOption *option);
 
 jboolean start_server(Server *server);
+
 /* 输出服务设置 */
 void dump_server(Server *server);
 

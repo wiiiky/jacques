@@ -24,6 +24,11 @@
 struct _Master {
     JConfLoader *config_loader;
     jchar *config_error;
+    jchar *log;
+    jint logfd;
+    jchar *error_log;
+    jint error_logfd;
+    jint log_level;
 
     JList *servers;
     const CLOption *option;

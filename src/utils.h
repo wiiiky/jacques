@@ -31,4 +31,7 @@ jboolean make_dir(const jchar *path);
 jint append_file(const jchar *path);
 
 
+void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd);
+
+
 #endif

@@ -18,6 +18,7 @@
 #include <jlib/jlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 
 jboolean make_dir(const jchar *path) {
@@ -31,4 +32,32 @@ jboolean make_dir(const jchar *path) {
 jint append_file(const jchar *path) {
     jint fd=open(path, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP);
     return fd;
+}
+
+void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd) {
+    jchar buf[4096];
+    time_t t=time(NULL);
+    ctime_r(&t, buf);
+    jint len=strlen(buf)-1;
+    if(level&J_LOG_LEVEL_ERROR) {
+        if(errfd<0) {
+            return;
+        }
+        j_snprintf(buf+len, sizeof(buf)-len, " [%s]: %s\n", domain, message);
+        j_write(errfd, buf, strlen(buf));
+        return;
+    } else if(fd<0) {
+        return;
+    }
+
+    const jchar *flag="";
+    if(level & J_LOG_LEVEL_DEBUG) {
+        flag="DEBUG";
+    } else if(level & J_LOG_LEVEL_INFO) {
+        flag="INFO";
+    } else if(level & J_LOG_LEVEL_WARNING) {
+        flag="WARNING";
+    }
+    j_snprintf(buf+len, sizeof(buf)-len, " [%s] [%s]: %s\n", domain,flag, message);
+    j_write(fd, buf, strlen(buf));
 }

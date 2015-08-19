@@ -17,15 +17,28 @@
 #include "master.h"
 #include "config.h"
 #include "server.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <unistd.h>
 
+#define MASTER_DOMAIN "master"
 
 static Master *g_master=NULL;
 
 static void quit_master(void);
 /* 读取配置文件 */
-static inline JConfRoot *load_config(Master *master);
+static inline jboolean load_config(Master *master);
+
+/* 日志记录函数 */
+static void master_log_handler(const jchar *domain, JLogLevelFlag level,
+                               const jchar *message, jpointer user_data);
+#define master_debug(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define master_info(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_INFO, __VA_ARGS__)
+#define master_warning(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define master_error(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_ERROR, __VA_ARGS__)
+
+static inline void wait_servers(Master *master);
+static inline jboolean check_master(Master *master);
 
 Master *create_master(const CLOption *option) {
     if(g_master!=NULL) {
@@ -36,13 +49,15 @@ Master *create_master(const CLOption *option) {
     g_master->config_error=NULL;
     g_master->servers=NULL;
     g_master->option=option;
+    g_master->log=NULL;
+    g_master->error_log=NULL;
+    g_master->logfd=-1;
+    g_master->error_logfd=-1;
     atexit(quit_master);
 
-    JConfRoot *root;;
-    if((root=load_config(g_master))==NULL) {
+    if(!load_config(g_master)) {
         return g_master;
     }
-    g_master->servers=load_servers(root, g_master->option);
     return g_master;
 }
 
@@ -52,23 +67,25 @@ static void quit_master(void) {
     }
     j_conf_loader_unref(g_master->config_loader);
     j_free(g_master->config_error);
+    j_free(g_master->log);
+    close(g_master->logfd);
     j_list_free_full(g_master->servers, (JDestroyNotify)j_object_unref);
     j_free(g_master);
 }
 
-static inline void wait_servers(Master *master);
-
 /* 开始执行主控进程 */
 void run_master(Master *master) {
-    if(master->config_error!=NULL) {
-        j_fprintf(stderr, "configuration error: %s", master->config_error);
+    if(!check_master(master)) {
         return;
     }
+    j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
     JList *ptr=master->servers;
     while(ptr) {
         Server *server=(Server*)j_list_data(ptr);
         if(!start_server(server)) {
-            j_fprintf(stderr, "fail to start server %s\n", server->name);
+            master_error("fail to start server %s", server->name);
+        } else {
+            master_debug("server %s starts successfully", server->name);
         }
         ptr=j_list_next(ptr);
     }
@@ -77,17 +94,26 @@ void run_master(Master *master) {
 }
 
 
-static inline JConfRoot *load_config(Master *master) {
+static inline jboolean load_config(Master *master) {
     const jchar *path=master->option->config;
     if(path==NULL) {
         path = CONFIG_FILENAME;
     }
     if(!j_conf_loader_loads(master->config_loader, path)) {
         master->config_error=j_conf_loader_build_error_message(master->config_loader);
-        return NULL;
+        return FALSE;
     }
-    JConfRoot *root=j_conf_loader_get_root(master->config_loader);
-    return root;
+    JConfObject *root=(JConfObject*)j_conf_loader_get_root(master->config_loader);
+    master->log=j_strdup(j_conf_object_get_string(root, CONFIG_KEY_LOG, DEFAULT_LOG));
+    make_dir(master->log);
+    master->logfd=append_file(master->log);
+    master->error_log=j_strdup(j_conf_object_get_string(root, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG));
+    make_dir(master->error_log);
+    master->error_logfd=append_file(master->error_log);
+    master->log_level=j_conf_object_get_integer(root, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
+
+    master->servers=load_servers((JConfRoot*)root, master->option);
+    return TRUE;
 }
 
 static inline void wait_servers(Master *master) {
@@ -105,10 +131,31 @@ static inline void wait_servers(Master *master) {
             ptr=j_list_next(ptr);
         }
         if(J_UNLIKELY(server==NULL)) {
-            j_printf("unknown server %d exits with status code %d\n", pid, status);
+            master_warning("unknown server(PID=%d) exits with status code %d", pid, status);
         } else {
-            j_printf("server %s exits with status code %d\n", server->name, status);
+            master_info("server %s(PID=%d) exits with status code %d", server->name, pid, status);
             server->pid=-1;
         }
     }
+}
+
+static inline jboolean check_master(Master *master) {
+    if(master->config_error!=NULL) {
+        j_fprintf(stderr, "configuration error: %s\n", master->config_error);
+        return FALSE;
+    } else if(master->logfd<0) {
+        j_fprintf(stderr, "unable to open log %s\n", master->log);
+        return FALSE;
+    } else if(master->error_logfd<0) {
+        j_fprintf(stderr, "unable to open error log %s\n", master->error_log);
+        return FALSE;
+    }
+    return TRUE;
+
+}
+
+static void master_log_handler(const jchar *domain, JLogLevelFlag level,
+                               const jchar *message, jpointer user_data) {
+    Master *master=(Master*)user_data;
+    log_internal(domain, message, level, master->logfd, master->error_logfd);
 }
