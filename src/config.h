@@ -32,10 +32,12 @@
 #define CONFIG_KEY_LOG  "log"
 #define CONFIG_KEY_ERROR_LOG    "error_log"
 #define CONFIG_KEY_LOG_LEVEL "log_level"
+#define CONFIG_KEY_USER "user"
 
 #define DEFAULT_LOG LOG_DIR "/" PACKAGE ".log"
 #define DEFAULT_ERROR_LOG LOG_DIR "/" PACKAGE ".err"
 #define DEFAULT_LOG_LEVEL (J_LOG_LEVEL_ERROR|J_LOG_LEVEL_INFO|J_LOG_LEVEL_WARNING)
+#define DEFAULT_USER    "wiky"
 
 JConfLoader *create_config_loader(void);
 

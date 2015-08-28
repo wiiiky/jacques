@@ -48,20 +48,20 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
         return NULL;
     }
     /* 日志路径无效依然可以创建服务，只是日志功能失效 */
-    jchar *log=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG));
-    make_dir(log);
-    jchar *error_log=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG));
-    make_dir(error_log);
     Server *server=(Server*)j_malloc(sizeof(Server));
     J_OBJECT_INIT(server, stop_server);
     server->name=j_strdup(name);
     server->port=port;
     server->pid=-1;
-    server->log=log;
-    server->error_log=error_log;
+    server->user=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_USER, DEFAULT_USER));
+    server->log=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG));
+    server->error_log=j_strdup(j_conf_object_get_string_priority(root, obj,
+                               CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG));
     server->log_level=j_conf_object_get_integer_priority(root, obj, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
-    server->logfd=append_file(log);
-    server->error_logfd=append_file(error_log);
+    make_dir(server->log);
+    make_dir(server->error_log);
+    server->logfd=append_file(server->log);
+    server->error_logfd=append_file(server->error_log);
     server->socket=NULL;
 
     return server;
@@ -102,6 +102,7 @@ static void stop_server(Server *server) {
     j_free(server->name);
     j_free(server->log);
     j_free(server->error_log);
+    j_free(server->user);
     close(server->logfd);
     close(server->error_logfd);
     if(server->pid>0) {
@@ -115,8 +116,8 @@ static void stop_server(Server *server) {
 /* 在终端输出服务的配置信息 */
 void dump_server(Server *server) {
     j_printf("\033[34m%s\033[0m listens on port \033[32m%u\033[0m\n", server->name, server->port);
-    j_printf("  log: \033[31m%s\033[0m\n",server->log);
-    j_printf("  error_log: \033[31m%s\033[0m\n",server->error_log);
+    j_printf("  log: \033[32m%s\033[0m\n",server->log);
+    j_printf("  error_log: \033[32m%s\033[0m\n",server->error_log);
     j_printf("  log_level: ");
     if(server->log_level&J_LOG_LEVEL_INFO) {
         j_printf("\033[32mINFO\033[0m|");
@@ -137,8 +138,15 @@ static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer use
 static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint size, jpointer user_data);
 static inline void server_send(JSocket *socket, jint ret, jpointer user_data);
 
+/* 进入服务器主循环 */
 static inline void run_server(Server *server) {
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
+
+    if(!setuser(server->user)) {
+        perror("!!");
+        server_error(server, "fail to set the process effective user '%s'", server->user);
+        exit(1);
+    }
     server->socket=socket_listen("127.0.0.1", server->port);
     if(server->socket==NULL) {
         server_error(server, "unable to listen on port %d", server->port);

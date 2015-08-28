@@ -24,6 +24,7 @@ struct _Server {
     JObject parent;
     jchar *name;
     jushort port;
+    jchar *user;    /* 以哪个用户执行 */
 
     jchar *log;         /* 日志文件路径 */
     jchar *error_log;   /* 错误日志路径 */
@@ -31,8 +32,10 @@ struct _Server {
     jint logfd;
     jint error_logfd;
 
+    /* 监听端口的套接字 */
     JSocket *socket;
 
+    /* 进程ID */
     pid_t pid;
 };
 

@@ -34,5 +34,8 @@ jint append_file(const jchar *path);
 
 void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd);
 
+/* 根据用户名设置当前进程的用户ID */
+jboolean setuser(const jchar *user);
+
 
 #endif

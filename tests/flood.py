@@ -6,6 +6,14 @@ import socket
 import random
 import string
 import time
+import sys
+
+PORT = 43212
+
+if len(sys.argv) == 2:
+    PORT = int(sys.argv[1])
+
+print('flood port %d' % PORT)
 
 
 def random_string():
@@ -19,16 +27,19 @@ def random_string():
 class Worker(threading.Thread):
 
     def run(self):
-        count = 0
+        global PORT
+        self.count = 0
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        s.connect(('localhost', 43212))
+        try:
+            s.connect(('localhost', PORT))
+        except:
+            return
         for i in range(1000):
             data = random_string().encode('ascii')
-            count += len(data)
+            self.count += len(data)
             s.sendall(data)
             s.recv(4024)
         s.close()
-        self.count = count
 
     def join(self):
         super(Worker, self).join()

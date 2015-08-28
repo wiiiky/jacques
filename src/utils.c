@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 
 jboolean make_dir(const jchar *path) {
@@ -35,6 +37,9 @@ jint append_file(const jchar *path) {
     return fd;
 }
 
+/*
+ * 记录日志
+ */
 void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd) {
     jchar buf[4096];
     time_t t=time(NULL);
@@ -61,4 +66,10 @@ void log_internal(const jchar *domain,const jchar *message, jint level, jint fd,
     }
     j_snprintf(buf+len, sizeof(buf)-len, " [%s] [%s]: %s\n", domain,flag, message);
     j_write(fd, buf, strlen(buf));
+}
+
+/* 根据用户名设置当前进程的用户ID */
+jboolean setuser(const jchar *name) {
+    struct passwd *pwd=getpwnam(name);
+    return pwd!=NULL && setgid(pwd->pw_gid)==0 && setuid(pwd->pw_uid)==0;
 }
