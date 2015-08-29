@@ -33,6 +33,7 @@
 #define CONFIG_KEY_ERROR_LOG    "error_log"
 #define CONFIG_KEY_LOG_LEVEL "log_level"
 #define CONFIG_KEY_USER "user"
+#define CONFIG_KEY_MODULES "modules"
 
 #define DEFAULT_LOG LOG_DIR "/" PACKAGE ".log"
 #define DEFAULT_ERROR_LOG LOG_DIR "/" PACKAGE ".err"

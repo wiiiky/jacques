@@ -28,9 +28,11 @@ struct _Server {
 
     jchar *log;         /* 日志文件路径 */
     jchar *error_log;   /* 错误日志路径 */
-    JLogLevelFlag log_level;    /* 日志等级 */
     jint logfd;
     jint error_logfd;
+    JLogLevelFlag log_level;    /* 日志等级 */
+
+    JList *mod_paths;       /* 需要载入模块名 */
 
     /* 监听端口的套接字 */
     JSocket *socket;

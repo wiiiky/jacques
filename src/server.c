@@ -54,9 +54,8 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
     server->port=port;
     server->pid=-1;
     server->user=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_USER, DEFAULT_USER));
-    server->log=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG));
-    server->error_log=j_strdup(j_conf_object_get_string_priority(root, obj,
-                               CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG));
+    server->log=join_path_with_root(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG), LOG_DIR);
+    server->error_log=join_path_with_root( j_conf_object_get_string_priority(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG), LOG_DIR);
     server->log_level=j_conf_object_get_integer_priority(root, obj, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
     make_dir(server->log);
     make_dir(server->error_log);
@@ -143,7 +142,6 @@ static inline void run_server(Server *server) {
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
 
     if(!setuser(server->user)) {
-        perror("!!");
         server_error(server, "fail to set the process effective user '%s'", server->user);
         exit(1);
     }

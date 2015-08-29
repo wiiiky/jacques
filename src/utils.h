@@ -38,4 +38,11 @@ void log_internal(const jchar *domain,const jchar *message, jint level, jint fd,
 jboolean setuser(const jchar *user);
 
 
+/*
+ * 如果path是一个绝对路径，则返回该路径的一个副本
+ * 否则返回parent/path的副本
+ */
+jchar *join_path_with_root(const jchar *path, const jchar *parent);
+
+
 #endif

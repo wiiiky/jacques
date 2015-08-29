@@ -22,7 +22,6 @@ JConfLoader *create_config_loader(void) {
     j_conf_loader_allow_unknown_variable(loader, FALSE);
     j_conf_loader_put_string(loader, "PROGRAM", PACKAGE);
     j_conf_loader_put_string(loader, "PROGRAM_VERSION", VERSION);
-    j_conf_loader_put_string(loader, "LOGS_LOCATION", LOG_DIR);
     j_conf_loader_put_integer(loader, "ERROR", J_LOG_LEVEL_ERROR);
     j_conf_loader_put_integer(loader, "INFO",J_LOG_LEVEL_INFO);
     j_conf_loader_put_integer(loader, "DEBUG",J_LOG_LEVEL_DEBUG);

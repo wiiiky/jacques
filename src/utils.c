@@ -73,3 +73,14 @@ jboolean setuser(const jchar *name) {
     struct passwd *pwd=getpwnam(name);
     return pwd!=NULL && setgid(pwd->pw_gid)==0 && setuid(pwd->pw_uid)==0;
 }
+
+/*
+ * 如果path是一个绝对路径，则返回该路径的一个副本
+ * 否则返回parent/path的副本
+ */
+jchar *join_path_with_root(const jchar *path, const jchar *parent) {
+    if(j_path_is_absolute(path)) {
+        return j_strdup(path);
+    }
+    return j_path_join(parent, path);
+}
