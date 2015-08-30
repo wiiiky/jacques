@@ -63,6 +63,14 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
     server->error_logfd=append_file(server->error_log);
     server->socket=NULL;
 
+    JList *mods=j_conf_object_get_string_list_priority(root, obj, CONFIG_KEY_MODULES);
+    JList *ptr=mods;
+    while(ptr) {
+        server->mod_paths=j_list_append(server->mod_paths, join_path_with_root((jchar*)j_list_data(ptr), MOD_DIR));
+        ptr=j_list_next(ptr);
+    }
+    j_list_free(mods);
+
     return server;
 }
 
@@ -102,6 +110,7 @@ static void stop_server(Server *server) {
     j_free(server->log);
     j_free(server->error_log);
     j_free(server->user);
+    j_list_free_full(server->mod_paths, j_free);
     close(server->logfd);
     close(server->error_logfd);
     if(server->pid>0) {
@@ -131,6 +140,7 @@ void dump_server(Server *server) {
         j_printf("\033[32mWARNING\033[0m");
     }
     j_printf("\n");
+    j_printf("  user: \033[32m%s\033[0m\n", server->user);
 }
 
 static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data);

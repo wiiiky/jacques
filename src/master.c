@@ -104,10 +104,10 @@ static inline jboolean load_config(Master *master) {
         return FALSE;
     }
     JConfObject *root=(JConfObject*)j_conf_loader_get_root(master->config_loader);
-    master->log=j_strdup(j_conf_object_get_string(root, CONFIG_KEY_LOG, DEFAULT_LOG));
+    master->log=join_path_with_root(j_conf_object_get_string(root, CONFIG_KEY_LOG, DEFAULT_LOG), LOG_DIR);
     make_dir(master->log);
     master->logfd=append_file(master->log);
-    master->error_log=j_strdup(j_conf_object_get_string(root, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG));
+    master->error_log=join_path_with_root(j_conf_object_get_string(root, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG), LOG_DIR);
     make_dir(master->error_log);
     master->error_logfd=append_file(master->error_log);
     master->log_level=j_conf_object_get_integer(root, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
