@@ -70,6 +70,7 @@ static void quit_master(void) {
     j_free(g_master->log);
     close(g_master->logfd);
     j_list_free_full(g_master->servers, (JDestroyNotify)j_object_unref);
+    j_list_free_full(g_master->mod_paths, (JDestroyNotify)j_free);
     j_free(g_master);
 }
 
@@ -104,13 +105,12 @@ static inline jboolean load_config(Master *master) {
         return FALSE;
     }
     JConfObject *root=(JConfObject*)j_conf_loader_get_root(master->config_loader);
-    master->log=join_path_with_root(j_conf_object_get_string(root, CONFIG_KEY_LOG, DEFAULT_LOG), LOG_DIR);
-    make_dir(master->log);
+    master->log=load_log(root,NULL, CONFIG_KEY_LOG, DEFAULT_LOG);
     master->logfd=append_file(master->log);
-    master->error_log=join_path_with_root(j_conf_object_get_string(root, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG), LOG_DIR);
-    make_dir(master->error_log);
+    master->error_log=load_log(root,NULL, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
     master->error_logfd=append_file(master->error_log);
-    master->log_level=j_conf_object_get_integer(root, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
+    master->log_level=load_loglevel(root, NULL);
+    master->mod_paths=load_modules(root);
 
     master->servers=load_servers((JConfRoot*)root, master->option);
     return TRUE;

@@ -43,6 +43,18 @@
 JConfLoader *create_config_loader(void);
 
 
+/* 从配置中读取模块列表 */
+JList *load_modules(JConfObject *obj);
+
+/* 载入日志文件，同时创建目录（如果必要的话） */
+jchar *load_log(JConfObject *root, JConfObject *node, const jchar *key, const jchar *def);
+
+/* 读取用户，服务进程将以该用户的身份执行 */
+jchar *load_user(JConfObject *root, JConfObject *node);
+
+/* 读取日志级别 */
+jint load_loglevel(JConfObject *root, JConfObject *node);
+
 /* 命令行参数 */
 typedef struct {
     jboolean help;      /* --help */

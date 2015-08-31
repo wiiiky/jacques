@@ -53,30 +53,24 @@ static inline Server *create_server(const jchar *name,JConfObject *root, JConfOb
     server->name=j_strdup(name);
     server->port=port;
     server->pid=-1;
-    server->user=j_strdup(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_USER, DEFAULT_USER));
-    server->log=join_path_with_root(j_conf_object_get_string_priority(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG), LOG_DIR);
-    server->error_log=join_path_with_root( j_conf_object_get_string_priority(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG), LOG_DIR);
-    server->log_level=j_conf_object_get_integer_priority(root, obj, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
-    make_dir(server->log);
-    make_dir(server->error_log);
+    server->user=load_user(root, obj);
+    server->log=load_log(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG);
+    server->error_log=load_log(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
+    server->log_level=load_loglevel(root, obj);
     server->logfd=append_file(server->log);
     server->error_logfd=append_file(server->error_log);
     server->socket=NULL;
 
-    JList *mods=j_conf_object_get_string_list_priority(root, obj, CONFIG_KEY_MODULES);
-    JList *ptr=mods;
-    while(ptr) {
-        server->mod_paths=j_list_append(server->mod_paths, join_path_with_root((jchar*)j_list_data(ptr), MOD_DIR));
-        ptr=j_list_next(ptr);
-    }
-    j_list_free(mods);
+    server->mod_paths=load_modules(obj);
 
     return server;
 }
 
 JList *load_servers(JConfRoot *root, const CLOption *option) {
     JList *servers=NULL;
-    JList *keys=j_conf_object_lookup((JConfObject*)root, "^server-[[:alpha:]][[:alnum:]]*", J_CONF_NODE_TYPE_OBJECT);
+    JList *keys=j_conf_object_lookup((JConfObject*)root,
+                                     "^server-[[:alpha:]][[:alnum:]]*",
+                                     J_CONF_NODE_TYPE_OBJECT);
     JList *ptr=keys;
     while(ptr) {
         const jchar *key=(const jchar*)j_list_data(ptr);
@@ -141,6 +135,13 @@ void dump_server(Server *server) {
     }
     j_printf("\n");
     j_printf("  user: \033[32m%s\033[0m\n", server->user);
+    j_printf("  modules: \033[32m\n");
+    JList *ptr=server->mod_paths;
+    while(ptr) {
+        j_printf("          %s\n", (jchar*)j_list_data(ptr));
+        ptr=j_list_next(ptr);
+    }
+    j_printf("\033[0m\n");
 }
 
 static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data);

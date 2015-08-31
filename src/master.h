@@ -30,6 +30,8 @@ struct _Master {
     jint error_logfd;
     jint log_level;
 
+    JList *mod_paths;
+
     JList *servers;
     const CLOption *option;
 };

@@ -9,9 +9,12 @@ import time
 import sys
 
 PORT = 43212
+WORKER_COUNT = 6
 
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
     PORT = int(sys.argv[1])
+if len(sys.argv) >= 3:
+    WORKER_COUNT = int(sys.argv[2])
 
 print('flood port %d' % PORT)
 
@@ -47,15 +50,16 @@ class Worker(threading.Thread):
 
 workers = []
 start = time.time()
-for i in range(5):
+for i in range(WORKER_COUNT):
     w = Worker()
     w.start()
     workers.append(w)
 
 count = 0
-for i in range(5):
+for i in range(WORKER_COUNT):
     count += workers[i].join()
 
 end = time.time()
 
-print('time: %s, total: %s' %(int(end-start), count))
+diff = end-start;
+print('time: %s, total: %s KB/S' % (diff, count/diff/1024))

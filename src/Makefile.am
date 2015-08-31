@@ -6,7 +6,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
 	-DCONFIG_DIR=\""$(CONF_DIR)"\" \
 	-DLOG_DIR=\""$(LOGS_DIR)"\" \
-	-DMOD_DIR=\""$(MOD_DIR)"\" \
+	-DMOD_DIR=\""$(MODS_DIR)"\" \
 	$(JACQUES_CFLAGS)
 
 AM_CFLAGS =\
