@@ -24,7 +24,7 @@
 #include <pwd.h>
 
 
-jboolean make_dir(const jchar *path) {
+jboolean make_path(const jchar *path) {
     jchar *dir=j_path_dirname(path);
     jint ret=j_mkdir_with_parents(dir, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
     j_free(dir);

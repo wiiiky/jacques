@@ -25,7 +25,7 @@
  * path是一个文件路径，该函数创建该文件所需要的目录
  * 路径存在或者创建成功，返回TRUE，否则返回FALSE
  */
-jboolean make_dir(const jchar *path);
+jboolean make_path(const jchar *path);
 
 
 /* 以O_APPPEND打开文件 */
