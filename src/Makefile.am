@@ -12,7 +12,8 @@ AM_CPPFLAGS = \
 AM_CFLAGS =\
 	 -Wall\
 	 -O0 \
-	 -g
+	 -g \
+	 -pg
 
 bin_PROGRAMS = jacques
 
@@ -24,7 +25,7 @@ jacques_SOURCES = \
 	utils.c \
 	master.c
 
-jacques_LDFLAGS =
+jacques_LDFLAGS = -pg
 
 jacques_LDADD = $(JACQUES_LIBS)
 

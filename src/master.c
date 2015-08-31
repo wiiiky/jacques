@@ -20,6 +20,7 @@
 #include "utils.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MASTER_DOMAIN "master"
 
@@ -40,6 +41,9 @@ static void master_log_handler(const jchar *domain, JLogLevelFlag level,
 static inline void wait_servers(Master *master);
 static inline jboolean check_master(Master *master);
 
+/* 信号处理函数 */
+static void signal_handler(int signo);
+
 Master *create_master(const CLOption *option) {
     if(g_master!=NULL) {
         return g_master;
@@ -53,6 +57,7 @@ Master *create_master(const CLOption *option) {
     g_master->error_log=NULL;
     g_master->logfd=-1;
     g_master->error_logfd=-1;
+    g_master->running=FALSE;
     atexit(quit_master);
 
     if(!load_config(g_master)) {
@@ -72,6 +77,11 @@ static void quit_master(void) {
     j_list_free_full(g_master->servers, (JDestroyNotify)j_object_unref);
     j_list_free_full(g_master->mod_paths, (JDestroyNotify)j_free);
     j_free(g_master);
+}
+
+/* 信号处理函数 */
+static void signal_handler(int signo) {
+    g_master->running=FALSE;
 }
 
 /* 开始执行主控进程 */
@@ -119,7 +129,10 @@ static inline jboolean load_config(Master *master) {
 static inline void wait_servers(Master *master) {
     jint status;
     pid_t pid;
-    while((pid=j_wait(&status))>0) {
+
+    master->running=TRUE;
+    signal(SIGINT, signal_handler);
+    while((pid=j_wait(&status))>0 && master->running) {
         JList *ptr=master->servers;
         Server *server=NULL;
         while(ptr) {

@@ -34,6 +34,8 @@ struct _Master {
 
     JList *servers;
     const CLOption *option;
+
+    jboolean running;
 };
 
 typedef struct _Master Master;
