@@ -81,6 +81,7 @@ static void quit_master(void) {
 
 /* 信号处理函数 */
 static void signal_handler(int signo) {
+    j_printf("master signal: %d\n", signo);
     g_master->running=FALSE;
 }
 
