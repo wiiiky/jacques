@@ -23,19 +23,19 @@
 
 struct _Master {
     JConfLoader *config_loader;
-    jchar *config_error;
-    jchar *log;
-    jint logfd;
-    jchar *error_log;
-    jint error_logfd;
-    jint log_level;
+    char *config_error;
+    char *log;
+    int logfd;
+    char *error_log;
+    int error_logfd;
+    int log_level;
 
     JList *mod_paths;
 
     JList *servers;
     const CLOption *option;
 
-    jboolean running;
+    boolean running;
 };
 
 typedef struct _Master Master;

@@ -26,13 +26,13 @@
 
 
 /* 创建服务，失败返回NULL */
-static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, const CLOption *option);
+static inline Server *create_server(const char *name,JConfObject *root, JConfObject *obj, const CLOption *option);
 /* 服务的执行函数 */
 static inline void run_server(Server *server);
 
 /* 日志记录函数 */
-static void server_log_handler(const jchar *domain, JLogLevelFlag level,
-                               const jchar *message, jpointer user_data);
+static void server_log_handler(const char *domain, JLogLevelFlag level,
+                               const char *message, void * user_data);
 #define server_debug(server, ...) j_log(server->name, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define server_info(server, ...) j_log(server->name, J_LOG_LEVEL_INFO, __VA_ARGS__)
 #define server_warning(server, ...) j_log(server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
@@ -44,8 +44,8 @@ static void stop_server(Server *server);
 static void signal_handler(int signo);
 
 /* 读取配置，创建一个服务进程 */
-static inline Server *create_server(const jchar *name,JConfObject *root, JConfObject *obj, const CLOption *option) {
-    jint64 port = j_conf_object_get_integer(obj, "port", 0);
+static inline Server *create_server(const char *name,JConfObject *root, JConfObject *obj, const CLOption *option) {
+    int64_t port = j_conf_object_get_integer(obj, "port", 0);
     if(port<=0||port>65536) {
         j_fprintf(stderr, "invalid port in server %s\n", name);
         return NULL;
@@ -76,7 +76,7 @@ JList *load_servers(JConfRoot *root, const CLOption *option) {
                                      J_CONF_NODE_TYPE_OBJECT);
     JList *ptr=keys;
     while(ptr) {
-        const jchar *key=(const jchar*)j_list_data(ptr);
+        const char *key=(const char*)j_list_data(ptr);
         Server *server=create_server(key+7,(JConfObject*)root, j_conf_object_get((JConfObject*)root, key), option);
         if(server) {
             servers=j_list_append(servers, server);
@@ -88,7 +88,7 @@ JList *load_servers(JConfRoot *root, const CLOption *option) {
     return servers;
 }
 
-jboolean start_server(Server *server) {
+boolean start_server(Server *server) {
     server->pid=fork();
     if(server->pid<0) {
         return FALSE;
@@ -141,15 +141,15 @@ void dump_server(Server *server) {
     j_printf("  modules: \033[32m\n");
     JList *ptr=server->mod_paths;
     while(ptr) {
-        j_printf("          %s\n", (jchar*)j_list_data(ptr));
+        j_printf("          %s\n", (char*)j_list_data(ptr));
         ptr=j_list_next(ptr);
     }
     j_printf("\033[0m\n");
 }
 
-static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data);
-static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint size, jpointer user_data);
-static inline void server_send(JSocket *socket, jint ret, jpointer user_data);
+static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data);
+static inline boolean server_receive(JSocket *socket, const char *buffer, int size, void * user_data);
+static inline void server_send(JSocket *socket, int ret, void * user_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
@@ -179,7 +179,7 @@ static void signal_handler(int signo) {
     j_main_quit();
 }
 
-static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer user_data) {
+static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
     Server *server=(Server*)user_data;
     if(cli==NULL) {
         server_error(server, "socket accept error");
@@ -191,7 +191,7 @@ static inline jboolean server_accept(JSocket *socket, JSocket *cli, jpointer use
     return TRUE;
 }
 
-static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint size, jpointer user_data) {
+static inline boolean server_receive(JSocket *socket, const char *buffer, int size, void * user_data) {
     Server *server=(Server*)user_data;
     if(size<=0) {
         server_info(server, "client %s closed", j_socket_get_remote_address_string(socket));
@@ -201,14 +201,14 @@ static inline jboolean server_receive(JSocket *socket, const jchar *buffer, jint
     return TRUE;
 }
 
-static inline void server_send(JSocket *socket, jint ret, jpointer user_data) {
+static inline void server_send(JSocket *socket, int ret, void * user_data) {
     Server *server=(Server*)user_data;
     server_debug(server, "%d bytes sent to %s", ret, j_socket_get_remote_address_string(socket));
 }
 
 
 /* 日志处理函数 */
-static void server_log_handler(const jchar *domain, JLogLevelFlag level, const jchar *message, jpointer user_data) {
+static void server_log_handler(const char *domain, JLogLevelFlag level, const char *message, void * user_data) {
     Server *server=(Server*)user_data;
     log_internal(server->name, message, level, server->logfd, server->error_logfd);
 }

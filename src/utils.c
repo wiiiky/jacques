@@ -24,27 +24,27 @@
 #include <pwd.h>
 
 
-jboolean make_path(const jchar *path) {
-    jchar *dir=j_path_dirname(path);
-    jint ret=j_mkdir_with_parents(dir, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+boolean make_path(const char *path) {
+    char *dir=j_path_dirname(path);
+    int ret=j_mkdir_with_parents(dir, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
     j_free(dir);
     return ret==0;
 }
 
 
-jint append_file(const jchar *path) {
-    jint fd=open(path, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP);
+int append_file(const char *path) {
+    int fd=open(path, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP);
     return fd;
 }
 
 /*
  * 记录日志
  */
-void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd) {
-    jchar buf[4096];
+void log_internal(const char *domain,const char *message, int level, int fd, int errfd) {
+    char buf[4096];
     time_t t=time(NULL);
     ctime_r(&t, buf);
-    jint len=strlen(buf)-1;
+    int len=strlen(buf)-1;
     if(level&J_LOG_LEVEL_ERROR) {
         if(errfd<0) {
             return;
@@ -56,7 +56,7 @@ void log_internal(const jchar *domain,const jchar *message, jint level, jint fd,
         return;
     }
 
-    const jchar *flag="";
+    const char *flag="";
     if(level & J_LOG_LEVEL_DEBUG) {
         flag="DEBUG";
     } else if(level & J_LOG_LEVEL_INFO) {
@@ -69,7 +69,7 @@ void log_internal(const jchar *domain,const jchar *message, jint level, jint fd,
 }
 
 /* 根据用户名设置当前进程的用户ID */
-jboolean setuser(const jchar *name) {
+boolean setuser(const char *name) {
     struct passwd *pwd=getpwnam(name);
     return pwd!=NULL && setgid(pwd->pw_gid)==0 && setuid(pwd->pw_uid)==0;
 }
@@ -78,7 +78,7 @@ jboolean setuser(const jchar *name) {
  * 如果path是一个绝对路径，则返回该路径的一个副本
  * 否则返回parent/path的副本
  */
-jchar *join_path_with_root(const jchar *path, const jchar *parent) {
+char *join_path_with_root(const char *path, const char *parent) {
     if(j_path_is_absolute(path)) {
         return j_strdup(path);
     }

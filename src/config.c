@@ -32,8 +32,8 @@ JConfLoader *create_config_loader(void) {
 }
 
 /* 载入日志文件，同时创建目录（如果必要的话） */
-jchar *load_log(JConfObject *root, JConfObject *node, const jchar *key, const jchar *def) {
-    jchar *log=join_path_with_root(j_conf_object_get_string_priority(root, node, key, def), LOG_DIR);
+char *load_log(JConfObject *root, JConfObject *node, const char *key, const char *def) {
+    char *log=join_path_with_root(j_conf_object_get_string_priority(root, node, key, def), LOG_DIR);
     make_path(log);
     return log;
 }
@@ -44,7 +44,7 @@ JList *load_modules(JConfObject *obj) {
     JList *ret=NULL;
     JList *ptr=mods;
     while(ptr) {
-        ret=j_list_append(ret, join_path_with_root((jchar*)j_list_data(ptr), MOD_DIR));
+        ret=j_list_append(ret, join_path_with_root((char*)j_list_data(ptr), MOD_DIR));
         ptr=j_list_next(ptr);
     }
     j_list_free(mods);
@@ -52,10 +52,10 @@ JList *load_modules(JConfObject *obj) {
 }
 
 /* 读取用户，服务进程将以该用户的身份执行 */
-jchar *load_user(JConfObject *root, JConfObject *node) {
+char *load_user(JConfObject *root, JConfObject *node) {
     return j_strdup(j_conf_object_get_string_priority(root, node, CONFIG_KEY_USER, DEFAULT_USER));
 }
 
-jint load_loglevel(JConfObject *root, JConfObject *node) {
+int load_loglevel(JConfObject *root, JConfObject *node) {
     return j_conf_object_get_integer_priority(root, node, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
 }

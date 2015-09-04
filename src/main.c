@@ -33,7 +33,7 @@ static inline void show_help(CLOption *option);
 static inline void test_config(Master *master);
 
 int main(int argc, char *argv[]) {
-    jint opt, long_index;
+    int opt, long_index;
 
     CLOption OPTIONS = {
         FALSE,
@@ -103,7 +103,7 @@ static inline void test_config(Master *master) {
     }
 
 
-    jchar *data=j_conf_node_dump((JConfNode*)j_conf_loader_get_root(master->config_loader));
+    char *data=j_conf_node_dump((JConfNode*)j_conf_loader_get_root(master->config_loader));
     j_printf("%s\n",data);
     j_free(data);
 

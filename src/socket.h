@@ -21,6 +21,6 @@
 #include <jio/jio.h>
 
 /* 创建一个监听端口port的TCP套接字 */
-JSocket *socket_listen(const jchar * address, jushort port);
+JSocket *socket_listen(const char * address, unsigned short port);
 
 #endif

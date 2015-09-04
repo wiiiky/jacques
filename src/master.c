@@ -28,18 +28,18 @@ static Master *g_master=NULL;
 
 static void quit_master(void);
 /* 读取配置文件 */
-static inline jboolean load_config(Master *master);
+static inline boolean load_config(Master *master);
 
 /* 日志记录函数 */
-static void master_log_handler(const jchar *domain, JLogLevelFlag level,
-                               const jchar *message, jpointer user_data);
+static void master_log_handler(const char *domain, JLogLevelFlag level,
+                               const char *message, void * user_data);
 #define master_debug(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define master_info(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_INFO, __VA_ARGS__)
 #define master_warning(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define master_error(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 static inline void wait_servers(Master *master);
-static inline jboolean check_master(Master *master);
+static inline boolean check_master(Master *master);
 
 /* 信号处理函数 */
 static void signal_handler(int signo);
@@ -106,8 +106,8 @@ void run_master(Master *master) {
 }
 
 
-static inline jboolean load_config(Master *master) {
-    const jchar *path=master->option->config;
+static inline boolean load_config(Master *master) {
+    const char *path=master->option->config;
     if(path==NULL) {
         path = CONFIG_FILENAME;
     }
@@ -128,7 +128,7 @@ static inline jboolean load_config(Master *master) {
 }
 
 static inline void wait_servers(Master *master) {
-    jint status;
+    int status;
     pid_t pid;
 
     master->running=TRUE;
@@ -153,7 +153,7 @@ static inline void wait_servers(Master *master) {
     }
 }
 
-static inline jboolean check_master(Master *master) {
+static inline boolean check_master(Master *master) {
     if(master->config_error!=NULL) {
         j_fprintf(stderr, "configuration error: %s\n", master->config_error);
         return FALSE;
@@ -168,8 +168,8 @@ static inline jboolean check_master(Master *master) {
 
 }
 
-static void master_log_handler(const jchar *domain, JLogLevelFlag level,
-                               const jchar *message, jpointer user_data) {
+static void master_log_handler(const char *domain, JLogLevelFlag level,
+                               const char *message, void * user_data) {
     Master *master=(Master*)user_data;
     log_internal(domain, message, level, master->logfd, master->error_logfd);
 }

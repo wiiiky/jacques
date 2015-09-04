@@ -47,20 +47,20 @@ JConfLoader *create_config_loader(void);
 JList *load_modules(JConfObject *obj);
 
 /* 载入日志文件，同时创建目录（如果必要的话） */
-jchar *load_log(JConfObject *root, JConfObject *node, const jchar *key, const jchar *def);
+char *load_log(JConfObject *root, JConfObject *node, const char *key, const char *def);
 
 /* 读取用户，服务进程将以该用户的身份执行 */
-jchar *load_user(JConfObject *root, JConfObject *node);
+char *load_user(JConfObject *root, JConfObject *node);
 
 /* 读取日志级别 */
-jint load_loglevel(JConfObject *root, JConfObject *node);
+int load_loglevel(JConfObject *root, JConfObject *node);
 
 /* 命令行参数 */
 typedef struct {
-    jboolean help;      /* --help */
-    jboolean test;      /* --test */
-    jboolean verbose;   /* --verbose */
-    jchar *config;      /* --config filename*/
+    boolean help;      /* --help */
+    boolean test;      /* --test */
+    boolean verbose;   /* --verbose */
+    char *config;      /* --config filename*/
 } CLOption;
 
 

@@ -22,14 +22,14 @@
 /* 一个服务相关的信息 */
 struct _Server {
     JObject parent;
-    jchar *name;
-    jushort port;
-    jchar *user;    /* 以哪个用户执行 */
+    char *name;
+    unsigned short port;
+    char *user;    /* 以哪个用户执行 */
 
-    jchar *log;         /* 日志文件路径 */
-    jchar *error_log;   /* 错误日志路径 */
-    jint logfd;
-    jint error_logfd;
+    char *log;         /* 日志文件路径 */
+    char *error_log;   /* 错误日志路径 */
+    int logfd;
+    int error_logfd;
     JLogLevelFlag log_level;    /* 日志等级 */
 
     JList *mod_paths;       /* 需要载入模块名 */
@@ -47,7 +47,7 @@ typedef struct _Server Server;
 /* 根据配置文件以及命令行选项载入服务设置 */
 JList *load_servers(JConfRoot *root, const CLOption *option);
 
-jboolean start_server(Server *server);
+boolean start_server(Server *server);
 
 /* 输出服务设置 */
 void dump_server(Server *server);

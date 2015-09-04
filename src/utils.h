@@ -25,24 +25,24 @@
  * path是一个文件路径，该函数创建该文件所需要的目录
  * 路径存在或者创建成功，返回TRUE，否则返回FALSE
  */
-jboolean make_path(const jchar *path);
+boolean make_path(const char *path);
 
 
 /* 以O_APPPEND打开文件 */
-jint append_file(const jchar *path);
+int append_file(const char *path);
 
 
-void log_internal(const jchar *domain,const jchar *message, jint level, jint fd, jint errfd);
+void log_internal(const char *domain,const char *message, int level, int fd, int errfd);
 
 /* 根据用户名设置当前进程的用户ID */
-jboolean setuser(const jchar *user);
+boolean setuser(const char *user);
 
 
 /*
  * 如果path是一个绝对路径，则返回该路径的一个副本
  * 否则返回parent/path的副本
  */
-jchar *join_path_with_root(const jchar *path, const jchar *parent);
+char *join_path_with_root(const char *path, const char *parent);
 
 
 #endif
