@@ -19,7 +19,6 @@
 #include "socket.h"
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
@@ -39,9 +38,6 @@ static void server_log_handler(const char *domain, JLogLevelFlag level,
 #define server_error(server, ...) j_log(server->name, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 static void stop_server(Server *server);
-
-/* 信号处理函数 */
-static void signal_handler(int signo);
 
 /* 读取配置，创建一个服务进程 */
 static inline Server *create_server(const char *name,JConfObject *root, JConfObject *obj, const CLOption *option) {
@@ -153,7 +149,6 @@ static inline void server_send(JSocket *socket, int ret, void * user_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
-    signal(SIGINT, signal_handler);
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
 
     if(!setuser(server->user)) {
@@ -169,14 +164,6 @@ static inline void run_server(Server *server) {
     j_socket_accept_async(server->socket, server_accept, server);
     j_main();
     server_info(server, "exit");
-}
-
-/*
- * 信号处理函数
- */
-static void signal_handler(int signo) {
-    j_printf("server signal : %d\n", signo);
-    j_main_quit();
 }
 
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
