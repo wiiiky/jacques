@@ -74,6 +74,7 @@ static void quit_master(void) {
     j_free(g_master->config_error);
     j_free(g_master->log);
     close(g_master->logfd);
+    close(g_master->error_logfd);
     j_list_free_full(g_master->servers, (JDestroyNotify)j_object_unref);
     j_list_free_full(g_master->mod_paths, (JDestroyNotify)j_free);
     j_free(g_master);

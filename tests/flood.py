@@ -4,8 +4,13 @@
 import socket
 import select
 import time
+import sys
 
 PORT = 43212
+COUNT = 50
+if len(sys.argv) > 1:
+    COUNT = int(sys.argv[1])
+TOTAL = 1024*1024*COUNT
 pfd = select.epoll()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
@@ -27,7 +32,7 @@ while running:
     for fileno, event in events:
         if event & select.EPOLLIN:
             count+=len(s.recv(size))
-            if count > 1024*1024*50:
+            if count > TOTAL:
                 running=False
         if event & select.EPOLLOUT:
             s.sendall(('a'*size).encode('ascii'))

@@ -19,6 +19,7 @@
 #include "socket.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
@@ -30,8 +31,12 @@ static inline Server *create_server(const char *name,JConfObject *root, JConfObj
 static inline void run_server(Server *server);
 
 /* 日志记录函数 */
-static void server_log_handler(const char *domain, JLogLevelFlag level,
-                               const char *message, void * user_data);
+static void server_log_handler(const char *domain,
+                               JLogLevelFlag level,
+                               const char *message,
+                               void * user_data);
+/* 信号处理函数 */
+static void signal_handler(int signo);
 #define server_debug(server, ...) j_log(server->name, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define server_info(server, ...) j_log(server->name, J_LOG_LEVEL_INFO, __VA_ARGS__)
 #define server_warning(server, ...) j_log(server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
@@ -114,35 +119,6 @@ static void stop_server(Server *server) {
     }
 }
 
-/* 在终端输出服务的配置信息 */
-void dump_server(Server *server) {
-    j_printf("\033[34m%s\033[0m listens on port \033[32m%u\033[0m\n", server->name, server->port);
-    j_printf("  log: \033[32m%s\033[0m\n",server->log);
-    j_printf("  error_log: \033[32m%s\033[0m\n",server->error_log);
-    j_printf("  log_level: ");
-    if(server->log_level&J_LOG_LEVEL_INFO) {
-        j_printf("\033[32mINFO\033[0m|");
-    }
-    if(server->log_level&J_LOG_LEVEL_DEBUG) {
-        j_printf("\033[32mDEBUG\033[0m|");
-    }
-    if(server->log_level&J_LOG_LEVEL_ERROR) {
-        j_printf("\033[32mERROR\033[0m|");
-    }
-    if(server->log_level&J_LOG_LEVEL_WARNING) {
-        j_printf("\033[32mWARNING\033[0m");
-    }
-    j_printf("\n");
-    j_printf("  user: \033[32m%s\033[0m\n", server->user);
-    j_printf("  modules: \033[32m\n");
-    JList *ptr=server->mod_paths;
-    while(ptr) {
-        j_printf("          %s\n", (char*)j_list_data(ptr));
-        ptr=j_list_next(ptr);
-    }
-    j_printf("\033[0m\n");
-}
-
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data);
 static inline boolean server_receive(JSocket *socket, const char *buffer, int size, void * user_data);
 static inline void server_send(JSocket *socket, int ret, void * user_data);
@@ -160,6 +136,8 @@ static inline void run_server(Server *server) {
         server_error(server, "unable to listen on port %d", server->port);
         exit(1);
     }
+
+    signal(SIGINT, signal_handler);
     server_info(server, "listen on port %d", server->port);
     j_socket_accept_async(server->socket, server_accept, server);
     j_main();
@@ -198,4 +176,40 @@ static inline void server_send(JSocket *socket, int ret, void * user_data) {
 static void server_log_handler(const char *domain, JLogLevelFlag level, const char *message, void * user_data) {
     Server *server=(Server*)user_data;
     log_internal(server->name, message, level, server->logfd, server->error_logfd);
+}
+
+static void signal_handler(int signo) {
+    if(signo==SIGINT) {
+        j_main_quit_notify();
+    }
+    j_printf("server %d quit!\n",getpid());
+}
+
+/* 在终端输出服务的配置信息 */
+void dump_server(Server *server) {
+    j_printf("\033[34m%s\033[0m listens on port \033[32m%u\033[0m\n", server->name, server->port);
+    j_printf("  log: \033[32m%s\033[0m\n",server->log);
+    j_printf("  error_log: \033[32m%s\033[0m\n",server->error_log);
+    j_printf("  log_level: ");
+    if(server->log_level&J_LOG_LEVEL_INFO) {
+        j_printf("\033[32mINFO\033[0m|");
+    }
+    if(server->log_level&J_LOG_LEVEL_DEBUG) {
+        j_printf("\033[32mDEBUG\033[0m|");
+    }
+    if(server->log_level&J_LOG_LEVEL_ERROR) {
+        j_printf("\033[32mERROR\033[0m|");
+    }
+    if(server->log_level&J_LOG_LEVEL_WARNING) {
+        j_printf("\033[32mWARNING\033[0m");
+    }
+    j_printf("\n");
+    j_printf("  user: \033[32m%s\033[0m\n", server->user);
+    j_printf("  modules: \033[32m\n");
+    JList *ptr=server->mod_paths;
+    while(ptr) {
+        j_printf("          %s\n", (char*)j_list_data(ptr));
+        ptr=j_list_next(ptr);
+    }
+    j_printf("\033[0m\n");
 }
