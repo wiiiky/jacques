@@ -180,7 +180,7 @@ static void server_log_handler(const char *domain, JLogLevelFlag level, const ch
 
 static void signal_handler(int signo) {
     if(signo==SIGINT) {
-        j_main_quit_notify();
+        j_main_try_quit();
     }
     j_printf("server %d quit!\n",getpid());
 }
