@@ -42,7 +42,7 @@ static inline void wait_servers(Master *master);
 static inline boolean check_master(Master *master);
 
 /* 信号处理函数 */
-static void signal_handler(int signo);
+static void signal_handler(int signo, siginfo_t *sinfo, void *unused);
 
 Master *create_master(const CLOption *option) {
     if(g_master!=NULL) {
@@ -81,9 +81,35 @@ static void quit_master(void) {
 }
 
 /* 信号处理函数 */
-static void signal_handler(int signo) {
-    j_printf("master signal: %d\n", signo);
-    g_master->running=FALSE;
+static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
+    if(signo==SIGINT) {
+        g_master->running=FALSE;
+    } else if(signo==SIGCHLD) {
+        if(sinfo->si_code!=CLD_EXITED) {
+            return;
+        }
+        /* 子进程退出 */
+        int status;
+        pid_t pid=sinfo->si_pid;
+        waitpid(sinfo->si_pid, &status, 0);
+
+        JList *ptr=g_master->servers;
+        Server *server=NULL;
+        while(ptr) {
+            Server *s=((Server*)j_list_data(ptr));
+            if(s->pid==pid) {
+                server=s;
+                break;
+            }
+            ptr=j_list_next(ptr);
+        }
+        if(J_UNLIKELY(server==NULL)) {
+            master_warning("unknown server(PID=%d) exits with status code %d", pid, status);
+        } else {
+            master_info("server %s(PID=%d) exits with status code %d", server->name, pid, status);
+            server->pid=-1;
+        }
+    }
 }
 
 /* 开始执行主控进程 */
@@ -91,7 +117,9 @@ void run_master(Master *master) {
     if(!check_master(master)) {
         return;
     }
+    j_daemonize();
     j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
+    master_debug("master pid %d\n",getpid());
     JList *ptr=master->servers;
     while(ptr) {
         Server *server=(Server*)j_list_data(ptr);
@@ -129,31 +157,23 @@ static inline boolean load_config(Master *master) {
 }
 
 static inline void wait_servers(Master *master) {
-    int status;
-    pid_t pid;
-
     master->running=TRUE;
-    signal(SIGINT, signal_handler);
-    while((pid=j_wait(&status))>0 && master->running) {
-        JList *ptr=master->servers;
-        Server *server=NULL;
-        while(ptr) {
-            Server *s=((Server*)j_list_data(ptr));
-            if(s->pid==pid) {
-                server=s;
-                break;
-            }
-            ptr=j_list_next(ptr);
-        }
-        if(J_UNLIKELY(server==NULL)) {
-            master_warning("unknown server(PID=%d) exits with status code %d", pid, status);
-        } else {
-            master_info("server %s(PID=%d) exits with status code %d", server->name, pid, status);
-            server->pid=-1;
-        }
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGCHLD, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    while(master->running) {
+        sleep(10);
     }
 }
 
+/*
+ * 检查主进程的配置是否没有问题
+ * 如果没有问题则返回True
+ * 否则返回False
+ */
 static inline boolean check_master(Master *master) {
     if(master->config_error!=NULL) {
         j_fprintf(stderr, "configuration error: %s\n", master->config_error);

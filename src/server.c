@@ -162,7 +162,7 @@ static inline boolean server_receive(JSocket *socket, const char *buffer, int si
         server_info(server, "client %s closed", j_socket_get_remote_address_string(socket));
         return FALSE;
     }
-    j_socket_send_async(socket, buffer, size,server_send ,server);
+    j_socket_send_async(socket, buffer, size, server_send, server);
     return TRUE;
 }
 
