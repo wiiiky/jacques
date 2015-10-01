@@ -156,6 +156,9 @@ static inline boolean load_config(Master *master) {
     return TRUE;
 }
 
+/*
+ * 等待信号
+ */
 static inline void wait_servers(Master *master) {
     master->running=TRUE;
     struct sigaction sa;
@@ -164,8 +167,13 @@ static inline void wait_servers(Master *master) {
     sigemptyset(&sa.sa_mask);
     sigaction(SIGCHLD, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
+
+    sigset_t sigmask;
+    sigfillset(&sigmask);
+    sigdelset(&sigmask, SIGINT);
+    sigdelset(&sigmask, SIGCHLD);
     while(master->running) {
-        sleep(10);
+        sigsuspend(&sigmask);
     }
 }
 
