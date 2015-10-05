@@ -25,17 +25,17 @@
  * path是一个文件路径，该函数创建该文件所需要的目录
  * 路径存在或者创建成功，返回TRUE，否则返回FALSE
  */
-boolean make_path(const char *path);
+boolean make_deep_path(const char *path);
 
 
 /* 以O_APPPEND打开文件 */
-int append_file(const char *path);
+int create_or_append(const char *path);
 
 
 void log_common(const char *domain,const char *message, int level, int fd, int errfd);
 
 /* 根据用户名设置当前进程的用户ID */
-boolean setuser(const char *user);
+boolean setuser_by_name(const char *user);
 
 
 /*

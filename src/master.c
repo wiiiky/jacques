@@ -119,8 +119,8 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
 
 /* 初始化Master，打开日志，载入模块等 */
 static inline void init_master(Master *master) {
-    master->logfd = append_file(master->log);
-    master->error_logfd = append_file(master->error_log);
+    master->logfd = create_or_append(master->log);
+    master->error_logfd = create_or_append(master->error_log);
 
     j_daemonize();
 

@@ -34,7 +34,7 @@ JConfLoader *create_config_loader(void) {
 /* 载入日志文件，同时创建目录（如果必要的话） */
 char *load_log(JConfObject *root, JConfObject *node, const char *key, const char *def) {
     char *log=join_path_with_root(j_conf_object_get_string_priority(root, node, key, def), LOG_DIR);
-    make_path(log);
+    make_deep_path(log);
     return log;
 }
 

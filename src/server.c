@@ -61,8 +61,8 @@ static inline Server *create_server(const char *name,JConfObject *root, JConfObj
     server->log=load_log(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG);
     server->error_log=load_log(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
     server->log_level=load_loglevel(root, obj);
-    server->logfd=append_file(server->log);
-    server->error_logfd=append_file(server->error_log);
+    server->logfd=create_or_append(server->log);
+    server->error_logfd=create_or_append(server->error_log);
     server->socket=NULL;
 
     server->mod_paths=load_modules(obj);
@@ -127,7 +127,7 @@ static inline void server_send(JSocket *socket, int ret, void * user_data);
 static inline void run_server(Server *server) {
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
 
-    if(!setuser(server->user)) {
+    if(!setuser_by_name(server->user)) {
         server_error(server, "fail to set the process effective user '%s'", server->user);
         exit(1);
     }

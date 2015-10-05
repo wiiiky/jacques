@@ -24,7 +24,7 @@
 #include <pwd.h>
 
 
-boolean make_path(const char *path) {
+boolean make_deep_path(const char *path) {
     char *dir=j_path_dirname(path);
     int ret=j_mkdir_with_parents(dir, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
     j_free(dir);
@@ -32,7 +32,7 @@ boolean make_path(const char *path) {
 }
 
 
-int append_file(const char *path) {
+int create_or_append(const char *path) {
     int fd=open(path, O_WRONLY|O_APPEND|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP);
     return fd;
 }
@@ -69,7 +69,7 @@ void log_common(const char *domain,const char *message, int level, int fd, int e
 }
 
 /* 根据用户名设置当前进程的用户ID */
-boolean setuser(const char *name) {
+boolean setuser_by_name(const char *name) {
     struct passwd *pwd=getpwnam(name);
     return pwd!=NULL && setgid(pwd->pw_gid)==0 && setuid(pwd->pw_uid)==0;
 }
