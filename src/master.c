@@ -38,6 +38,11 @@ static void master_log_handler(const char *domain, JLogLevelFlag level,
 #define master_warning(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define master_error(...) j_log(MASTER_DOMAIN, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
+
+/* 初始化Master，打开日志，载入模块等 */
+static inline void init_master(Master *master);
+/* 启动服务器 */
+static inline void start_servers(Master *master);
 static inline void wait_servers(Master *master);
 static inline boolean check_master(Master *master);
 
@@ -112,14 +117,19 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
     }
 }
 
-/* 开始执行主控进程 */
-void run_master(Master *master) {
-    if(!check_master(master)) {
-        return;
-    }
+/* 初始化Master，打开日志，载入模块等 */
+static inline void init_master(Master *master) {
+    master->logfd = append_file(master->log);
+    master->error_logfd = append_file(master->error_log);
+
     j_daemonize();
+
     j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
     master_debug("master pid %d\n",getpid());
+}
+
+/* 启动服务器 */
+static inline void start_servers(Master *master) {
     JList *ptr=master->servers;
     while(ptr) {
         Server *server=(Server*)j_list_data(ptr);
@@ -130,7 +140,15 @@ void run_master(Master *master) {
         }
         ptr=j_list_next(ptr);
     }
+}
 
+/* 开始执行主控进程 */
+void run_master(Master *master) {
+    if(!check_master(master)) {
+        return;
+    }
+    init_master(master);
+    start_servers(master);
     wait_servers(master);
 }
 
@@ -146,15 +164,16 @@ static inline boolean load_config(Master *master) {
     }
     JConfObject *root=(JConfObject*)j_conf_loader_get_root(master->config_loader);
     master->log=load_log(root,NULL, CONFIG_KEY_LOG, DEFAULT_LOG);
-    master->logfd=append_file(master->log);
+    master->logfd=-1;
     master->error_log=load_log(root,NULL, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
-    master->error_logfd=append_file(master->error_log);
+    master->error_logfd=-1;
     master->log_level=load_loglevel(root, NULL);
     master->mod_paths=load_modules(root);
 
     master->servers=load_servers((JConfRoot*)root, master->option);
     return TRUE;
 }
+
 
 /*
  * 等待信号
@@ -185,12 +204,6 @@ static inline void wait_servers(Master *master) {
 static inline boolean check_master(Master *master) {
     if(master->config_error!=NULL) {
         j_fprintf(stderr, "configuration error: %s\n", master->config_error);
-        return FALSE;
-    } else if(master->logfd<0) {
-        j_fprintf(stderr, "unable to open log %s\n", master->log);
-        return FALSE;
-    } else if(master->error_logfd<0) {
-        j_fprintf(stderr, "unable to open error log %s\n", master->error_log);
         return FALSE;
     }
     return TRUE;
