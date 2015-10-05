@@ -32,7 +32,7 @@ boolean make_path(const char *path);
 int append_file(const char *path);
 
 
-void log_internal(const char *domain,const char *message, int level, int fd, int errfd);
+void log_common(const char *domain,const char *message, int level, int fd, int errfd);
 
 /* 根据用户名设置当前进程的用户ID */
 boolean setuser(const char *user);

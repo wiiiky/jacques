@@ -40,7 +40,7 @@ int append_file(const char *path) {
 /*
  * 记录日志
  */
-void log_internal(const char *domain,const char *message, int level, int fd, int errfd) {
+void log_common(const char *domain,const char *message, int level, int fd, int errfd) {
     char buf[4096];
     time_t t=time(NULL);
     ctime_r(&t, buf);

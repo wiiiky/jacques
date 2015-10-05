@@ -175,7 +175,7 @@ static inline void server_send(JSocket *socket, int ret, void * user_data) {
 /* 日志处理函数 */
 static void server_log_handler(const char *domain, JLogLevelFlag level, const char *message, void * user_data) {
     Server *server=(Server*)user_data;
-    log_internal(server->name, message, level, server->logfd, server->error_logfd);
+    log_common(server->name, message, level, server->logfd, server->error_logfd);
 }
 
 static void signal_handler(int signo) {

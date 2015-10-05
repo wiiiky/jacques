@@ -213,5 +213,5 @@ static inline boolean check_master(Master *master) {
 static void master_log_handler(const char *domain, JLogLevelFlag level,
                                const char *message, void * user_data) {
     Master *master=(Master*)user_data;
-    log_internal(domain, message, level, master->logfd, master->error_logfd);
+    log_common(domain, message, level, master->logfd, master->error_logfd);
 }
