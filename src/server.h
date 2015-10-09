@@ -23,6 +23,7 @@
 struct _Server {
     JObject parent;
     char *name;
+    char *host;
     unsigned short port;
     char *user;    /* 以哪个用户执行 */
 

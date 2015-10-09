@@ -56,6 +56,11 @@ char *extract_user(JConfObject *root, JConfObject *node) {
     return j_strdup(j_conf_object_get_string_priority(root, node, CONFIG_KEY_USER, DEFAULT_USER));
 }
 
+/* 读取主机地址 */
+char *extract_host(JConfObject *root, JConfObject *node) {
+    return j_strdup(j_conf_object_get_string_priority(root, node, CONFIG_KEY_HOST, DEFAULT_HOST));
+}
+
 int extract_loglevel(JConfObject *root, JConfObject *node) {
     return j_conf_object_get_integer_priority(root, node, CONFIG_KEY_LOG_LEVEL, DEFAULT_LOG_LEVEL);
 }

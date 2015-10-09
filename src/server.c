@@ -58,11 +58,12 @@ static inline Server *create_server(const char *name,JConfObject *root, JConfObj
     server->port=port;
     server->pid=-1;
     server->user=extract_user(root, obj);
+    server->host = extract_host(root, obj);
     server->log=extract_log(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG);
     server->error_log=extract_log(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
     server->log_level=extract_loglevel(root, obj);
-    server->logfd=create_or_append(server->log);
-    server->error_logfd=create_or_append(server->error_log);
+    server->logfd=-1;
+    server->error_logfd=-1;
     server->socket=NULL;
 
     server->mod_paths=extract_modules(obj);
@@ -94,7 +95,7 @@ boolean start_server(Server *server) {
     if(server->pid<0) {
         return FALSE;
     } else if(server->pid>0) {
-        /* 主进程 */
+        /* 主进程 master */
         return TRUE;
     }
     /* 执行服务 */
@@ -108,6 +109,7 @@ static void stop_server(Server *server) {
     j_free(server->log);
     j_free(server->error_log);
     j_free(server->user);
+    j_free(server->host);
     j_list_free_full(server->mod_paths, j_free);
     close(server->logfd);
     close(server->error_logfd);
@@ -125,14 +127,15 @@ static inline void server_send(JSocket *socket, int ret, void * user_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
+    server->logfd=create_or_append(server->log);
+    server->error_logfd=create_or_append(server->error_log);
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
 
     if(!setuser_by_name(server->user)) {
         server_error(server, "fail to set the process effective user '%s'", server->user);
         exit(1);
     }
-    server->socket=socket_listen("127.0.0.1", server->port);
-    if(server->socket==NULL) {
+    if((server->socket=socket_listen(server->host, server->port))==NULL) {
         server_error(server, "unable to listen on port %d", server->port);
         exit(1);
     }

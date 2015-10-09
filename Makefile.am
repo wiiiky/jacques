@@ -26,3 +26,6 @@ install: all
 	cp src/$(PACKAGE) $(TARGET)
 	cp conf/$(PACKAGE).conf $(CONF_DIR)
 	cp mod/*.so $(MODS_DIR)
+
+clean-local:
+	-rm -rf local

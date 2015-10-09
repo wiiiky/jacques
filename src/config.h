@@ -34,11 +34,13 @@
 #define CONFIG_KEY_LOG_LEVEL "log_level"
 #define CONFIG_KEY_USER "user"
 #define CONFIG_KEY_MODULES "modules"
+#define CONFIG_KEY_HOST "host"
 
 #define DEFAULT_LOG LOG_DIR "/" PACKAGE ".log"
 #define DEFAULT_ERROR_LOG LOG_DIR "/" PACKAGE ".err"
 #define DEFAULT_LOG_LEVEL (J_LOG_LEVEL_ERROR|J_LOG_LEVEL_INFO|J_LOG_LEVEL_WARNING)
 #define DEFAULT_USER    "wiky"
+#define DEFAULT_HOST    "0.0.0.0"
 
 JConfLoader *create_config_loader(void);
 
@@ -55,6 +57,9 @@ char *extract_log(JConfObject *root, JConfObject *node, const char *key, const c
 
 /* 读取用户，服务进程将以该用户的身份执行 */
 char *extract_user(JConfObject *root, JConfObject *node);
+
+/* 读取主机地址 */
+char *extract_host(JConfObject *root, JConfObject *node);
 
 /* 读取日志级别 */
 int extract_loglevel(JConfObject *root, JConfObject *node);
