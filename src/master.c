@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <jmod/jmod.h>
 
 #define MASTER_DOMAIN "master"
 
@@ -29,6 +30,9 @@ static Master *g_master=NULL;
 static void quit_master(void);
 /* 读取配置文件 */
 static inline boolean load_config(Master *master);
+/* 载入模块 */
+static inline boolean load_modules(Master *master);
+
 
 /* 日志记录函数 */
 static void master_log_handler(const char *domain, JLogLevelFlag level,
@@ -40,7 +44,7 @@ static void master_log_handler(const char *domain, JLogLevelFlag level,
 
 
 /* 初始化Master，打开日志，载入模块等 */
-static inline void init_master(Master *master);
+static inline boolean init_master(Master *master);
 /* 启动服务器 */
 static inline void start_servers(Master *master);
 static inline void wait_servers(Master *master);
@@ -118,14 +122,19 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
 }
 
 /* 初始化Master，打开日志，载入模块等 */
-static inline void init_master(Master *master) {
-    master->logfd = create_or_append(master->log);
-    master->error_logfd = create_or_append(master->error_log);
+static inline boolean init_master(Master *master) {
+    if(!check_master(master)||!load_modules(master)) {
+        return FALSE;
+    }
 
     j_daemonize();
 
+    master->logfd = create_or_append(master->log);
+    master->error_logfd = create_or_append(master->error_log);
     j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
+
     master_debug("master pid %d\n",getpid());
+    return TRUE;
 }
 
 /* 启动服务器 */
@@ -144,10 +153,9 @@ static inline void start_servers(Master *master) {
 
 /* 开始执行主控进程 */
 void run_master(Master *master) {
-    if(!check_master(master)) {
+    if(!init_master(master)) {
         return;
     }
-    init_master(master);
     start_servers(master);
     wait_servers(master);
 }
@@ -163,12 +171,12 @@ static inline boolean load_config(Master *master) {
         return FALSE;
     }
     JConfObject *root=(JConfObject*)j_conf_loader_get_root(master->config_loader);
-    master->log=load_log(root,NULL, CONFIG_KEY_LOG, DEFAULT_LOG);
+    master->log=extract_log(root,NULL, CONFIG_KEY_LOG, DEFAULT_LOG);
     master->logfd=-1;
-    master->error_log=load_log(root,NULL, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
+    master->error_log=extract_log(root,NULL, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
     master->error_logfd=-1;
-    master->log_level=load_loglevel(root, NULL);
-    master->mod_paths=load_modules(root);
+    master->log_level=extract_loglevel(root, NULL);
+    master->mod_paths=extract_modules(root);
 
     master->servers=load_servers((JConfRoot*)root, master->option);
     return TRUE;
@@ -207,9 +215,25 @@ static inline boolean check_master(Master *master) {
         return FALSE;
     }
     return TRUE;
-
 }
 
+/* 载入模块，失败返回FALSE，成功返回TRUE */
+static inline boolean load_modules(Master *master) {
+    JList *ptr=master->mod_paths;
+    while(ptr) {
+        const char *path = (const char*)j_list_data(ptr);
+        JacModule *mod=jac_loads_module(path);
+        if(mod==NULL) {
+            fprintf(stderr, "fail to load module %s\n", path);
+            return FALSE;
+        }
+        ptr=j_list_next(ptr);
+    }
+    return TRUE;
+}
+
+
+/* 日志输出函数 */
 static void master_log_handler(const char *domain, JLogLevelFlag level,
                                const char *message, void * user_data) {
     Master *master=(Master*)user_data;

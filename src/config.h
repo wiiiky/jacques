@@ -43,17 +43,21 @@
 JConfLoader *create_config_loader(void);
 
 
+/*
+ * extract_* 函数从配置中提取相关字段
+ */
+
 /* 从配置中读取模块列表 */
-JList *load_modules(JConfObject *obj);
+JList *extract_modules(JConfObject *obj);
 
 /* 载入日志文件，同时创建目录（如果必要的话） */
-char *load_log(JConfObject *root, JConfObject *node, const char *key, const char *def);
+char *extract_log(JConfObject *root, JConfObject *node, const char *key, const char *def);
 
 /* 读取用户，服务进程将以该用户的身份执行 */
-char *load_user(JConfObject *root, JConfObject *node);
+char *extract_user(JConfObject *root, JConfObject *node);
 
 /* 读取日志级别 */
-int load_loglevel(JConfObject *root, JConfObject *node);
+int extract_loglevel(JConfObject *root, JConfObject *node);
 
 /* 命令行参数 */
 typedef struct {

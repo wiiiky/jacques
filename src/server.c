@@ -57,15 +57,15 @@ static inline Server *create_server(const char *name,JConfObject *root, JConfObj
     server->name=j_strdup(name);
     server->port=port;
     server->pid=-1;
-    server->user=load_user(root, obj);
-    server->log=load_log(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG);
-    server->error_log=load_log(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
-    server->log_level=load_loglevel(root, obj);
+    server->user=extract_user(root, obj);
+    server->log=extract_log(root, obj, CONFIG_KEY_LOG, DEFAULT_LOG);
+    server->error_log=extract_log(root, obj, CONFIG_KEY_ERROR_LOG, DEFAULT_ERROR_LOG);
+    server->log_level=extract_loglevel(root, obj);
     server->logfd=create_or_append(server->log);
     server->error_logfd=create_or_append(server->error_log);
     server->socket=NULL;
 
-    server->mod_paths=load_modules(obj);
+    server->mod_paths=extract_modules(obj);
 
     return server;
 }
