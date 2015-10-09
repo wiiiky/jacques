@@ -123,15 +123,15 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
 
 /* 初始化Master，打开日志，载入模块等 */
 static inline boolean init_master(Master *master) {
+    master->logfd = create_or_append(master->log);
+    master->error_logfd = create_or_append(master->error_log);
+    j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
+
     if(!check_master(master)||!load_modules(master)) {
         return FALSE;
     }
 
     j_daemonize();
-
-    master->logfd = create_or_append(master->log);
-    master->error_logfd = create_or_append(master->error_log);
-    j_log_set_handler(MASTER_DOMAIN,master->log_level, master_log_handler, master);
 
     master_debug("master pid %d\n",getpid());
     return TRUE;
@@ -227,6 +227,7 @@ static inline boolean load_modules(Master *master) {
             fprintf(stderr, "fail to load module %s\n", path);
             return FALSE;
         }
+        master_info("load module %s successfully\n", path);
         ptr=j_list_next(ptr);
     }
     return TRUE;

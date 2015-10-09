@@ -321,7 +321,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = src tests
+SUBDIRS = src mod tests
 dist_doc_DATA = \
 	README \
 	COPYING \
@@ -814,12 +814,14 @@ uninstall:
 install: all
 	mkdir -p $(SBIN_DIR)
 	mkdir -p $(CONF_DIR)
+	mkdir -p $(MODS_DIR)
 	if [ -f $(TARGET) ] ; \
 	then \
 	    mv $(TARGET) $(TARGET).old; \
 	fi
 	cp src/$(PACKAGE) $(TARGET)
 	cp conf/$(PACKAGE).conf $(CONF_DIR)
+	cp mod/*.so $(MODS_DIR)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
