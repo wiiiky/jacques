@@ -105,7 +105,7 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
         JList *ptr=g_master->servers;
         Server *server=NULL;
         while(ptr) {
-            Server *s=((Server*)j_list_data(ptr));
+            Server *s=(Server*)j_list_data(ptr);
             if(s->pid==pid) {
                 server=s;
                 break;
@@ -117,6 +117,21 @@ static void signal_handler(int signo, siginfo_t *sinfo, void *unused) {
         } else {
             master_info("server %s(PID=%d) exits with status code %d", server->name, pid, status);
             server->pid=-1;
+        }
+
+        /* 检查还有多少个子进程 */
+        int child_count=0;
+        ptr=g_master->servers;
+        while(ptr) {
+            Server *s=(Server*)j_list_data(ptr);
+            if(s->pid>0) {
+                child_count++;
+            }
+            ptr=j_list_next(ptr);
+        }
+        /* 如果没有子进程，则主进程也退出 */
+        if(child_count==0) {
+            g_master->running=FALSE;
         }
     }
 }
@@ -227,7 +242,7 @@ static inline boolean load_modules(Master *master) {
             fprintf(stderr, "fail to load module %s\n", path);
             return FALSE;
         }
-        master_info("load module %s successfully\n", path);
+        master_info("load module %s successfully\n", mod->name);
         ptr=j_list_next(ptr);
     }
     return TRUE;

@@ -23,10 +23,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include <jmod/jmod.h>
+
 
 
 /* 创建服务，失败返回NULL */
 static inline Server *create_server(const char *name,JConfObject *root, JConfObject *obj, const CLOption *option);
+
+static inline void init_server(Server *server);
 /* 服务的执行函数 */
 static inline void run_server(Server *server);
 
@@ -127,9 +131,32 @@ static inline void server_send(JSocket *socket, int ret, void * user_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
+    init_server(server);
+
+    server_info(server, "listen on port %d", server->port);
+    j_socket_accept_async(server->socket, server_accept, server);
+    j_main();
+    server_info(server, "exit");
+}
+
+/* 初始化服务进程 */
+static inline void init_server(Server *server) {
     server->logfd=create_or_append(server->log);
     server->error_logfd=create_or_append(server->error_log);
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
+
+    /* 载入模块 */
+    JList *ptr=server->mod_paths;
+    while(ptr) {
+        const char *path=(const char*)j_list_data(ptr);
+        JacModule *mod=jac_loads_module(path);
+        if(mod==NULL) {
+            server_error(server, "fail to load module %s", path);
+            exit(1);
+        }
+        server_info(server, "load module %s successfully", mod->name);
+        ptr=j_list_next(ptr);
+    }
 
     if(!setuser_by_name(server->user)) {
         server_error(server, "fail to set the process effective user '%s'", server->user);
@@ -141,10 +168,6 @@ static inline void run_server(Server *server) {
     }
 
     signal(SIGINT, signal_handler);
-    server_info(server, "listen on port %d", server->port);
-    j_socket_accept_async(server->socket, server_accept, server);
-    j_main();
-    server_info(server, "exit");
 }
 
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
