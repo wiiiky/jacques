@@ -26,6 +26,9 @@
 #include <jmod/jmod.h>
 
 
+/*
+ * 全局变量，服务启动后生效
+ */
 static Server *g_server = NULL;
 
 
@@ -48,10 +51,10 @@ static void server_log_handler(const char *domain,
                                void * user_data);
 /* 信号处理函数 */
 static void signal_handler(int signo);
-#define server_debug(server, ...) j_log(server->name, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
-#define server_info(server, ...) j_log(server->name, J_LOG_LEVEL_INFO, __VA_ARGS__)
-#define server_warning(server, ...) j_log(server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
-#define server_error(server, ...) j_log(server->name, J_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define server_debug(...) j_log(g_server->name, J_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define server_info(...) j_log(g_server->name, J_LOG_LEVEL_INFO, __VA_ARGS__)
+#define server_warning(...) j_log(g_server->name, J_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define server_error(...) j_log(g_server->name, J_LOG_LEVEL_ERROR, __VA_ARGS__)
 
 static void stop_server(Server *server);
 
@@ -140,10 +143,10 @@ static inline void server_send(JSocket *socket, int ret, void * user_data);
 static inline void run_server(Server *server) {
     init_server(server);
 
-    server_info(server, "listen on port %d", server->port);
+    server_info("listen on port %d", server->port);
     j_socket_accept_async(server->socket, server_accept, NULL);
     j_main();
-    server_info(server, "exit");
+    server_info("exit");
 }
 
 /* 初始化服务进程 */
@@ -159,19 +162,19 @@ static inline void init_server(Server *server) {
         const char *path=(const char*)j_list_data(ptr);
         JacModule *mod=jac_loads_module(path);
         if(mod==NULL) {
-            server_error(server, "fail to load module %s", path);
+            server_error("fail to load module %s", path);
             exit(1);
         }
-        server_info(server, "load module %s successfully", mod->name);
+        server_info("load module %s successfully", mod->name);
         ptr=j_list_next(ptr);
     }
 
     if(!setuser_by_name(server->user)) {
-        server_error(server, "fail to set the process effective user '%s'", server->user);
+        server_error("fail to set the process effective user '%s'", server->user);
         exit(1);
     }
     if((server->socket=socket_listen(server->host, server->port))==NULL) {
-        server_error(server, "unable to listen on port %d", server->port);
+        server_error("unable to listen on port %d", server->port);
         exit(1);
     }
 
@@ -179,19 +182,18 @@ static inline void init_server(Server *server) {
 }
 
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
-    Server *server=g_server;
     if(cli==NULL) {
-        server_error(server, "socket accept error");
+        server_error("socket accept error");
         return FALSE;
     }
-    server_info(server, "establish connection with %s", j_socket_get_remote_address_string(cli));
+    server_info("establish connection with %s", j_socket_get_remote_address_string(cli));
     j_socket_receive_async(cli, server_recv, NULL);
     j_socket_unref(cli);
     handle_accept(cli);
     return TRUE;
 }
 
-/* 调用接收到连接的回调函数 */
+/* 调用接收链接的回调函数 */
 static inline void handle_accept(JSocket *client) {
     JList *ptr = get_client_accept_hooks();
     while(ptr) {
@@ -202,25 +204,26 @@ static inline void handle_accept(JSocket *client) {
 }
 
 static inline boolean server_recv(JSocket *socket, const char *buffer, int size, void * user_data) {
-    Server *server=(Server*)g_server;
+    handle_recv(socket, buffer, size, user_data);
     if(size<=0) {
-        server_info(server, "client %s closed", j_socket_get_remote_address_string(socket));
+        server_info("client %s closed", j_socket_get_remote_address_string(socket));
         return FALSE;
     }
     j_socket_send_async(socket, buffer, size, server_send, NULL);
     return TRUE;
 }
 
+/* 收到数据的回调函数 */
 static inline void handle_recv(JSocket *socket, const char *buf, int size, void *user_data) {
 
 }
 
 
 static inline void server_send(JSocket *socket, int ret, void * user_data) {
-    Server *server=(Server*)g_server;
-    server_debug(server, "%d bytes sent to %s", ret, j_socket_get_remote_address_string(socket));
+    handle_send(socket, ret, user_data);
 }
 
+/* 数据发送完成的回调函数 */
 static inline void handle_send(JSocket *socket, int size, void *user_data) {
 
 }
