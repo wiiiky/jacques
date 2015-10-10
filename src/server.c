@@ -26,6 +26,8 @@
 #include <jmod/jmod.h>
 
 
+static Server *g_server = NULL;
+
 
 /* 创建服务，失败返回NULL */
 static inline Server *create_server(const char *name,JConfObject *root, JConfObject *obj, const CLOption *option);
@@ -33,6 +35,11 @@ static inline Server *create_server(const char *name,JConfObject *root, JConfObj
 static inline void init_server(Server *server);
 /* 服务的执行函数 */
 static inline void run_server(Server *server);
+
+/* 调用相关的回调函数 */
+static inline void handle_accept(JSocket *socket);
+static inline void handle_recv(JSocket *socket, const char *buf, int size, void *user_data);
+static inline void handle_send(JSocket *socket, int size, void *user_data);
 
 /* 日志记录函数 */
 static void server_log_handler(const char *domain,
@@ -126,7 +133,7 @@ static void stop_server(Server *server) {
 }
 
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data);
-static inline boolean server_receive(JSocket *socket, const char *buffer, int size, void * user_data);
+static inline boolean server_recv(JSocket *socket, const char *buffer, int size, void * user_data);
 static inline void server_send(JSocket *socket, int ret, void * user_data);
 
 /* 进入服务器主循环 */
@@ -134,13 +141,14 @@ static inline void run_server(Server *server) {
     init_server(server);
 
     server_info(server, "listen on port %d", server->port);
-    j_socket_accept_async(server->socket, server_accept, server);
+    j_socket_accept_async(server->socket, server_accept, NULL);
     j_main();
     server_info(server, "exit");
 }
 
 /* 初始化服务进程 */
 static inline void init_server(Server *server) {
+    g_server=server;
     server->logfd=create_or_append(server->log);
     server->error_logfd=create_or_append(server->error_log);
     j_log_set_handler(server->name, server->log_level, server_log_handler, server);
@@ -171,30 +179,50 @@ static inline void init_server(Server *server) {
 }
 
 static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
-    Server *server=(Server*)user_data;
+    Server *server=g_server;
     if(cli==NULL) {
         server_error(server, "socket accept error");
         return FALSE;
     }
     server_info(server, "establish connection with %s", j_socket_get_remote_address_string(cli));
-    j_socket_receive_async(cli, server_receive, server);
+    j_socket_receive_async(cli, server_recv, NULL);
     j_socket_unref(cli);
+    handle_accept(cli);
     return TRUE;
 }
 
-static inline boolean server_receive(JSocket *socket, const char *buffer, int size, void * user_data) {
-    Server *server=(Server*)user_data;
+/* 调用接收到连接的回调函数 */
+static inline void handle_accept(JSocket *client) {
+    JList *ptr = get_client_accept_hooks();
+    while(ptr) {
+        AcceptClient func=(AcceptClient)j_list_data(ptr);
+        func(client);
+        ptr=j_list_next(ptr);
+    }
+}
+
+static inline boolean server_recv(JSocket *socket, const char *buffer, int size, void * user_data) {
+    Server *server=(Server*)g_server;
     if(size<=0) {
         server_info(server, "client %s closed", j_socket_get_remote_address_string(socket));
         return FALSE;
     }
-    j_socket_send_async(socket, buffer, size, server_send, server);
+    j_socket_send_async(socket, buffer, size, server_send, NULL);
     return TRUE;
 }
 
+static inline void handle_recv(JSocket *socket, const char *buf, int size, void *user_data) {
+
+}
+
+
 static inline void server_send(JSocket *socket, int ret, void * user_data) {
-    Server *server=(Server*)user_data;
+    Server *server=(Server*)g_server;
     server_debug(server, "%d bytes sent to %s", ret, j_socket_get_remote_address_string(socket));
+}
+
+static inline void handle_send(JSocket *socket, int size, void *user_data) {
+
 }
 
 

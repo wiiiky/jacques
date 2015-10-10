@@ -19,10 +19,14 @@
 
 
 static void accept_hook(JSocket *socket);
+static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data);
+static void send_hook(JSocket *socket, int ret, void *user_data);
 
 
 JacHook hooks= {
     accept_hook,
+    recv_hook,
+    send_hook,
 };
 
 
@@ -35,4 +39,12 @@ JACQUES_MODULE(mod);
 
 
 static void accept_hook(JSocket *socket){
+}
+
+static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data){
+    
+}
+
+static void send_hook(JSocket *socket, int ret, void *user_data){
+    
 }
