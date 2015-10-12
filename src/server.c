@@ -137,10 +137,11 @@ static void stop_server(Server *server) {
 }
 
 static inline boolean server_accept_cb(JSocket *socket, JSocket *cli, void * user_data);
-static inline boolean server_recv_cb(JSocket *socket, const char *buffer, int size, void * user_data);
+static inline boolean server_recv_cb(JSocket *socket, const void *buffer, int size, void * user_data);
 static inline void server_send_cb(JSocket *socket, int ret, void * user_data);
 
-static inline void server_send_internal(JSocket *socket, const char *buf, int size, void *user_data);
+static inline void server_send_internal(JSocket *socket, const void *buf, unsigned int size, void *user_data);
+static inline void server_send_multi_internal(const void *buf, unsigned int size, void *user_data, JacSocketFilter filter, void *filter_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
@@ -184,6 +185,7 @@ static inline void init_server(Server *server) {
     signal(SIGINT, signal_handler);
 
     register_jac_send(server_send_internal);
+    register_jac_send_multi(server_send_multi_internal);
 
     handle_init(server->name, server->host, server->port);
 }
@@ -220,7 +222,7 @@ static inline void handle_accept(JSocket *client) {
     }
 }
 
-static inline boolean server_recv_cb(JSocket *socket, const char *buffer, int size, void * user_data) {
+static inline boolean server_recv_cb(JSocket *socket, const void *buffer, int size, void * user_data) {
     handle_recv(socket, buffer, size, user_data);
     if(size<=0) {
         server_info("client %s closed", j_socket_get_remote_address_string(socket));
@@ -229,8 +231,22 @@ static inline boolean server_recv_cb(JSocket *socket, const char *buffer, int si
     return TRUE;
 }
 
-static inline void server_send_internal(JSocket *socket, const char *buf, int size, void *user_data) {
+static inline void server_send_internal(JSocket *socket, const void *buf, unsigned int size, void *user_data) {
     j_socket_send_async(socket, buf, size, server_send_cb, user_data);
+}
+
+static inline void server_send_multi_internal(const void *buf, unsigned int size, void *user_data, JacSocketFilter filter, void *filter_data) {
+    JList *sockets=j_main_get_sources("SocketSource");
+    JList *ptr=sockets;
+    while(ptr) {
+        JSocketSource *src = (JSocketSource*)j_list_data(ptr);
+        JSocket *socket=j_socket_source_get_socket(src);
+        if(filter(socket, filter_data)) {
+            server_send_internal(socket, buf, size, user_data);
+        }
+        ptr=j_list_next(ptr);
+    }
+    j_list_free(sockets);
 }
 
 /* 收到数据的回调函数 */
