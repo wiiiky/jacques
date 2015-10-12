@@ -40,6 +40,7 @@ static inline void init_server(Server *server);
 static inline void run_server(Server *server);
 
 /* 调用相关的回调函数 */
+static inline void handle_init(const char *name, const char *host, unsigned short port);
 static inline void handle_accept(JSocket *socket);
 static inline void handle_recv(JSocket *socket, const char *buf, int size, void *user_data);
 static inline void handle_send(JSocket *socket, int size, void *user_data);
@@ -135,16 +136,18 @@ static void stop_server(Server *server) {
     }
 }
 
-static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data);
-static inline boolean server_recv(JSocket *socket, const char *buffer, int size, void * user_data);
-static inline void server_send(JSocket *socket, int ret, void * user_data);
+static inline boolean server_accept_cb(JSocket *socket, JSocket *cli, void * user_data);
+static inline boolean server_recv_cb(JSocket *socket, const char *buffer, int size, void * user_data);
+static inline void server_send_cb(JSocket *socket, int ret, void * user_data);
+
+static inline void server_send_internal(JSocket *socket, const char *buf, int size, void *user_data);
 
 /* 进入服务器主循环 */
 static inline void run_server(Server *server) {
     init_server(server);
 
     server_info("listen on port %d", server->port);
-    j_socket_accept_async(server->socket, server_accept, NULL);
+    j_socket_accept_async(server->socket, server_accept_cb, NULL);
     j_main();
     server_info("exit");
 }
@@ -179,15 +182,29 @@ static inline void init_server(Server *server) {
     }
 
     signal(SIGINT, signal_handler);
+
+    register_jac_send(server_send_internal);
+
+    handle_init(server->name, server->host, server->port);
 }
 
-static inline boolean server_accept(JSocket *socket, JSocket *cli, void * user_data) {
+/* 调用服务初始化的回调函数 */
+static inline void handle_init(const char *name, const char *host, unsigned short port) {
+    JList *ptr=get_server_init_hooks();
+    while(ptr) {
+        ServerInit func=(ServerInit)j_list_data(ptr);
+        func(name, host, port);
+        ptr=j_list_next(ptr);
+    }
+}
+
+static inline boolean server_accept_cb(JSocket *socket, JSocket *cli, void * user_data) {
     if(cli==NULL) {
         server_error("socket accept error");
         return FALSE;
     }
     server_info("establish connection with %s", j_socket_get_remote_address_string(cli));
-    j_socket_receive_async(cli, server_recv, NULL);
+    j_socket_receive_async(cli, server_recv_cb, NULL);
     j_socket_unref(cli);
     handle_accept(cli);
     return TRUE;
@@ -203,29 +220,42 @@ static inline void handle_accept(JSocket *client) {
     }
 }
 
-static inline boolean server_recv(JSocket *socket, const char *buffer, int size, void * user_data) {
+static inline boolean server_recv_cb(JSocket *socket, const char *buffer, int size, void * user_data) {
     handle_recv(socket, buffer, size, user_data);
     if(size<=0) {
         server_info("client %s closed", j_socket_get_remote_address_string(socket));
         return FALSE;
     }
-    j_socket_send_async(socket, buffer, size, server_send, NULL);
     return TRUE;
+}
+
+static inline void server_send_internal(JSocket *socket, const char *buf, int size, void *user_data) {
+    j_socket_send_async(socket, buf, size, server_send_cb, user_data);
 }
 
 /* 收到数据的回调函数 */
 static inline void handle_recv(JSocket *socket, const char *buf, int size, void *user_data) {
-
+    JList *ptr=get_client_recv_hooks();
+    while(ptr) {
+        RecvClient func=(RecvClient)j_list_data(ptr);
+        func(socket, buf, size, user_data);
+        ptr=j_list_next(ptr);
+    }
 }
 
 
-static inline void server_send(JSocket *socket, int ret, void * user_data) {
+static inline void server_send_cb(JSocket *socket, int ret, void * user_data) {
     handle_send(socket, ret, user_data);
 }
 
 /* 数据发送完成的回调函数 */
 static inline void handle_send(JSocket *socket, int size, void *user_data) {
-
+    JList *ptr=get_client_send_hooks();
+    while(ptr) {
+        SendClient func=(SendClient)j_list_data(ptr);
+        func(socket, size, user_data);
+        ptr=j_list_next(ptr);
+    }
 }
 
 

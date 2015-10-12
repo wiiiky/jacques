@@ -18,12 +18,14 @@
 #include <jio/jio.h>
 
 
+static void init_hook(const char *name, const char *host, unsigned short port);
 static void accept_hook(JSocket *socket);
 static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data);
 static void send_hook(JSocket *socket, int ret, void *user_data);
 
 
 JacHook hooks= {
+    init_hook,
     accept_hook,
     recv_hook,
     send_hook,
@@ -38,11 +40,14 @@ JacModule mod = {
 JACQUES_MODULE(mod);
 
 
+static void init_hook(const char *name, const char *host, unsigned short port){
+}
+
 static void accept_hook(JSocket *socket){
 }
 
 static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data){
-    
+    jac_send(socket, buffer, size, NULL);
 }
 
 static void send_hook(JSocket *socket, int ret, void *user_data){
