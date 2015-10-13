@@ -238,6 +238,7 @@ static inline void server_send_internal(JSocket *socket, const void *buf, unsign
 static inline void server_send_multi_internal(const void *buf, unsigned int size, void *user_data, JacSocketFilter filter, void *filter_data) {
     JList *sockets=j_main_get_sources("SocketSource");
     JList *ptr=sockets;
+    printf("multi_internal, %d\n",j_list_length(ptr));
     while(ptr) {
         JSocketSource *src = (JSocketSource*)j_list_data(ptr);
         JSocket *socket=j_socket_source_get_socket(src);

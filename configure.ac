@@ -3,6 +3,7 @@ dnl Created by Anjuta application wizard.
 
 
 AC_INIT(jacques, 0.01)
+AC_CONFIG_AUX_DIR([.])
 
 #AC_CONFIG_HEADERS([src/config.h])
 
@@ -26,6 +27,8 @@ AC_SUBST(SBIN_DIR)
 AC_SUBST(CONF_DIR)
 AC_SUBST(LOGS_DIR)
 AC_SUBST(MODS_DIR)
+
+AC_CONFIG_SUBDIRS([src/libev])
 
 AC_OUTPUT([
            Makefile

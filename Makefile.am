@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 ## Created by Anjuta
 
-SUBDIRS = src mod tests
+SUBDIRS = src mod tests 
 
 dist_doc_DATA = \
 	README \

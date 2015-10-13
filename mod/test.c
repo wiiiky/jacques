@@ -24,6 +24,9 @@ static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_
 static void send_hook(JSocket *socket, int ret, void *user_data);
 
 
+static boolean send_filter(JSocket *socket, void *data);
+
+
 JacHook hooks= {
     init_hook,
     accept_hook,
@@ -47,9 +50,13 @@ static void accept_hook(JSocket *socket){
 }
 
 static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data){
-    jac_send(socket, buffer, size, NULL);
+    jac_send_multi(buffer, size, NULL, send_filter, NULL);
 }
 
 static void send_hook(JSocket *socket, int ret, void *user_data){
     
+}
+
+static boolean send_filter(JSocket *socket, void *data){
+    return TRUE;
 }
