@@ -9,14 +9,12 @@ AM_CPPFLAGS = \
 	-DCONFIG_DIR=\""$(CONF_DIR)"\" \
 	-DLOG_DIR=\""$(LOGS_DIR)"\" \
 	-DMOD_DIR=\""$(MODS_DIR)"\" \
-	$(JACQUES_CFLAGS) \
 	-I$(srcdir)/libev
 
 AM_CFLAGS =\
 	 -Wall\
 	 -O0 \
-	 -g \
-	 -pg
+	 -g
 
 bin_PROGRAMS = jacques
 
@@ -24,14 +22,13 @@ bin_PROGRAMS = jacques
 jacques_SOURCES = \
 	main.c \
 	socket.c \
-	config.c \
+	client.c \
 	server.c \
-	utils.c \
-	master.c
+	signal.c
 
-jacques_LDFLAGS = -pg
+jacques_LDFLAGS = -lm
 
-jacques_LDADD = $(JACQUES_LIBS) libev/libev.a
+jacques_LDADD = libev/libev.a
 
 
 clean-local:

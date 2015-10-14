@@ -14,22 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_SERVER_H__
-#define __JAC_SERVER_H__
 
-#include "socket.h"
-
-typedef struct {
-    BaseSocket parent;
-    struct ev_loop *loop;
-
-} ServerSocket;
+#include "signal_.h"
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
-/* 创建一个监听套接字 */
-ServerSocket *server_start(const char *ip, unsigned short port);
+static ev_signal signal_watcher;
 
-void server_stop(ServerSocket *server);
+static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents) {
+    ev_break (loop, EVBREAK_ALL);
 
+    ev_signal_stop(loop, w);
 
-#endif
+    printf("SIGINT!\n");
+}
+
+/* 初始化信号处理函数 */
+void signal_init(struct ev_loop *loop) {
+    ev_signal_init (&signal_watcher, sigint_cb, SIGINT);
+    ev_signal_start (loop, &signal_watcher);
+}

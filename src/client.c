@@ -14,22 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_SERVER_H__
-#define __JAC_SERVER_H__
+#include "client.h"
+#include <ev.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#include "socket.h"
+/* 接受一个客户端连接 */
+ClientSocket *client_accept(ServerSocket *server) {
+    struct sockaddr_storage addr;
+    socklen_t addrlen;
+    int fd = accept(((ev_io*)server)->fd, (struct sockaddr*)&addr, &addrlen);
+    if(fd<0) {
+        return NULL;
+    }
+    ClientSocket *cli = malloc(sizeof(ClientSocket));
+    SOCKET_INIT(cli, fd, &addr, addrlen, EV_READ, NULL);
+    cli->server=server;
+    cli->prev=NULL;
+    cli->next=NULL;
 
-typedef struct {
-    BaseSocket parent;
-    struct ev_loop *loop;
+    return cli;
+}
 
-} ServerSocket;
-
-
-/* 创建一个监听套接字 */
-ServerSocket *server_start(const char *ip, unsigned short port);
-
-void server_stop(ServerSocket *server);
-
-
-#endif
+void client_free(ClientSocket *cli) {
+    SOCKET_RELEASE(cli, cli->server->loop);
+    free(cli);
+}

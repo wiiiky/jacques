@@ -14,36 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_MASTER_H__
-#define __JAC_MASTER_H__
+#ifndef __JAC_CLIENT_H__
+#define __JAC_CLIENT_H__
 
-#include <jconf/jconf.h>
-#include <jlib/jlib.h>
-#include "config.h"
+#include "server.h"
 
-struct _Master {
-    JConfLoader *config_loader;
-    char *config_error;
-    char *log;
-    int logfd;
-    char *error_log;
-    int error_logfd;
-    int log_level;
+typedef struct _ClientSocket ClientSocket;
 
-    JList *mod_paths;
+struct _ClientSocket {
+    BaseSocket parent;
 
-    JList *servers;
-    const CLOption *option;
+    ServerSocket *server;
 
-    boolean running;
+    ClientSocket *prev;
+    ClientSocket *next;
 };
 
-typedef struct _Master Master;
+/* 接受一个客户端连接 */
+ClientSocket *client_accept(ServerSocket *server);
 
-/* 初始化主进程 */
-Master *create_master(const CLOption *option);
+void client_free(ClientSocket *cli);
 
-/* 开始执行主控进程 */
-void run_master(Master *master);
 
 #endif

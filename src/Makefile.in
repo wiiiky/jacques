@@ -98,11 +98,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_jacques_OBJECTS = main.$(OBJEXT) socket.$(OBJEXT) config.$(OBJEXT) \
-	server.$(OBJEXT) utils.$(OBJEXT) master.$(OBJEXT)
+am_jacques_OBJECTS = main.$(OBJEXT) socket.$(OBJEXT) client.$(OBJEXT) \
+	server.$(OBJEXT) signal.$(OBJEXT)
 jacques_OBJECTS = $(am_jacques_OBJECTS)
-am__DEPENDENCIES_1 =
-jacques_DEPENDENCIES = $(am__DEPENDENCIES_1) libev/libev.a
+jacques_DEPENDENCIES = libev/libev.a
 jacques_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(jacques_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
@@ -228,8 +227,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_ROOT = @INSTALL_ROOT@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-JACQUES_CFLAGS = @JACQUES_CFLAGS@
-JACQUES_LIBS = @JACQUES_LIBS@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -247,9 +244,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PKG_CONFIG = @PKG_CONFIG@
-PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
-PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 SBIN_DIR = @SBIN_DIR@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -306,25 +300,22 @@ AM_CPPFLAGS = \
 	-DCONFIG_DIR=\""$(CONF_DIR)"\" \
 	-DLOG_DIR=\""$(LOGS_DIR)"\" \
 	-DMOD_DIR=\""$(MODS_DIR)"\" \
-	$(JACQUES_CFLAGS) \
 	-I$(srcdir)/libev
 
 AM_CFLAGS = \
 	 -Wall\
 	 -O0 \
-	 -g \
-	 -pg
+	 -g
 
 jacques_SOURCES = \
 	main.c \
 	socket.c \
-	config.c \
+	client.c \
 	server.c \
-	utils.c \
-	master.c
+	signal.c
 
-jacques_LDFLAGS = -pg
-jacques_LDADD = $(JACQUES_LIBS) libev/libev.a
+jacques_LDFLAGS = -lm
+jacques_LDADD = libev/libev.a
 all: all-recursive
 
 .SUFFIXES:
@@ -411,12 +402,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/master.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signal.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/socket.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
