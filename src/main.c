@@ -24,7 +24,7 @@ int main(int argc, const char *argv[]) {
     if (!ev_default_loop (0)) {
         return -1;
     }
-    ServerSocket *server=server_start("0.0.0.0", 13221);
+    Server *server=server_start("0.0.0.0", 13221);
     if(server==NULL) {
         return -2;
     }

@@ -24,7 +24,8 @@ jacques_SOURCES = \
 	socket.c \
 	client.c \
 	server.c \
-	signal.c
+	signal.c \
+	list.c
 
 jacques_LDFLAGS = -lm
 

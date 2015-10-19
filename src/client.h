@@ -19,21 +19,16 @@
 
 #include "server.h"
 
-typedef struct _ClientSocket ClientSocket;
+typedef struct {
+    Socket parent;
 
-struct _ClientSocket {
-    BaseSocket parent;
-
-    ServerSocket *server;
-
-    ClientSocket *prev;
-    ClientSocket *next;
-};
+    Server *server;
+} Client;
 
 /* 接受一个客户端连接 */
-ClientSocket *client_accept(ServerSocket *server);
+Client *client_accept(Server *server);
 
-void client_free(ClientSocket *cli);
+void client_free(Client *cli);
 
 
 #endif

@@ -19,7 +19,7 @@
 #include <string.h>
 
 /* 使用文件描述符初始化 */
-void socket_init(BaseSocket *sock, int fd, struct sockaddr *addr,
+void socket_init(Socket *sock, int fd, struct sockaddr *addr,
                  socklen_t addrlen, int events,
                  void(*callback)(struct ev_loop *, ev_io *, int)) {
     memcpy(&sock->addr, addr, addrlen);
@@ -28,7 +28,7 @@ void socket_init(BaseSocket *sock, int fd, struct sockaddr *addr,
 }
 
 /* 关闭套接字 */
-void socket_release(BaseSocket *sock, struct ev_loop *loop) {
+void socket_release(Socket *sock, struct ev_loop *loop) {
     ev_io_stop(loop, (ev_io*)sock);
     close(((ev_io*)sock)->fd);
 }

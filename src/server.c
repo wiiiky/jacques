@@ -26,14 +26,15 @@
 static void accept_cb(struct ev_loop *loop, ev_io *w, int revents);
 
 /* 创建一个监听套接字 */
-ServerSocket *server_start(const char *ip, unsigned short port) {
+Server *server_start(const char *ip, unsigned short port) {
     struct sockaddr_storage addr;
     socklen_t addrlen;
     int fd = socket_service(ip, port, &addr, &addrlen);
     if(fd<0) {
         return NULL;
     }
-    ServerSocket *server = (ServerSocket*)malloc(sizeof(ServerSocket));
+    Server *server = (Server*)malloc(sizeof(Server));
+    server->clients=NULL;
     server->loop=EV_DEFAULT;
     SOCKET_INIT(server, fd, &addr, addrlen, EV_READ, accept_cb);
     ev_io_start(server->loop, (ev_io*)server);
@@ -45,15 +46,15 @@ ServerSocket *server_start(const char *ip, unsigned short port) {
     return server;
 }
 
-void server_stop(ServerSocket *server) {
+void server_stop(Server *server) {
     SOCKET_RELEASE(server, server->loop);
     ev_unref(server->loop);
     free(server);
 }
 
 static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {
-    ServerSocket *server=(ServerSocket*)w;
-    ClientSocket *cli=client_accept(server);
+    Server *server=(Server*)w;
+    Client *cli=client_accept(server);
     if(cli) {
         client_free(cli);
     }

@@ -27,18 +27,18 @@ typedef struct {
     ev_io parent;
     struct sockaddr_storage addr;
     socklen_t addrlen;
-} BaseSocket;
+} Socket;
 
 /* 使用文件描述符初始化 */
-void socket_init(BaseSocket *sock, int fd, struct sockaddr *addr,
+void socket_init(Socket *sock, int fd, struct sockaddr *addr,
                  socklen_t addrlen, int events,
                  void(*callback)(struct ev_loop *, ev_io *, int));
 #define SOCKET_INIT(sock, fd, addr, addrlen, events, cb)\
-    socket_init((BaseSocket*)sock, fd, (struct sockaddr*)addr, addrlen, events, cb)
+    socket_init((Socket*)sock, fd, (struct sockaddr*)addr, addrlen, events, cb)
 
 /* 关闭套接字 */
-void socket_release(BaseSocket *sock, struct ev_loop *loop);
-#define SOCKET_RELEASE(sock, loop)  socket_release((BaseSocket*)sock, loop)
+void socket_release(Socket *sock, struct ev_loop *loop);
+#define SOCKET_RELEASE(sock, loop)  socket_release((Socket*)sock, loop)
 
 /*
  * 创建一个监听套接字

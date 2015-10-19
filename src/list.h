@@ -14,29 +14,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#include "client.h"
-#include <ev.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
 
-/* 接受一个客户端连接 */
-Client *client_accept(Server *server) {
-    struct sockaddr_storage addr;
-    socklen_t addrlen;
-    int fd = accept(((ev_io*)server)->fd, (struct sockaddr*)&addr, &addrlen);
-    if(fd<0) {
-        return NULL;
-    }
-    Client *cli = malloc(sizeof(Client));
-    SOCKET_INIT(cli, fd, &addr, addrlen, EV_READ, NULL);
-    cli->server=server;
+#ifndef __JAC_LIST_H__
+#define __JAC_LIST_H__
 
-    return cli;
-}
 
-void client_free(Client *cli) {
-    SOCKET_RELEASE(cli, cli->server->loop);
-    free(cli);
-}
+/*
+ * 双向列表
+ */
+
+typedef struct _DList DList;
+
+struct _DList {
+    void *data;
+
+    DList *prev;
+    DList *next;
+};
+#define dlist_new() NULL
+#define dlist_data(l)   ((l)->data)
+#define dlist_prev(l)   ((l)->prev)
+#define dlist_next(l)   ((l)->next)
+
+/*
+ * 在列表末尾添加元素
+ */
+DList *dlist_append(DList *l, void *ptr);
+
+/*
+ * 在列表开头添加元素
+ */
+DList *dlist_prepend(DList *l, void *ptr);
+
+
+#endif

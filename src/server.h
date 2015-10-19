@@ -18,18 +18,20 @@
 #define __JAC_SERVER_H__
 
 #include "socket.h"
+#include "list.h"
 
 typedef struct {
-    BaseSocket parent;
+    Socket parent;
     struct ev_loop *loop;
 
-} ServerSocket;
+    DList *clients;
+} Server;
 
 
 /* 创建一个监听套接字 */
-ServerSocket *server_start(const char *ip, unsigned short port);
+Server *server_start(const char *ip, unsigned short port);
 
-void server_stop(ServerSocket *server);
+void server_stop(Server *server);
 
 
 #endif
