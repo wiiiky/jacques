@@ -6,7 +6,7 @@ import select
 import time
 import sys
 
-PORT = 43212
+PORT = 13221
 COUNT = 50
 if len(sys.argv) > 1:
     COUNT = int(sys.argv[1])

@@ -15,11 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "client.h"
+#include "list.h"
 #include <ev.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
+
+/* 客户端事件的回调函数 */
+static void client_cb(struct ev_loop *loop, ev_io *w, int revents);
+
+void client_start(Client *cli) {
+    ev_io_start(cli->server->loop, (ev_io*)cli);
+}
 
 /* 接受一个客户端连接 */
 Client *client_accept(Server *server) {
@@ -30,7 +39,7 @@ Client *client_accept(Server *server) {
         return NULL;
     }
     Client *cli = malloc(sizeof(Client));
-    SOCKET_INIT(cli, fd, &addr, addrlen, EV_READ, NULL);
+    SOCKET_INIT(cli, fd, &addr, addrlen, EV_READ, client_cb);
     cli->server=server;
 
     return cli;
@@ -39,4 +48,26 @@ Client *client_accept(Server *server) {
 void client_free(Client *cli) {
     SOCKET_RELEASE(cli, cli->server->loop);
     free(cli);
+}
+
+static void client_cb(struct ev_loop *loop, ev_io *w, int revents) {
+    Client *cli = (Client*)w;
+    if(EV_READ & revents) {
+        char buf[4096];
+        int n;
+        while((n=recv(w->fd, buf, sizeof(buf), MSG_DONTWAIT))>0) {
+            send(w->fd, buf, n, 0);
+        }
+        if(n==0) {
+            client_close(cli);
+        } else if(errno!=EAGAIN&&errno!=EWOULDBLOCK) {
+            client_close(cli);
+        }
+    }
+}
+
+/* 关闭链接 */
+void client_close(Client *cli) {
+    cli->server->clients=dlist_remove(cli->server->clients, cli);
+    client_free(cli);
 }

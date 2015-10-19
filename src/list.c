@@ -58,3 +58,31 @@ DList *dlist_prepend(DList *l, void *ptr) {
     e->next=first;
     return e;
 }
+
+/*
+ * 从列表中删除指定元素
+ */
+DList *dlist_remove(DList *l, void *ptr) {
+    DList *p=l;
+    while(p) {
+        if(dlist_data(p)==ptr) {
+            break;
+        }
+        p=dlist_next(p);
+    }
+    if(p==NULL) {
+        return l;
+    }
+    DList *prev=dlist_prev(p);
+    DList *next=dlist_next(p);
+    if(prev) {
+        prev->next=next;
+    }
+    if(next) {
+        next->prev=prev;
+    }
+    if(prev) {
+        return l;
+    }
+    return next;
+}

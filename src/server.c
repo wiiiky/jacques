@@ -25,6 +25,9 @@
 
 static void accept_cb(struct ev_loop *loop, ev_io *w, int revents);
 
+/* 保存客户端链接 */
+static inline void save_client(Server *server, Client *client);
+
 /* 创建一个监听套接字 */
 Server *server_start(const char *ip, unsigned short port) {
     struct sockaddr_storage addr;
@@ -56,6 +59,12 @@ static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {
     Server *server=(Server*)w;
     Client *cli=client_accept(server);
     if(cli) {
-        client_free(cli);
+        save_client(server, cli);
     }
+}
+
+/* 保存客户端链接 */
+static inline void save_client(Server *server, Client *client) {
+    server->clients=dlist_prepend(server->clients, client);
+    client_start(client);
 }

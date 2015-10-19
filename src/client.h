@@ -25,10 +25,15 @@ typedef struct {
     Server *server;
 } Client;
 
+void client_start(Client *cli);
+
 /* 接受一个客户端连接 */
 Client *client_accept(Server *server);
 
 void client_free(Client *cli);
+
+/* 关闭链接 */
+void client_close(Client *cli);
 
 
 #endif

@@ -30,7 +30,7 @@ typedef struct {
 
 /* 创建一个监听套接字 */
 Server *server_start(const char *ip, unsigned short port);
-
+/* 结束服务 */
 void server_stop(Server *server);
 
 

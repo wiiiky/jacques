@@ -46,5 +46,10 @@ DList *dlist_append(DList *l, void *ptr);
  */
 DList *dlist_prepend(DList *l, void *ptr);
 
+/*
+ * 从列表中删除指定元素
+ */
+DList *dlist_remove(DList *l, void *ptr);
+
 
 #endif
