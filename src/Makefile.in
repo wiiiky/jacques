@@ -99,7 +99,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_jacques_OBJECTS = main.$(OBJEXT) socket.$(OBJEXT) client.$(OBJEXT) \
-	server.$(OBJEXT) signal.$(OBJEXT) list.$(OBJEXT)
+	server.$(OBJEXT) signal.$(OBJEXT) list.$(OBJEXT) dl.$(OBJEXT)
 jacques_OBJECTS = $(am_jacques_OBJECTS)
 jacques_DEPENDENCIES = libev/libev.a
 jacques_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(jacques_LDFLAGS) \
@@ -313,7 +313,8 @@ jacques_SOURCES = \
 	client.c \
 	server.c \
 	signal.c \
-	list.c
+	list.c \
+	dl.c
 
 jacques_LDFLAGS = -lm
 jacques_LDADD = libev/libev.a
@@ -404,6 +405,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
