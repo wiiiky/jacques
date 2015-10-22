@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 
-#ifndef __JAC_SOCKET_H__
-#define __JAC_SOCKET_H__
+#ifndef __LIBJAC_SOCKET_H__
+#define __LIBJAC_SOCKET_H__
 
 #include <ev.h>
 #include <sys/socket.h>
@@ -45,6 +45,24 @@ void socket_release(Socket *sock, struct ev_loop *loop);
  */
 int socket_service(const char *ip, unsigned short port,
                    struct sockaddr_storage *addr, socklen_t *addrlen);
+
+
+/*
+ * 接受数据
+ * recv()函数的包裹
+ * 过滤EINTR
+ * flags一定包含MSG_DONTWAIT
+ */
+int socket_recv(Socket *socket, void *buf, unsigned int len, int flags);
+
+
+/*
+ * 发送数据
+ * send()函数的包裹
+ * 过滤EINTR
+ * flags一定包含MSG_DONTWAIT
+ */
+int socket_send(Socket *socket, void *buf, unsigned int len, int flags);
 
 
 #endif

@@ -587,11 +587,6 @@ am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
 subdirs
-MODS_DIR
-LOGS_DIR
-CONF_DIR
-SBIN_DIR
-INSTALL_ROOT
 am__fastdepCC_FALSE
 am__fastdepCC_TRUE
 CCDEPMODE
@@ -3476,20 +3471,6 @@ else
   am__fastdepCC_TRUE='#'
   am__fastdepCC_FALSE=
 fi
-
-
-
-
-#PKG_CHECK_MODULES(JACQUES, [jlib-0.1 jio-0.1 jconf-0.1 jmod-0.1])
-
-
-INSTALL_ROOT='$(prefix)/$(PACKAGE)'
-SBIN_DIR='$(INSTALL_ROOT)/sbin'
-CONF_DIR='$(INSTALL_ROOT)/conf'
-LOGS_DIR='$(INSTALL_ROOT)/logs'
-MODS_DIR='$(INSTALL_ROOT)/mods'
-
-
 
 
 

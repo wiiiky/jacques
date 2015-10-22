@@ -184,7 +184,8 @@ CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in AUTHORS COPYING ChangeLog \
-	INSTALL NEWS README compile depcomp install-sh missing
+	INSTALL NEWS README compile config.guess config.sub depcomp \
+	install-sh ltmain.sh missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -237,7 +238,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CONF_DIR = @CONF_DIR@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -249,17 +249,14 @@ EXEEXT = @EXEEXT@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_ROOT = @INSTALL_ROOT@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
-LOGS_DIR = @LOGS_DIR@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
-MODS_DIR = @MODS_DIR@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -269,7 +266,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-SBIN_DIR = @SBIN_DIR@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -326,7 +322,6 @@ dist_doc_DATA = \
 	INSTALL \
 	NEWS
 
-TARGET = "$(SBIN_DIR)/$(PACKAGE)"
 all: all-recursive
 
 .SUFFIXES:
@@ -687,8 +682,10 @@ installdirs-am:
 	for dir in "$(DESTDIR)$(docdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
+install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
@@ -805,19 +802,8 @@ uninstall-am: uninstall-dist_docDATA
 .PRECIOUS: Makefile
 
 
-uninstall:
-	-rm -r $(INSTALL_ROOT)
-install: all
-	mkdir -p $(SBIN_DIR)
-	mkdir -p $(CONF_DIR)
-	mkdir -p $(MODS_DIR)
-	if [ -f $(TARGET) ] ; \
-	then \
-	    mv $(TARGET) $(TARGET).old; \
-	fi
-	cp src/$(PACKAGE) $(TARGET)
-	cp conf/$(PACKAGE).conf $(CONF_DIR)
-#	cp mod/*.so $(MODS_DIR)
+#uninstall:
+#-rm -r $(INSTALL_ROOT)
 
 clean-local:
 	-rm -rf local

@@ -17,7 +17,7 @@
 #ifndef __JAC_SERVER_H__
 #define __JAC_SERVER_H__
 
-#include "socket.h"
+#include "libjac.h"
 #include "list.h"
 
 typedef struct {

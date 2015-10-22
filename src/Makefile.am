@@ -5,11 +5,7 @@ SUBDIRS = libev
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
-	-DCONFIG_DIR=\""$(CONF_DIR)"\" \
-	-DLOG_DIR=\""$(LOGS_DIR)"\" \
-	-DMOD_DIR=\""$(MODS_DIR)"\" \
-	-I$(srcdir)/libev
+	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\"
 
 AM_CFLAGS =\
 	 -Wall\
@@ -21,17 +17,30 @@ bin_PROGRAMS = jacques
 
 jacques_SOURCES = \
 	main.c \
-	socket.c \
 	client.c \
 	server.c \
 	signal.c \
 	list.c \
-	dl.c
+	dl.c \
+	libjac/socket.c
+
+jacques_CFLAGS = -I$(srcdir)/libev -I$(srcdir)/libjac
 
 jacques_LDFLAGS = -lm
 
-jacques_LDADD = libev/libev.a
+jacques_LDADD = \
+	libev/libev.a
 
+libjac_aincludedir = $(includedir)/libjac
+
+libjac_ainclude_HEADERS = \
+	libev/ev.h \
+	libev/ev++.h \
+	libev/event.h \
+	libjac/libjac.h \
+	libjac/hook.h \
+	libjac/mod.h \
+	libjac/socket.h
 
 clean-local:
 	-astyle --style=google -n *.c *.h

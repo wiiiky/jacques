@@ -17,6 +17,7 @@
 #include "socket.h"
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 /* 使用文件描述符初始化 */
 void socket_init(Socket *sock, int fd, struct sockaddr *addr,
@@ -66,4 +67,33 @@ int socket_service(const char *ip, unsigned short port,
         return -1;
     }
     return fd;
+}
+
+
+/*
+ * 接受数据
+ * recv()函数的包裹
+ */
+int socket_recv(Socket *socket, void *buf, unsigned int len, int flags){
+    flags |= MSG_DONTWAIT;
+    int n;
+    do{
+        n= recv(((struct ev_io*)socket)->fd, buf, len, flags);
+    }while(n<0&&(errno==EINTR));
+    return n;
+}
+
+/*
+ * 发送数据
+ * send()函数的包裹
+ * 过滤EINTR
+ * flags一定包含MSG_DONTWAIT
+ */
+int socket_send(Socket *socket, void *buf, unsigned int len, int flags){
+    flags |= MSG_DONTWAIT;
+    int n;
+    do{
+        n= send(((struct ev_io*)socket)->fd, buf, len, flags);
+    }while(n<0&&(errno==EINTR));
+    return n;
 }
