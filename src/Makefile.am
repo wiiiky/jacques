@@ -2,6 +2,8 @@
 
 SUBDIRS = libev
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
@@ -29,7 +31,8 @@ jacques_CFLAGS = -I$(srcdir)/libev -I$(srcdir)/libjac
 jacques_LDFLAGS = -lm
 
 jacques_LDADD = \
-	libev/libev.a
+	libev/libev.a \
+	-lm
 
 libjac_aincludedir = $(includedir)/libjac
 

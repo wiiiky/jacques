@@ -36,4 +36,8 @@ void client_free(Client *cli);
 void client_close(Client *cli);
 
 
+#define client_recv(cli, buf, len, flags) socket_recv((Socket*)cli, buf, len, flags)
+#define client_send(cli, buf, len, flags) socket_send((Socket*)cli, buf, len, flags)
+
+
 #endif

@@ -55,8 +55,8 @@ static void client_cb(struct ev_loop *loop, ev_io *w, int revents) {
     if(EV_READ & revents) {
         char buf[4096];
         int n;
-        while((n=socket_recv((Socket*)cli, buf, sizeof(buf), 0))>0) {
-            socket_send((Socket*)cli, buf, n, 0);
+        while((n=client_recv(cli, buf, sizeof(buf), 0))>0) {
+            client_send(cli, buf, n, 0);
         }
         if(n==0) {
             client_close(cli);
