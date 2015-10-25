@@ -62,7 +62,7 @@ int socket_recv(Socket *socket, void *buf, unsigned int len, int flags);
  * 过滤EINTR
  * flags一定包含MSG_DONTWAIT
  */
-int socket_send(Socket *socket, void *buf, unsigned int len, int flags);
+int socket_send(Socket *socket, const void *buf, unsigned int len, int flags);
 
 
 #endif

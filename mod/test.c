@@ -14,49 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#include <jmod/jmod.h>
-#include <jio/jio.h>
+#include <libjac.h>
+#include <stdlib.h>
 
+static int accept_hook(Socket *socket);
+static int recv_hook(Socket *socket, const void *buf, unsigned int len);
 
-static void init_hook(const char *name, const char *host, unsigned short port);
-static void accept_hook(JSocket *socket);
-static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data);
-static void send_hook(JSocket *socket, int ret, void *user_data);
-
-
-static boolean send_filter(JSocket *socket, void *data);
-
-
-JacHook hooks= {
-    init_hook,
+static JacHook hook = {
     accept_hook,
-    recv_hook,
-    send_hook,
+    recv_hook
 };
 
-
-JacModule mod = {
-    "Test Module",
-    &hooks
+static JacModule mod = {
+    &hook
 };
 
 JACQUES_MODULE(mod);
 
 
-static void init_hook(const char *name, const char *host, unsigned short port){
+static int accept_hook(Socket *socket) {
+
 }
 
-static void accept_hook(JSocket *socket){
-}
-
-static void recv_hook(JSocket *socket, const char *buffer, int size, void *user_data){
-    jac_send_multi(buffer, size, NULL, send_filter, NULL);
-}
-
-static void send_hook(JSocket *socket, int ret, void *user_data){
-    
-}
-
-static boolean send_filter(JSocket *socket, void *data){
-    return TRUE;
+static int recv_hook(Socket *socket, const void *buf, unsigned int len) {
+    if(len>0) {
+        socket_send(socket, buf, len, 0);
+    }
+    return len;
 }

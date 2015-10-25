@@ -17,6 +17,7 @@
 #include "server.h"
 #include "client.h"
 #include "signal_.h"
+#include "mod.h"
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -42,6 +43,8 @@ Server *server_start(const char *ip, unsigned short port) {
     SOCKET_INIT(server, fd, &addr, addrlen, EV_READ, accept_cb);
     ev_io_start(server->loop, (ev_io*)server);
 
+    printf("load module %s\n",load_module("./mod/test.so")?"successfully":"unsuccessfully");
+
     /* 捕获信号 */
     signal_init(server->loop);
 
@@ -59,7 +62,11 @@ static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {
     Server *server=(Server*)w;
     Client *cli=client_accept(server);
     if(cli) {
-        save_client(server, cli);
+        if(call_accept_hooks((Socket*)cli)) {
+            save_client(server, cli);
+        } else {
+            client_close(cli);
+        }
     }
 }
 

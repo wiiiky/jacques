@@ -16,6 +16,7 @@
  */
 #include "client.h"
 #include "list.h"
+#include "mod.h"
 #include <ev.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -56,7 +57,9 @@ static void client_cb(struct ev_loop *loop, ev_io *w, int revents) {
         char buf[4096];
         int n;
         while((n=client_recv(cli, buf, sizeof(buf), 0))>0) {
-            client_send(cli, buf, n, 0);
+            if((n=call_recv_hooks((Socket*)cli, buf, n))<=0) {
+                break;
+            }
         }
         if(n==0) {
             client_close(cli);

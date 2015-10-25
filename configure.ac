@@ -20,4 +20,5 @@ AC_CONFIG_SUBDIRS([src/libev])
 AC_OUTPUT([
            Makefile
            src/Makefile
+           mod/Makefile
            ])

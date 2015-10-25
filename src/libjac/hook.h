@@ -22,9 +22,15 @@
 
 #include "socket.h"
 
-
-typedef void (*JacAcceptHook)(Socket *socket);
-typedef void (*JacRecvHook)(Socket *socket);
+/*
+ * 返回0关闭链接
+ */
+typedef int (*JacAcceptHook)(Socket *socket);
+/*
+ * 返回接受到的字节长度
+ * 如果<=0则会关闭链接
+ */
+typedef int (*JacRecvHook)(Socket *socket, const void *buf, unsigned int len);
 
 
 typedef struct {

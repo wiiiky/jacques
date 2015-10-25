@@ -27,4 +27,11 @@ typedef struct {
 }JacModule;
 
 
+#define JACQUES_MODULE_NAME __jacques_module__
+#define STR(S)  #S
+#define XSTR(S) STR(S)
+#define JACQUES_MODULE_NAME_STRING  XSTR(JACQUES_MODULE_NAME)
+#define JACQUES_MODULE(mod) JacModule* JACQUES_MODULE_NAME=&mod
+
+
 #endif

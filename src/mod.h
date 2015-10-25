@@ -14,5 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
+#ifndef __JAC_DL_H__
+#define __JAC_DL_H__
 
-#include "dl.h"
+
+#include <libjac.h>
+#include "list.h"
+
+/*
+ * 载入指定模块
+ */
+JacModule *load_module(const char *filename);
+
+/* 返回记录所有模块的链表 */
+DList *all_modules(void);
+
+/* 调用相关的回调函数 */
+int call_accept_hooks(Socket *socket);
+int call_recv_hooks(Socket *socket, const void *buf, unsigned int len);
+
+
+#endif
