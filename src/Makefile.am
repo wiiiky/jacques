@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = libev libjac
+SUBDIRS = libjac
 
 AUTOMAKE_OPTIONS = subdir-objects
 
@@ -25,26 +25,13 @@ jacques_SOURCES = \
 	list.c \
 	mod.c
 
-jacques_CFLAGS = -I$(srcdir)/libev -I$(srcdir)/libjac
+jacques_CFLAGS = -I$(srcdir)/libjac
 
-jacques_LDFLAGS = -L./libjac -ljac
+jacques_LDFLAGS = -L./libjac/.libs -ljac
 
 jacques_LDADD = \
-	libev/libev.a \
 	-lm \
-	-ldl \
-	-L./libjac -ljac
-
-libjac_aincludedir = $(includedir)/libjac
-
-libjac_ainclude_HEADERS = \
-	libev/ev.h \
-	libev/ev++.h \
-	libev/event.h \
-	libjac/libjac.h \
-	libjac/hook.h \
-	libjac/mod.h \
-	libjac/socket.h
+	-ldl
 
 clean-local:
 	-astyle --style=google -n *.c *.h
