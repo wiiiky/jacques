@@ -29,11 +29,15 @@ static JacModule mod = {
     &hook
 };
 
-JACQUES_MODULE(mod);
+static JacModule *init(){
+    return &mod;
+}
+
+JACQUES_MODULE_INIT(init);
 
 
 static int accept_hook(Socket *socket) {
-
+    return 1;
 }
 
 static int recv_hook(Socket *socket, const void *buf, unsigned int len) {

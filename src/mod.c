@@ -50,7 +50,7 @@ int call_recv_hooks(Socket *socket, const void *buf, unsigned int len) {
     DList *ptr=recv_hooks;
     while(ptr) {
         JacRecvHook cb = (JacRecvHook)dlist_data(ptr);
-        if(cb(socket, buf, len)) {
+        if(cb(socket, buf, len)<=0) {
             return 0;
         }
         ptr=dlist_next(ptr);
@@ -92,11 +92,10 @@ JacModule *load_module(const char *filename) {
     }
 
     JacModule *mod=NULL;
-    JacModule **ptr=(JacModule**)dl_symbol(handle, JACQUES_MODULE_NAME_STRING);
-    if(ptr==NULL) {
+    JacModuleInit *ptr=(JacModuleInit*)dl_symbol(handle, JACQUES_MODULE_NAME_STRING);
+    if(ptr==NULL||(mod = (*ptr)())==NULL) {
         goto OUT;
     }
-    mod = *ptr;
 OUT:
     dl_close(handle);
     register_module(mod);

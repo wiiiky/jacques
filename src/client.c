@@ -63,7 +63,7 @@ static void client_cb(struct ev_loop *loop, ev_io *w, int revents) {
         }
         if(n==0) {
             client_close(cli);
-        } else if(errno!=EAGAIN&&errno!=EWOULDBLOCK) {
+        }else if(n<0&&errno!=EAGAIN&&errno!=EWOULDBLOCK){
             client_close(cli);
         }
     }
