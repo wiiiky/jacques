@@ -56,6 +56,7 @@ void server_stop(Server *server) {
     SOCKET_RELEASE(server, server->loop);
     ev_unref(server->loop);
     free(server);
+    call_exit_hooks();
 }
 
 static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {

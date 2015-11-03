@@ -32,6 +32,7 @@ DList *all_modules(void);
 /* 调用相关的回调函数 */
 int call_accept_hooks(Socket *socket);
 int call_recv_hooks(Socket *socket, const void *buf, unsigned int len);
+void call_exit_hooks(void);
 
 
 #endif

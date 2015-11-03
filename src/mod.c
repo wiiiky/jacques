@@ -27,6 +27,7 @@ static DList *modules=NULL;
 /* 不同回调函数的链表 */
 static DList *accept_hooks = NULL;
 static DList *recv_hooks = NULL;
+static DList *exit_hooks = NULL;
 
 /* 返回记录所有模块的链表 */
 DList *all_modules(void) {
@@ -58,6 +59,15 @@ int call_recv_hooks(Socket *socket, const void *buf, unsigned int len) {
     return 1;
 }
 
+void call_exit_hooks(void){
+    DList *ptr=exit_hooks;
+    while(ptr) {
+        JacExitHook cb = (JacExitHook)dlist_data(ptr);
+        cb();
+        ptr=dlist_next(ptr);
+    }
+}
+
 /*
  * 打开模块文件
  */
@@ -78,6 +88,9 @@ static inline void register_module(JacModule *mod) {
         }
         if(hook->recv) {
             recv_hooks=dlist_append(recv_hooks, hook->recv);
+        }
+        if(hook->exit){
+            exit_hooks=dlist_append(exit_hooks, hook->exit);
         }
     }
 }

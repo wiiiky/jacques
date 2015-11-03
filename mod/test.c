@@ -16,13 +16,16 @@
  */
 #include <libjac.h>
 #include <stdlib.h>
+#include <Python.h>
 
 static int accept_hook(Socket *socket);
 static int recv_hook(Socket *socket, const void *buf, unsigned int len);
+static void uninit(void);
 
 static JacHook hook = {
     accept_hook,
-    recv_hook
+    recv_hook,
+    uninit,
 };
 
 static JacModule mod = {
@@ -30,7 +33,13 @@ static JacModule mod = {
 };
 
 static JacModule *init(){
+    Py_Initialize();
+
     return &mod;
+}
+
+static void uninit(void){
+    Py_Finalize();
 }
 
 JACQUES_MODULE_INIT(init);
