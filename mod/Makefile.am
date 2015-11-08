@@ -19,10 +19,14 @@ LDFLAGS = `pkg-config --libs python3`
 test.so: test.c
 	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o $@
 
-.PHONY: test.so
+
+jacques.so: jacques.c
+	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o jacques.so
+
+.PHONY: test.so jacques.so
 
 
-all-local: test.so
+all-local: test.so jacques.so
 
 clean-local:
 	-astyle --style=google -n *.c *.h
