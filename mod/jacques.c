@@ -93,7 +93,7 @@ static PyTypeObject SocketType = {
     Socket_new,                 /* tp_new */
 };
 
-static PyModuleDef jacquesmodule[]= {
+static PyModuleDef jacquesmodule= {
     PyModuleDef_HEAD_INIT,
     "jacques",
     "module that extends libjac",
