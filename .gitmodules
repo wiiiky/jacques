@@ -1,3 +1,0 @@
-[submodule "src/libjac"]
-	path = src/libjac
-	url = git@github.com:jacques-server/libjac.git

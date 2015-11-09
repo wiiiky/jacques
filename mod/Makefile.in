@@ -125,7 +125,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = -I$(LIBJAC_INCLUDEDIR) -I$(LIBEV_INCLUDEDIR) `pkg-config --cflags python3`
+CFLAGS = -I$(LIBJAC_INCLUDEDIR) `pkg-config --cflags python3`
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -195,7 +195,6 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
-subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
@@ -211,8 +210,7 @@ AM_CFLAGS = \
 	-O0 \
 	-g
 
-LIBJAC_INCLUDEDIR = $(top_builddir)/src/libjac
-LIBEV_INCLUDEDIR = $(top_builddir)/src/libev
+LIBJAC_INCLUDEDIR = /usr/include/libjac
 all: all-am
 
 .SUFFIXES:

@@ -1,7 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = libjac
-
 AUTOMAKE_OPTIONS = subdir-objects
 
 AM_CPPFLAGS = \
@@ -25,9 +23,9 @@ jacques_SOURCES = \
 	list.c \
 	mod.c
 
-jacques_CFLAGS = -I$(srcdir)/libjac
+jacques_CFLAGS = -I/usr/include/libjac
 
-jacques_LDFLAGS = -L./libjac/.libs -ljac
+jacques_LDFLAGS = -ljac
 
 jacques_LDADD = \
 	-lm \

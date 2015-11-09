@@ -11,9 +11,8 @@ AM_CFLAGS =\
 	-O0 \
 	-g
 
-LIBJAC_INCLUDEDIR=$(top_builddir)/src/libjac
-LIBEV_INCLUDEDIR=$(top_builddir)/src/libev
-CFLAGS = -I$(LIBJAC_INCLUDEDIR) -I$(LIBEV_INCLUDEDIR) `pkg-config --cflags python3`
+LIBJAC_INCLUDEDIR=/usr/include/libjac
+CFLAGS = -I$(LIBJAC_INCLUDEDIR) `pkg-config --cflags python3`
 LDFLAGS = `pkg-config --libs python3`
 
 test.so: test.c
