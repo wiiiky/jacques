@@ -16,6 +16,7 @@
  */
 #include "server.h"
 #include "signals.h"
+#include "client.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,7 +30,7 @@ static void jac_server_release(void *self);
 /* 创建服务 */
 JacServer *jac_server_new(const char *ip, unsigned short port){
     JacServer *server=(JacServer*)malloc(sizeof(JacServer));
-    SphSocket *socket=jac_server_get_socket(server);
+    SphSocket *socket=jac_server_socket(server);
     sph_socket_init(socket, jac_server_release);
     sph_socket_reuse_addr(socket, 1);
     sph_socket_reuse_port(socket, 1);
@@ -41,7 +42,7 @@ JacServer *jac_server_new(const char *ip, unsigned short port){
 /* 启动服务 */
 void jac_server_run(JacServer *server){
     init_signals();
-    SphSocket *socket=jac_server_get_socket(server);
+    SphSocket *socket=jac_server_socket(server);
     sph_socket_start(socket, NULL, ev_callback);
     run_evloop();
 }
@@ -49,10 +50,13 @@ void jac_server_run(JacServer *server){
 /* 事件回调 */
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events){
     JacServer *server=(JacServer*)io;
-    SphSocket *socket=jac_server_get_socket(server);
+    SphSocket *socket=jac_server_socket(server);
     int fd = sph_socket_accept(socket);
-    printf("accept %d\n", fd);
-    close(fd);
+    JacClient *client=jac_client_new_from_fd(fd);
+    if(client!=NULL){
+        printf("new client!\n");
+        jac_client_start(client);
+    }
 }
 
 /* 结束服务 */

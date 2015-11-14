@@ -18,7 +18,8 @@ bin_PROGRAMS = jacques
 jacques_SOURCES = \
 	main.c \
 	signals.c \
-	server.c
+	server.c \
+	client.c
 
 jacques_CFLAGS = $(SPH_CFLAGS)
 

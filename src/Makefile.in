@@ -99,7 +99,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_jacques_OBJECTS = jacques-main.$(OBJEXT) jacques-signals.$(OBJEXT) \
-	jacques-server.$(OBJEXT)
+	jacques-server.$(OBJEXT) jacques-client.$(OBJEXT)
 jacques_OBJECTS = $(am_jacques_OBJECTS)
 am__DEPENDENCIES_1 =
 jacques_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -268,7 +268,8 @@ AM_CFLAGS = \
 jacques_SOURCES = \
 	main.c \
 	signals.c \
-	server.c
+	server.c \
+	client.c
 
 jacques_CFLAGS = $(SPH_CFLAGS)
 jacques_LDFLAGS = $(SPH_LDFLAGS)
@@ -359,6 +360,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jacques-client.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jacques-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jacques-server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jacques-signals.Po@am__quote@
@@ -420,6 +422,20 @@ jacques-server.obj: server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='server.c' object='jacques-server.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jacques_CFLAGS) $(CFLAGS) -c -o jacques-server.obj `if test -f 'server.c'; then $(CYGPATH_W) 'server.c'; else $(CYGPATH_W) '$(srcdir)/server.c'; fi`
+
+jacques-client.o: client.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jacques_CFLAGS) $(CFLAGS) -MT jacques-client.o -MD -MP -MF $(DEPDIR)/jacques-client.Tpo -c -o jacques-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jacques-client.Tpo $(DEPDIR)/jacques-client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='client.c' object='jacques-client.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jacques_CFLAGS) $(CFLAGS) -c -o jacques-client.o `test -f 'client.c' || echo '$(srcdir)/'`client.c
+
+jacques-client.obj: client.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jacques_CFLAGS) $(CFLAGS) -MT jacques-client.obj -MD -MP -MF $(DEPDIR)/jacques-client.Tpo -c -o jacques-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/jacques-client.Tpo $(DEPDIR)/jacques-client.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='client.c' object='jacques-client.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(jacques_CFLAGS) $(CFLAGS) -c -o jacques-client.obj `if test -f 'client.c'; then $(CYGPATH_W) 'client.c'; else $(CYGPATH_W) '$(srcdir)/client.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
