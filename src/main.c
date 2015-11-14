@@ -14,22 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-
-#include <ev.h>
-#include <stdio.h>
 #include "server.h"
-#include "client.h"
+
 
 int main(int argc, const char *argv[]) {
-    if (!ev_default_loop (0)) {
-        return -1;
-    }
-    Server *server=server_start("0.0.0.0", 13221);
-    if(server==NULL) {
-        return -2;
-    }
-    server_stop(server);
-
+    JacServer *server=jac_server_new("0.0.0.0", 13221);
+    jac_server_run(server);
     return 0;
 }
 

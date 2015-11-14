@@ -14,42 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
+#include "signals.h"
+#include <signal.h>
+#include <sph.h>
+#include <stdio.h>
 
-#ifndef __JAC_LIST_H__
-#define __JAC_LIST_H__
-
-
-/*
- * 双向列表
- */
-
-typedef struct _DList DList;
-
-struct _DList {
-    void *data;
-
-    DList *prev;
-    DList *next;
-};
-#define dlist_new() NULL
-#define dlist_data(l)   ((l)->data)
-#define dlist_prev(l)   ((l)->prev)
-#define dlist_next(l)   ((l)->next)
-
-/*
- * 在列表末尾添加元素
- */
-DList *dlist_append(DList *l, void *ptr);
-
-/*
- * 在列表开头添加元素
- */
-DList *dlist_prepend(DList *l, void *ptr);
-
-/*
- * 从列表中删除指定元素
- */
-DList *dlist_remove(DList *l, void *ptr);
+static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents);
 
 
-#endif
+static ev_signal sigint_watcher;
+
+/* 初始化信号处理函数 */
+void init_signals(void){
+    ev_signal_init (&sigint_watcher, sigint_cb, SIGINT);
+    ev_signal_start (get_default_evloop(), &sigint_watcher);
+}
+
+
+static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents){
+    stop_evloop();
+    printf("SIGINT!\n");
+}

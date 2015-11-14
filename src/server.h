@@ -14,24 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#ifndef __JAC_SERVER_H__
-#define __JAC_SERVER_H__
+#ifndef __JACQUES_SERVER_H__
+#define __JACQUES_SERVER_H__
 
-#include "libjac.h"
-#include "list.h"
-
-typedef struct {
-    Socket parent;
-    struct ev_loop *loop;
-
-    DList *clients;
-} Server;
+#include <sph.h>
 
 
-/* 创建一个监听套接字 */
-Server *server_start(const char *ip, unsigned short port);
-/* 结束服务 */
-void server_stop(Server *server);
+/* 创建服务 */
+JacServer *jac_server_new(const char *ip, unsigned short port);
+
+/* 启动服务 */
+void jac_server_run(JacServer *server);
 
 
 #endif

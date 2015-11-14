@@ -17,19 +17,14 @@ bin_PROGRAMS = jacques
 
 jacques_SOURCES = \
 	main.c \
-	client.c \
-	server.c \
-	signal.c \
-	list.c \
-	mod.c
+	signals.c \
+	server.c
 
-jacques_CFLAGS = -I/usr/include/libjac
+jacques_CFLAGS = $(SPH_CFLAGS)
 
-jacques_LDFLAGS = -ljac
+jacques_LDFLAGS = $(SPH_LDFLAGS)
 
-jacques_LDADD = \
-	-lm \
-	-ldl
+jacques_LDADD = $(SPH_LIBS)
 
 clean-local:
 	-astyle --style=google -n *.c *.h

@@ -1,5 +1,5 @@
 
-SUBDIRS = src mod
+SUBDIRS = src
 
 dist_doc_DATA = \
 	README \
@@ -9,8 +9,6 @@ dist_doc_DATA = \
 	INSTALL \
 	NEWS
 
-#uninstall:
-#-rm -r $(INSTALL_ROOT)
 
 clean-local:
 	-rm -rf local

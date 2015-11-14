@@ -15,64 +15,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
 #include "server.h"
-#include "client.h"
-#include "signal_.h"
-#include "mod.h"
-#include <sys/socket.h>
-#include <sys/types.h>
+#include "signals.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-static void accept_cb(struct ev_loop *loop, ev_io *w, int revents);
 
-/* 保存客户端链接 */
-static inline void save_client(Server *server, Client *client);
+/* 事件回调 */
+static void ev_callback(struct ev_loop *loop, ev_io *io, int events);
+/* 结束服务 */
+static void jac_server_release(void *self);
 
-/* 创建一个监听套接字 */
-Server *server_start(const char *ip, unsigned short port) {
-    struct sockaddr_storage addr;
-    socklen_t addrlen;
-    int fd = socket_service(ip, port, &addr, &addrlen);
-    if(fd<0) {
-        return NULL;
-    }
-    Server *server = (Server*)malloc(sizeof(Server));
-    server->clients=NULL;
-    server->loop=EV_DEFAULT;
-    SOCKET_INIT(server, fd, &addr, addrlen, EV_READ, accept_cb);
-    ev_io_start(server->loop, (ev_io*)server);
-
-    printf("load module %s\n",load_module("./mod/test.so")?"successfully":"unsuccessfully");
-
-    /* 捕获信号 */
-    signal_init(server->loop);
-
-    ev_run(server->loop, 0);
+/* 创建服务 */
+JacServer *jac_server_new(const char *ip, unsigned short port){
+    JacServer *server=(JacServer*)malloc(sizeof(JacServer));
+    SphSocket *socket=jac_server_get_socket(server);
+    sph_socket_init(socket, jac_server_release);
+    sph_socket_reuse_addr(socket, 1);
+    sph_socket_reuse_port(socket, 1);
+    sph_socket_bind(socket, ip, port);
+    sph_socket_listen(socket, 1024);
     return server;
 }
 
-void server_stop(Server *server) {
-    SOCKET_RELEASE(server, server->loop);
-    ev_unref(server->loop);
-    free(server);
-    call_exit_hooks();
+/* 启动服务 */
+void jac_server_run(JacServer *server){
+    init_signals();
+    SphSocket *socket=jac_server_get_socket(server);
+    sph_socket_start(socket, NULL, ev_callback);
+    run_evloop();
 }
 
-static void accept_cb(struct ev_loop *loop, ev_io *w, int revents) {
-    Server *server=(Server*)w;
-    Client *cli=client_accept(server);
-    if(cli) {
-        if(call_accept_hooks((Socket*)cli)) {
-            save_client(server, cli);
-        } else {
-            client_close(cli);
-        }
-    }
+/* 事件回调 */
+static void ev_callback(struct ev_loop *loop, ev_io *io, int events){
+    JacServer *server=(JacServer*)io;
+    SphSocket *socket=jac_server_get_socket(server);
+    int fd = sph_socket_accept(socket);
+    printf("accept %d\n", fd);
+    close(fd);
 }
 
-/* 保存客户端链接 */
-static inline void save_client(Server *server, Client *client) {
-    server->clients=dlist_prepend(server->clients, client);
-    client_start(client);
+/* 结束服务 */
+static void jac_server_release(void *self){
 }
