@@ -20,18 +20,26 @@
 #include <stdio.h>
 
 static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents);
+static void sigpipe_cb (struct ev_loop *loop, ev_signal *w, int revents);
 
 
 static ev_signal sigint_watcher;
+static ev_signal sigpipe_watcher;
 
 /* 初始化信号处理函数 */
-void init_signals(void){
+void init_signals(void) {
     ev_signal_init (&sigint_watcher, sigint_cb, SIGINT);
     ev_signal_start (get_default_evloop(), &sigint_watcher);
+
+    ev_signal_init (&sigpipe_watcher, sigpipe_cb, SIGPIPE);
+    ev_signal_start (get_default_evloop(), &sigpipe_watcher);
 }
 
 
-static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents){
+static void sigint_cb (struct ev_loop *loop, ev_signal *w, int revents) {
     stop_evloop();
     printf("SIGINT!\n");
+}
+
+static void sigpipe_cb (struct ev_loop *loop, ev_signal *w, int revents) {
 }

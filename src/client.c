@@ -20,58 +20,47 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-/* 关闭客户端链接 */
-static void jac_client_close(JacClient *client);
-
 
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events);
 static void jac_client_release(void *self);
 
 
-JacClient *jac_client_new_from_fd(int fd){
-    if(fd<0){
+JacClient *jac_client_new_from_fd(int fd) {
+    if(fd<0) {
         return NULL;
     }
     JacClient *client=(JacClient*)malloc(sizeof(JacClient));
     SphSocket *socket=jac_client_socket(client);
     sph_socket_init_from_fd(socket, fd, jac_client_release);
-    
+
     return client;
 }
 
 
-static void jac_client_release(void *self){
-    
+static void jac_client_release(void *self) {
+
 }
 
 
 /* 开始监听客户链接事件 */
-void jac_client_start(JacClient *client){
+void jac_client_start(JacClient *client) {
     SphSocket *socket=jac_client_socket(client);
     sph_socket_start(socket, NULL, ev_callback);
 }
 
-static void ev_callback(struct ev_loop *loop, ev_io *io, int events){
+static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     JacClient *client=(JacClient *)io;
     SphSocket *socket=jac_client_socket(client);
-    if(events&EV_ERROR){
-        jac_client_close(client);
+    if(events&EV_ERROR) {
+        sph_socket_unref(socket);
         return;
-    }else if(events&EV_READ){
+    } else if(events&EV_READ) {
         char buf[4096];
         int n = sph_socket_recv(socket, buf, sizeof(buf), MSG_DONTWAIT);
-        if(n<=0){
-            jac_client_close(client);
+        if(n<=0) {
+            sph_socket_unref(socket);
             return;
         }
         sph_socket_send(socket, buf, n, 0);
     }
-}
-
-/* 关闭客户端链接 */
-static void jac_client_close(JacClient *client){
-    SphSocket *socket=jac_client_socket(client);
-    sph_socket_stop(socket);
-    sph_socket_unref(socket);
-    printf("client closed!\n");
 }
