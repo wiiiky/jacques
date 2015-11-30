@@ -43,4 +43,5 @@ end = time.time()
 
 duration = end-start
 
+print('%sB, %sKB, %sMB' % (count, count/1024, count/1024/1024))
 print('time: %s -- %s MB/S' % (duration, count/1024/1024/duration))

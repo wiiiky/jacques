@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <errno.h>
+#include "debug.h"
 
 
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events);
@@ -53,14 +55,47 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     SphSocket *socket=jac_client_socket(client);
     if(events&EV_ERROR) {
         sph_socket_unref(socket);
+        D("event error\n");
         return;
-    } else if(events&EV_READ) {
+    }
+    if(events&EV_READ) {
         char buf[4096];
         int n = sph_socket_recv(socket, buf, sizeof(buf), MSG_DONTWAIT);
         if(n<=0) {
             sph_socket_unref(socket);
+            D("read %d, close client\n", n);
             return;
         }
-        sph_socket_send(socket, buf, n, 0);
+        int r=sph_socket_send(socket, buf, n, MSG_DONTWAIT);
+        if(r<0) {
+            if(errno==EAGAIN||errno==EWOULDBLOCK) {
+                sph_buffer_append(sph_socket_get_wbuf(socket), buf, n);
+                D("write would block\n");
+            } else {
+                sph_socket_unref(socket);
+                D("write error %d, close client\n", r);
+                return;
+            }
+        } else if(r<n) {
+            sph_buffer_append(sph_socket_get_wbuf(socket), buf, n-r);
+            D("write not enough %d/%d", r, n);
+        }
+    }
+    if(events&EV_WRITE) {
+        SphBuffer *wbuf=sph_socket_get_wbuf(socket);
+        if(sph_buffer_get_length(wbuf)>0) {
+            int r = sph_socket_send(socket, sph_buffer_get_data(wbuf),
+                                    sph_buffer_get_length(wbuf), MSG_DONTWAIT);
+            if(r<0) {
+                if(!(errno==EAGAIN||errno==EWOULDBLOCK)) {
+                    sph_socket_unref(socket);
+                    D("write error %d, close client\n", r);
+                    return;
+                }
+            } else if(r<sph_buffer_get_length(wbuf)) {
+                D("write not enough %d/%d", r, sph_buffer_get_length(wbuf));
+                sph_buffer_erase(wbuf, 0, r);
+            }
+        }
     }
 }
