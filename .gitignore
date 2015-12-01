@@ -5,3 +5,6 @@ local
 gmon.out
 cscope.*
 Makefile
+.deps
+config.log
+config.status

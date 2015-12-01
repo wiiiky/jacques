@@ -61,25 +61,13 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     if(events&EV_READ) {
         char buf[4096];
         int n = sph_socket_recv(socket, buf, sizeof(buf), MSG_DONTWAIT);
+        D("read %d\n", n);
         if(n<=0) {
             sph_socket_unref(socket);
-            D("read %d, close client\n", n);
+            D("close client %d\n", sph_socket_get_fd(socket));
             return;
         }
-        int r=sph_socket_send(socket, buf, n, MSG_DONTWAIT);
-        if(r<0) {
-            if(errno==EAGAIN||errno==EWOULDBLOCK) {
-                sph_buffer_append(sph_socket_get_wbuf(socket), buf, n);
-                D("write would block\n");
-            } else {
-                sph_socket_unref(socket);
-                D("write error %d, close client\n", r);
-                return;
-            }
-        } else if(r<n) {
-            sph_buffer_append(sph_socket_get_wbuf(socket), buf, n-r);
-            D("write not enough %d/%d", r, n);
-        }
+        sph_buffer_append(sph_socket_get_wbuf(socket), buf, n);
     }
     if(events&EV_WRITE) {
         SphBuffer *wbuf=sph_socket_get_wbuf(socket);
@@ -92,8 +80,8 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
                     D("write error %d, close client\n", r);
                     return;
                 }
-            } else if(r<sph_buffer_get_length(wbuf)) {
-                D("write not enough %d/%d", r, sph_buffer_get_length(wbuf));
+            } else {
+                D("write %d/%u\n", r, sph_buffer_get_length(wbuf));
                 sph_buffer_erase(wbuf, 0, r);
             }
         }

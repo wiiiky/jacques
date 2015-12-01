@@ -7,18 +7,22 @@ import time
 import sys
 
 PORT = 13221
-COUNT = 50
+COUNT = 500
 if len(sys.argv) > 1:
     COUNT = int(sys.argv[1])
 TOTAL = 1024*1024*COUNT
 pfd = select.epoll()
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-s.connect(('localhost', PORT))
+s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+s1.connect(('localhost', PORT))
+s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+s2.connect(('localhost', PORT))
 
-pfd.register(s, select.EPOLLIN|select.EPOLLOUT)
+pfd.register(s1, select.EPOLLIN|select.EPOLLOUT)
+pfd.register(s2, select.EPOLLIN|select.EPOLLOUT)
 
-s.sendall(b'hello world')
+s1.sendall(b'hello world')
+s2.sendall(b'hello world')
 
 count = 0
 
@@ -30,6 +34,7 @@ size= 1024
 while running:
     events = pfd.poll()
     for fileno, event in events:
+        s = s1 if s1.fileno() == fileno else s2
         if event & select.EPOLLIN:
             count+=len(s.recv(size))
             if count > TOTAL:
