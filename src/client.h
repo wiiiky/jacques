@@ -19,6 +19,24 @@
 
 #include <sph.h>
 
+typedef enum {
+    PACKAGE_FLAG_SIZE=0,
+    PACKAGE_FLAG_PAYLOAD=1,
+} PackageFlag;
+
+typedef struct {
+    PackageFlag pflag;
+    unsigned int plen;
+} PackageData;
+
+
+typedef struct {
+    SphSocket parent;
+    PackageData pdata;
+} JacClient;
+#define jac_client_socket(client)           ((SphSocket*)client)
+#define jac_client_get_package_data(client) (&(client)->pdata)
+
 
 JacClient *jac_client_new_from_fd(int fd);
 

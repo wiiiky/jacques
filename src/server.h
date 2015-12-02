@@ -19,6 +19,10 @@
 
 #include <sph.h>
 
+typedef struct {
+    SphSocket parent;
+} JacServer;
+#define jac_server_socket(server)   ((SphSocket*)server)
 
 /* 创建服务 */
 JacServer *jac_server_new(const char *ip, unsigned short port);

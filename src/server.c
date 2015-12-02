@@ -54,7 +54,6 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     int fd = sph_socket_accept(socket);
     JacClient *client=jac_client_new_from_fd(fd);
     if(client!=NULL) {
-        printf("new client!\n");
         jac_client_start(client);
     }
 }

@@ -8,7 +8,7 @@ import sys
 import random
 
 PORT = 13221
-COUNT = 5000
+COUNT = 500
 if len(sys.argv) > 1:
     COUNT = int(sys.argv[1])
 TOTAL = 1024*1024*COUNT
@@ -38,22 +38,24 @@ for i in range(10):
     s.sendall(pack('hello world'))
 
 count = 0
+wcount = 0;
 
 start = time.time()
 running = True
-
-size = 1024
 
 while running:
     events = pfd.poll()
     for fileno, event in events:
         s = sockets[fileno]
         if event & select.EPOLLIN:
-            count += len(s.recv(size))
+            count += len(s.recv(2048))
             if count > TOTAL:
                 running = False
         if event & select.EPOLLOUT:
-            s.sendall(pack('a'*random.randint(100, 2048)))
+            #if wcount < TOTAL:
+            b = pack('a'*random.randint(100, 2048))
+            #wcount += len(b)
+            s.sendall(b)
         if event & select.EPOLLHUP or event & select.EPOLLERR:
             break
 

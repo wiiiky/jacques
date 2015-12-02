@@ -27,26 +27,6 @@
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events);
 static void jac_client_release(void *self);
 
-typedef enum {
-    PACKAGE_FLAG_SIZE=0,
-    PACKAGE_FLAG_PAYLOAD=1,
-} PackageFlag;
-
-typedef struct {
-    PackageFlag pflag;
-    unsigned int plen;
-} ClientData;
-
-static inline ClientData *client_data_new(void) {
-    ClientData *data=(ClientData*)malloc(sizeof(ClientData));
-    data->pflag=PACKAGE_FLAG_SIZE;
-    return data;
-}
-
-static inline void client_data_free(ClientData *data) {
-    free(data);
-}
-
 
 JacClient *jac_client_new_from_fd(int fd) {
     if(fd<0) {
@@ -55,7 +35,8 @@ JacClient *jac_client_new_from_fd(int fd) {
     JacClient *client=(JacClient*)malloc(sizeof(JacClient));
     SphSocket *socket=jac_client_socket(client);
     sph_socket_init_from_fd(socket, fd, jac_client_release);
-    sph_socket_set_user_data(socket, client_data_new());
+    client->pdata.pflag = PACKAGE_FLAG_SIZE;
+    client->pdata.plen = 0;
 
     return client;
 }
@@ -63,7 +44,6 @@ JacClient *jac_client_new_from_fd(int fd) {
 
 static void jac_client_release(void *self) {
     SphSocket *socket=jac_client_socket(self);
-    client_data_free((ClientData*)sph_socket_get_user_data(socket));
 }
 
 
@@ -75,70 +55,93 @@ void jac_client_start(JacClient *client) {
 
 #define WOULDBLOCK()    (errno==EAGAIN||errno==EWOULDBLOCK)
 
-static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
-    int n;
+/* 从客户端读取数据，成功返回0，失败返回-1 */
+static inline int jac_client_pop(JacClient *client);
+/* 如果有未发送的数据，则发送，成功返回0，失败返回-1 */
+static inline int jac_client_push(JacClient *client);
 
+static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     JacClient *client=(JacClient *)io;
     SphSocket *socket=jac_client_socket(client);
-    SphBuffer *rbuf = sph_socket_get_rbuf(socket);
-    SphBuffer *wbuf = sph_socket_get_wbuf(socket);
     if(events&EV_ERROR) {
         sph_socket_unref(socket);
         D("event error\n");
         return;
     }
     if(events&EV_READ) {
-        char buf[4096];
-        ClientData *cdata=(ClientData*)sph_socket_get_user_data(socket);
-        if(cdata->pflag==PACKAGE_FLAG_SIZE) {
-            if(sph_socket_recv(socket, buf, 4, MSG_DONTWAIT)!=4) {
-                sph_socket_unref(socket);
-                D("read package length error %d\n", n);
-                return;
-            }
-            cdata->plen=decode_package_length(buf);
-            cdata->pflag = PACKAGE_FLAG_PAYLOAD;
-        }
-        while(cdata->plen>0) {
-            n = sph_socket_recv(socket, buf,
-                                cdata->plen<sizeof(buf)?cdata->plen:sizeof(buf),
-                                MSG_DONTWAIT);
-            if(n<=0) {
-                if(WOULDBLOCK()) {
-                    break;
-                }
-                sph_socket_unref(socket);
-                D("read package payload error %d\n", n);
-                return;
-            }
-            cdata->plen -= n;
-            sph_buffer_append(rbuf, buf, n);
-        }
-        if(cdata->plen==0) {
-            /* 读取到一个完整的数据包 */
-            D("read a good package with length %u\n", sph_buffer_get_length(rbuf));
-            encode_package_length(buf, sph_buffer_get_length(rbuf));
-            sph_buffer_append(wbuf, buf, 4);
-            sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), sph_buffer_get_length(rbuf));
-            sph_buffer_clear(rbuf);
-            cdata->pflag=PACKAGE_FLAG_SIZE;
-        }
+        jac_client_pop(client);
     }
     if(events&EV_WRITE) {
-        SphBuffer *wbuf=sph_socket_get_wbuf(socket);
-        if(sph_buffer_get_length(wbuf)>0) {
-            n = sph_socket_send(socket, sph_buffer_get_data(wbuf),
-                                sph_buffer_get_length(wbuf), MSG_DONTWAIT);
-            if(n<0) {
-                if(!WOULDBLOCK()) {
-                    sph_socket_unref(socket);
-                    D("write error %d, close client\n", n);
-                    return;
-                }
-            } else {
-                D("write %d/%u\n", n, sph_buffer_get_length(wbuf));
-                sph_buffer_erase(wbuf, 0, n);
+        jac_client_push(client);
+    }
+}
+
+static inline int jac_client_pop(JacClient *client) {
+    SphSocket *socket=jac_client_socket(client);
+    SphBuffer *rbuf = sph_socket_get_rbuf(socket);
+    SphBuffer *wbuf = sph_socket_get_wbuf(socket);
+
+    int n;
+    uint8_t buf[4096];
+    PackageData *pdata=jac_client_get_package_data(client);
+    if(pdata->pflag==PACKAGE_FLAG_SIZE) {
+        if(sph_socket_recv(socket, buf, 4, MSG_DONTWAIT)!=4) {
+            sph_socket_unref(socket);
+            D("read package length error %d\n", n);
+            return -1;
+        }
+        pdata->plen=decode_package_length(buf);
+        pdata->pflag = PACKAGE_FLAG_PAYLOAD;
+    }
+    while(pdata->plen>0) {
+        n = sph_socket_recv(socket, buf,
+                            pdata->plen<sizeof(buf)?pdata->plen:sizeof(buf),
+                            MSG_DONTWAIT);
+        if(n<=0) {
+            if(WOULDBLOCK()) {
+                break;
             }
+            sph_socket_unref(socket);
+            D("read package payload error %d\n", n);
+            return -1;
+        }
+        pdata->plen -= n;
+        sph_buffer_append(rbuf, buf, n);
+    }
+    if(pdata->plen==0) {
+        /* 读取到一个完整的数据包 */
+        D("read a good package with length %u\n", sph_buffer_get_length(rbuf));
+        encode_package_length(buf, sph_buffer_get_length(rbuf));
+        sph_buffer_append(wbuf, buf, 4);
+        sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), sph_buffer_get_length(rbuf));
+        sph_buffer_clear(rbuf);
+        pdata->pflag=PACKAGE_FLAG_SIZE;
+        //jac_client_push(client);
+    }
+
+    return 0;
+}
+
+static inline int jac_client_push(JacClient *client) {
+    SphSocket *socket=jac_client_socket(client);
+    SphBuffer *rbuf = sph_socket_get_rbuf(socket);
+    SphBuffer *wbuf = sph_socket_get_wbuf(socket);
+    int n;
+
+    if(sph_buffer_get_length(wbuf)>0) {
+        n = sph_socket_send(socket, sph_buffer_get_data(wbuf),
+                            sph_buffer_get_length(wbuf),MSG_DONTWAIT);
+        if(n<0) {
+            if(!WOULDBLOCK()) {
+                sph_socket_unref(socket);
+                D("write error %d, close client\n", n);
+                return -1;
+            }
+            D("write would block!\n");
+        } else {
+            D("write %d/%u\n", n, sph_buffer_get_length(wbuf));
+            sph_buffer_erase(wbuf, 0, n);
         }
     }
+    return 0;
 }
