@@ -8,7 +8,7 @@ import sys
 import random
 
 PORT = 13221
-COUNT = 500
+COUNT = 1000
 if len(sys.argv) > 1:
     COUNT = int(sys.argv[1])
 TOTAL = 1024*1024*COUNT
@@ -30,7 +30,7 @@ def unpack(data):
         (data[2] << 16) + (data[3] << 24)
 
 sockets = {}
-for i in range(10):
+for i in range(8):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.connect(('localhost', PORT))
     sockets[s.fileno()] = s
@@ -48,14 +48,16 @@ while running:
     for fileno, event in events:
         s = sockets[fileno]
         if event & select.EPOLLIN:
-            count += len(s.recv(2048))
+            b = s.recv(2048)
+            count += len(b)
             if count > TOTAL:
                 running = False
         if event & select.EPOLLOUT:
             #if wcount < TOTAL:
             b = pack('a'*random.randint(100, 2048))
+            print(unpack(b))
             #wcount += len(b)
-            s.sendall(b)
+            s.sendall(b*random.randint(2, 5))
         if event & select.EPOLLHUP or event & select.EPOLLERR:
             break
 

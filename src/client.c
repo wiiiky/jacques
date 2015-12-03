@@ -69,10 +69,14 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
         return;
     }
     if(events&EV_READ) {
-        jac_client_pop(client);
+        if(jac_client_pop(client)) {
+            return;
+        }
     }
     if(events&EV_WRITE) {
-        jac_client_push(client);
+        if(jac_client_push(client)) {
+            return;
+        }
     }
 }
 
@@ -84,41 +88,41 @@ static inline int jac_client_pop(JacClient *client) {
     int n;
     uint8_t buf[4096];
     PackageData *pdata=jac_client_get_package_data(client);
-    if(pdata->pflag==PACKAGE_FLAG_SIZE) {
-        if(sph_socket_recv(socket, buf, 4, MSG_DONTWAIT)!=4) {
+
+    ;
+    if((n = sph_socket_recv(socket, buf, sizeof(buf), MSG_DONTWAIT))<=0) {
+        if(!WOULDBLOCK()) {
             sph_socket_unref(socket);
-            D("read package length error %d\n", n);
+            D("read error %d\n", n);
             return -1;
         }
-        pdata->plen=decode_package_length(buf);
-        pdata->pflag = PACKAGE_FLAG_PAYLOAD;
-    }
-    while(pdata->plen>0) {
-        n = sph_socket_recv(socket, buf,
-                            pdata->plen<sizeof(buf)?pdata->plen:sizeof(buf),
-                            MSG_DONTWAIT);
-        if(n<=0) {
-            if(WOULDBLOCK()) {
-                break;
-            }
-            sph_socket_unref(socket);
-            D("read package payload error %d\n", n);
-            return -1;
-        }
-        pdata->plen -= n;
+        return 0;
+    } else {
         sph_buffer_append(rbuf, buf, n);
     }
-    if(pdata->plen==0) {
-        /* 读取到一个完整的数据包 */
-        D("read a good package with length %u\n", sph_buffer_get_length(rbuf));
-        encode_package_length(buf, sph_buffer_get_length(rbuf));
-        sph_buffer_append(wbuf, buf, 4);
-        sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), sph_buffer_get_length(rbuf));
-        sph_buffer_clear(rbuf);
-        pdata->pflag=PACKAGE_FLAG_SIZE;
-        //jac_client_push(client);
-    }
 
+    do {
+        if(pdata->pflag==PACKAGE_FLAG_SIZE && sph_buffer_get_length(rbuf)>=4) {
+            pdata->plen=decode_package_length(sph_buffer_get_data(rbuf));
+            pdata->pflag = PACKAGE_FLAG_PAYLOAD;
+            D("package length [0] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+            sph_buffer_pop(rbuf, 4);
+            D("package length [1] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+        }
+        D("package length [2] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+        if(pdata->pflag==PACKAGE_FLAG_PAYLOAD && pdata->plen<=sph_buffer_get_length(rbuf)) {
+            D("package length [3] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+            encode_package_length(buf, pdata->plen);
+            sph_buffer_append(wbuf, buf, 4);
+            sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), pdata->plen);
+            sph_buffer_pop(rbuf, pdata->plen);
+            pdata->pflag = PACKAGE_FLAG_SIZE;
+            D("package length [4] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+        } else {
+            D("package length [5] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
+            break;
+        }
+    } while(1);
     return 0;
 }
 
@@ -140,7 +144,7 @@ static inline int jac_client_push(JacClient *client) {
             D("write would block!\n");
         } else {
             D("write %d/%u\n", n, sph_buffer_get_length(wbuf));
-            sph_buffer_erase(wbuf, 0, n);
+            sph_buffer_pop(wbuf, n);
         }
     }
     return 0;
