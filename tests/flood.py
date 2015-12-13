@@ -30,7 +30,7 @@ def unpack(data):
         (data[2] << 16) + (data[3] << 24)
 
 sockets = {}
-for i in range(8):
+for i in range(1):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.connect(('localhost', PORT))
     sockets[s.fileno()] = s
@@ -38,10 +38,11 @@ for i in range(8):
     s.sendall(pack('hello world'))
 
 count = 0
-wcount = 0;
+wcount = 0
 
 start = time.time()
 running = True
+writing = True
 
 while running:
     events = pfd.poll()
@@ -52,12 +53,13 @@ while running:
             count += len(b)
             if count > TOTAL:
                 running = False
-        if event & select.EPOLLOUT:
-            #if wcount < TOTAL:
-            b = pack('a'*random.randint(100, 2048))
-            print(unpack(b))
-            #wcount += len(b)
-            s.sendall(b*random.randint(2, 5))
+        if writing and (event & select.EPOLLOUT):
+            b = pack('a'*random.randint(100, 2048))*random.randint(2, 5)
+            wcount += len(b)
+            if wcount > TOTAL:
+                writing = False
+                print('writing end')
+            s.sendall(b)
         if event & select.EPOLLHUP or event & select.EPOLLERR:
             break
 

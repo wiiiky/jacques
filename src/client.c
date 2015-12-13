@@ -78,6 +78,7 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
             return;
         }
     }
+    //printf("sph_buffer_get_length(wbuf) after: %u\n",sph_buffer_get_length(wbuf));
 }
 
 static inline int jac_client_pop(JacClient *client) {
@@ -105,21 +106,16 @@ static inline int jac_client_pop(JacClient *client) {
         if(pdata->pflag==PACKAGE_FLAG_SIZE && sph_buffer_get_length(rbuf)>=4) {
             pdata->plen=decode_package_length(sph_buffer_get_data(rbuf));
             pdata->pflag = PACKAGE_FLAG_PAYLOAD;
-            D("package length [0] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
             sph_buffer_pop(rbuf, 4);
-            D("package length [1] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
         }
-        D("package length [2] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
         if(pdata->pflag==PACKAGE_FLAG_PAYLOAD && pdata->plen<=sph_buffer_get_length(rbuf)) {
-            D("package length [3] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
             encode_package_length(buf, pdata->plen);
             sph_buffer_append(wbuf, buf, 4);
             sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), pdata->plen);
             sph_buffer_pop(rbuf, pdata->plen);
+            D("package - %u\n", pdata->plen);
             pdata->pflag = PACKAGE_FLAG_SIZE;
-            D("package length [4] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
         } else {
-            D("package length [5] %u/%u\n", pdata->plen, sph_buffer_get_length(rbuf));
             break;
         }
     } while(1);
@@ -134,7 +130,7 @@ static inline int jac_client_push(JacClient *client) {
 
     if(sph_buffer_get_length(wbuf)>0) {
         n = sph_socket_send(socket, sph_buffer_get_data(wbuf),
-                            sph_buffer_get_length(wbuf),MSG_DONTWAIT);
+                            sph_buffer_get_length(wbuf) ,MSG_DONTWAIT);
         if(n<0) {
             if(!WOULDBLOCK()) {
                 sph_socket_unref(socket);
@@ -143,8 +139,8 @@ static inline int jac_client_push(JacClient *client) {
             }
             D("write would block!\n");
         } else {
-            D("write %d/%u\n", n, sph_buffer_get_length(wbuf));
             sph_buffer_pop(wbuf, n);
+            D("write %d/%u\n", n, sph_buffer_get_length(wbuf));
         }
     }
     return 0;
