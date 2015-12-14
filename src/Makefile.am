@@ -20,7 +20,8 @@ jacques_SOURCES = \
 	signals.c \
 	server.c \
 	client.c \
-	package.c
+	package.c \
+	module.c
 
 jacques_CFLAGS = $(SPH_CFLAGS)
 
