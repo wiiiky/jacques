@@ -17,6 +17,7 @@
 #include "server.h"
 #include "signals.h"
 #include "client.h"
+#include "module.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -42,6 +43,7 @@ JacServer *jac_server_new(const char *ip, unsigned short port) {
 /* 启动服务 */
 void jac_server_run(JacServer *server) {
     init_signals();
+    jac_module_load_by_name("test.so");
     SphSocket *socket=jac_server_socket(server);
     sph_socket_start(socket, NULL, ev_callback);
     run_evloop();

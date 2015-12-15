@@ -11,21 +11,13 @@ AM_CFLAGS =\
 	-O0 \
 	-g
 
-LIBJAC_INCLUDEDIR=/usr/include/libjac
-CFLAGS = -I$(LIBJAC_INCLUDEDIR) `pkg-config --cflags python3`
-LDFLAGS = `pkg-config --libs python3`
+CFLAGS =`pkg-config --cflags python3 sph`
+LDFLAGS = `pkg-config --libs python3 sph`
 
 test.so: test.c
 	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o $@
 
-
-jacques.so: jacques.c
-	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o jacques.so
-
-.PHONY: test.so jacques.so
-
-
-all-local: test.so jacques.so
+all-local: test.so
 
 clean-local:
 	-astyle --style=google -n *.c *.h

@@ -19,11 +19,20 @@
 #include <limits.h>
 #include <stdio.h>
 
+static SphList *module_list = NULL;
+
 
 /* 根据模块名载入模块，失败返回NULL */
 JacModule *jac_module_load_by_name(const char *name) {
     char buf[PATH_MAX];
-    snprintf(buf, sizeof(buf), "%s/%s", "./conf",name);
+    snprintf(buf, sizeof(buf), "%s/%s", "./mod",name);
     JacModule *mod=jac_module_load(buf);
+    if(mod) {
+        if(mod->m_init()==0) {
+            module_list = sph_list_append(module_list, mod);
+        } else {
+            printf("fail to init %s\n", name);
+        }
+    }
     return mod;
 }

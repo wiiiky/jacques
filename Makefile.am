@@ -1,5 +1,5 @@
 
-SUBDIRS = src
+SUBDIRS = src mod
 
 dist_doc_DATA = \
 	README \

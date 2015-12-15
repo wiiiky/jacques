@@ -14,44 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.";
  */
-#include <libjac.h>
+#include <sph.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <Python.h>
 
-static int accept_hook(Socket *socket);
-static int recv_hook(Socket *socket, const void *buf, unsigned int len);
-static void uninit(void);
 
-static JacHook hook = {
-    accept_hook,
-    recv_hook,
-    uninit,
-};
+static int m_init(void) {
+    printf("m_init\n");
+    return 0;
+}
+
 
 static JacModule mod = {
-    &hook
+    m_init,
+    NULL,
+    NULL
 };
 
-static JacModule *init(){
-    Py_Initialize();
-
-    return &mod;
-}
-
-static void uninit(void){
-    Py_Finalize();
-}
-
-JACQUES_MODULE_INIT(init);
-
-
-static int accept_hook(Socket *socket) {
-    return 1;
-}
-
-static int recv_hook(Socket *socket, const void *buf, unsigned int len) {
-    if(len>0) {
-        socket_send(socket, buf, len, 0);
-    }
-    return len;
-}
+JACQUES_MODULE(mod);
