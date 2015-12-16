@@ -18,6 +18,7 @@
 #include "signals.h"
 #include "client.h"
 #include "module.h"
+#include "debug.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -32,7 +33,8 @@ static void jac_server_release(void *self);
 JacServer *jac_server_new(const char *ip, unsigned short port) {
     JacServer *server=(JacServer*)malloc(sizeof(JacServer));
     SphSocket *socket=jac_server_socket(server);
-    sph_socket_init(socket, jac_server_release);
+    sph_socket_init(socket);
+    socket->release=jac_server_release;
     sph_socket_reuse_addr(socket, 1);
     sph_socket_reuse_port(socket, 1);
     sph_socket_bind(socket, ip, port);
@@ -56,7 +58,12 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     int fd = sph_socket_accept(socket);
     JacClient *client=jac_client_new_from_fd(fd);
     if(client!=NULL) {
-        jac_client_start(client);
+        if(jac_module_accept((SphSocket*)client)) {
+            sph_socket_unref((SphSocket*)client);
+            D("dropped by module!\n");
+        } else {
+            jac_client_start(client);
+        }
     }
 }
 

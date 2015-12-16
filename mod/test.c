@@ -25,11 +25,20 @@ static int m_init(void) {
     return 0;
 }
 
+static int m_accept(SphSocket *socket) {
+    return 0;
+}
+
+static int m_recv(SphSocket *socket,const uint8_t *data, unsigned int len) {
+    sph_socket_prepare_data(socket, data, len);
+    return 0;
+}
+
 
 static JacModule mod = {
     m_init,
-    NULL,
-    NULL
+    m_accept,
+    m_recv
 };
 
 JACQUES_MODULE(mod);

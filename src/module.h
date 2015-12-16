@@ -23,5 +23,8 @@
 /* 根据模块名载入模块，失败返回NULL */
 JacModule *jac_module_load_by_name(const char *name);
 
+int jac_module_accept(SphSocket *socket);
+int jac_module_recv(SphSocket *socket, void *data, unsigned int len);
+
 
 #endif

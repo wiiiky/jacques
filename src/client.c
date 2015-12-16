@@ -22,10 +22,12 @@
 #include <errno.h>
 #include "debug.h"
 #include "package.h"
+#include "module.h"
 
 
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events);
 static void jac_client_release(void *self);
+static void jac_client_prepare_data(SphSocket *socket, const void *data, unsigned int len);
 
 
 JacClient *jac_client_new_from_fd(int fd) {
@@ -34,7 +36,10 @@ JacClient *jac_client_new_from_fd(int fd) {
     }
     JacClient *client=(JacClient*)malloc(sizeof(JacClient));
     SphSocket *socket=jac_client_socket(client);
-    sph_socket_init_from_fd(socket, fd, jac_client_release);
+    sph_socket_init_from_fd(socket, fd);
+    /* init hooks */
+    socket->release = jac_client_release;
+    socket->prepare = jac_client_prepare_data;
     client->pdata.pflag = PACKAGE_FLAG_SIZE;
     client->pdata.plen = 0;
 
@@ -78,7 +83,15 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
             return;
         }
     }
-    //printf("sph_buffer_get_length(wbuf) after: %u\n",sph_buffer_get_length(wbuf));
+}
+
+static void jac_client_prepare_data(SphSocket *socket, const void *data,
+                                    unsigned int len) {
+    uint8_t buf[4];
+    SphBuffer *wbuf=sph_socket_get_wbuf(socket);
+    encode_package_length(buf, len);
+    sph_buffer_append(wbuf, buf, 4);
+    sph_buffer_append(wbuf, data, len);
 }
 
 static inline int jac_client_pop(JacClient *client) {
@@ -109,9 +122,10 @@ static inline int jac_client_pop(JacClient *client) {
             sph_buffer_pop(rbuf, 4);
         }
         if(pdata->pflag==PACKAGE_FLAG_PAYLOAD && pdata->plen<=sph_buffer_get_length(rbuf)) {
-            encode_package_length(buf, pdata->plen);
-            sph_buffer_append(wbuf, buf, 4);
-            sph_buffer_append(wbuf, sph_buffer_get_data(rbuf), pdata->plen);
+            if(jac_module_recv(socket, sph_buffer_get_data(rbuf), pdata->plen)) {
+                sph_socket_unref(socket);
+                return -1;
+            }
             sph_buffer_pop(rbuf, pdata->plen);
             D("package - %u\n", pdata->plen);
             pdata->pflag = PACKAGE_FLAG_SIZE;

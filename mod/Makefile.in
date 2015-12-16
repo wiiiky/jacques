@@ -125,7 +125,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
-CFLAGS = `pkg-config --cflags python3 sph`
+CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -139,7 +139,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-LDFLAGS = `pkg-config --libs python3 sph`
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
@@ -211,10 +211,12 @@ AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\"
 
 AM_CFLAGS = \
+	`pkg-config --cflags python3 sph` \
 	-Wall\
 	-O0 \
 	-g
 
+AM_LDFLAGS = `pkg-config --libs python3 sph`
 all: all-am
 
 .SUFFIXES:
@@ -402,7 +404,7 @@ uninstall-am:
 
 
 test.so: test.c
-	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o $@
+	$(CC) $^ -shared -fPIC $(CFLAGS) $(AM_CFLAGS) $(AM_LDFLAGS) -o $@
 
 all-local: test.so
 

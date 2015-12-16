@@ -36,3 +36,29 @@ JacModule *jac_module_load_by_name(const char *name) {
     }
     return mod;
 }
+
+int jac_module_accept(SphSocket *socket) {
+    int ret = 1;
+    SphList *ptr=module_list;
+    while(ptr) {
+        JacModule *mod=(JacModule*)sph_list_data(ptr);
+        if(mod->m_accept && (ret = mod->m_accept(socket))) {
+            break;
+        }
+        ptr=sph_list_next(ptr);
+    }
+    return ret;
+}
+
+int jac_module_recv(SphSocket *socket, void *data, unsigned int len) {
+    int ret = 1;
+    SphList *ptr=module_list;
+    while(ptr) {
+        JacModule *mod=(JacModule*)sph_list_data(ptr);
+        if(mod->m_recv && (ret = mod->m_recv(socket, data, len))) {
+            break;
+        }
+        ptr=sph_list_next(ptr);
+    }
+    return ret;
+}

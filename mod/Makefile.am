@@ -7,15 +7,15 @@ AM_CPPFLAGS = \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\"
 
 AM_CFLAGS =\
+	`pkg-config --cflags python3 sph` \
 	-Wall\
 	-O0 \
 	-g
 
-CFLAGS =`pkg-config --cflags python3 sph`
-LDFLAGS = `pkg-config --libs python3 sph`
+AM_LDFLAGS = `pkg-config --libs python3 sph`
 
 test.so: test.c
-	$(CC) $^ -shared -fPIC $(CFLAGS) $(LDFLAGS) -o $@
+	$(CC) $^ -shared -fPIC $(CFLAGS) $(AM_CFLAGS) $(AM_LDFLAGS) -o $@
 
 all-local: test.so
 
