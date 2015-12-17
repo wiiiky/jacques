@@ -49,6 +49,7 @@ void jac_server_run(JacServer *server) {
     SphSocket *socket=jac_server_socket(server);
     sph_socket_start(socket, NULL, ev_callback);
     run_evloop();
+    jac_module_finalize();
 }
 
 /* 事件回调 */

@@ -20,5 +20,5 @@ test.so: test.c
 all-local: test.so
 
 clean-local:
-	-astyle --style=google -n *.c *.h
+	-astyle --style=google -n *.c 
 	-rm -f *~ *.so

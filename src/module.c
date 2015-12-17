@@ -62,3 +62,14 @@ int jac_module_recv(SphSocket *socket, void *data, unsigned int len) {
     }
     return ret;
 }
+
+void jac_module_finalize(void) {
+    SphList *ptr=module_list;
+    while(ptr) {
+        JacModule *mod=(JacModule*)sph_list_data(ptr);
+        if(mod->m_finalize) {
+            mod->m_finalize();
+        }
+        ptr=sph_list_next(ptr);
+    }
+}
