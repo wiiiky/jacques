@@ -23,6 +23,7 @@
 /* 根据模块名载入模块，失败返回NULL */
 JacModule *jac_module_load_by_name(const char *name);
 
+/* 调用模块的回调函数，会按载入顺序调用所有模块的回调函数，直到某个模块出错返回 */
 int jac_module_accept(SphSocket *socket);
 int jac_module_recv(SphSocket *socket, void *data, unsigned int len);
 void jac_module_finalize(void);

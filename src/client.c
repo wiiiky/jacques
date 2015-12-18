@@ -61,9 +61,9 @@ void jac_client_start(JacClient *client) {
 #define WOULDBLOCK()    (errno==EAGAIN||errno==EWOULDBLOCK)
 
 /* 从客户端读取数据，成功返回0，失败返回-1 */
-static inline int jac_client_pop(JacClient *client);
+static inline int jac_client_recv(JacClient *client);
 /* 如果有未发送的数据，则发送，成功返回0，失败返回-1 */
-static inline int jac_client_push(JacClient *client);
+static inline int jac_client_send(JacClient *client);
 
 static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
     JacClient *client=(JacClient *)io;
@@ -74,12 +74,12 @@ static void ev_callback(struct ev_loop *loop, ev_io *io, int events) {
         return;
     }
     if(events&EV_READ) {
-        if(jac_client_pop(client)) {
+        if(jac_client_recv(client)) {
             return;
         }
     }
     if(events&EV_WRITE) {
-        if(jac_client_push(client)) {
+        if(jac_client_send(client)) {
             return;
         }
     }
@@ -94,7 +94,7 @@ static void jac_client_prepare_data(SphSocket *socket, const void *data,
     sph_buffer_append(wbuf, data, len);
 }
 
-static inline int jac_client_pop(JacClient *client) {
+static inline int jac_client_recv(JacClient *client) {
     SphSocket *socket=jac_client_socket(client);
     SphBuffer *rbuf = sph_socket_get_rbuf(socket);
     SphBuffer *wbuf = sph_socket_get_wbuf(socket);
@@ -103,7 +103,6 @@ static inline int jac_client_pop(JacClient *client) {
     uint8_t buf[4096];
     PackageData *pdata=jac_client_get_package_data(client);
 
-    ;
     if((n = sph_socket_recv(socket, buf, sizeof(buf), MSG_DONTWAIT))<=0) {
         if(!WOULDBLOCK()) {
             sph_socket_unref(socket);
@@ -122,6 +121,7 @@ static inline int jac_client_pop(JacClient *client) {
             sph_buffer_pop(rbuf, 4);
         }
         if(pdata->pflag==PACKAGE_FLAG_PAYLOAD && pdata->plen<=sph_buffer_get_length(rbuf)) {
+            /* 回调给模块 */
             if(jac_module_recv(socket, sph_buffer_get_data(rbuf), pdata->plen)) {
                 sph_socket_unref(socket);
                 return -1;
@@ -136,7 +136,7 @@ static inline int jac_client_pop(JacClient *client) {
     return 0;
 }
 
-static inline int jac_client_push(JacClient *client) {
+static inline int jac_client_send(JacClient *client) {
     SphSocket *socket=jac_client_socket(client);
     SphBuffer *rbuf = sph_socket_get_rbuf(socket);
     SphBuffer *wbuf = sph_socket_get_wbuf(socket);

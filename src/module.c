@@ -72,4 +72,6 @@ void jac_module_finalize(void) {
         }
         ptr=sph_list_next(ptr);
     }
+    sph_list_free(module_list, NULL);
+    module_list = NULL;
 }
