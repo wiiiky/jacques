@@ -45,7 +45,7 @@ JacServer *jac_server_new(const char *ip, unsigned short port) {
 /* 启动服务 */
 void jac_server_run(JacServer *server) {
     init_signals();
-    jac_module_load_by_name("les.so");
+    jac_module_load_by_name("les");
     SphSocket *socket=jac_server_socket(server);
     sph_socket_start(socket, NULL, ev_callback);
     run_evloop();

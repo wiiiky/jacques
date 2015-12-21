@@ -1,0 +1,3 @@
+[submodule "les"]
+    path = mod/les
+    url = git@github.com:jacques-server/les.git

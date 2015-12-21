@@ -1,5 +1,5 @@
 
-SUBDIRS = src
+SUBDIRS = src mod/les
 
 dist_doc_DATA = \
 	README \
