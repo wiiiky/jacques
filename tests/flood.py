@@ -6,12 +6,25 @@ import select
 import time
 import sys
 import random
+import argparse
 
-PORT = 13221
-COUNT = 1000
-if len(sys.argv) > 1:
-    COUNT = int(sys.argv[1])
-TOTAL = 1024*1024*COUNT
+
+def parse_cmd():
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--port', '-p', type=int, default=13221,
+                        help='the port')
+    parser.add_argument('--total', '-t', type=int, default=1000,
+                        help='the total size of data to send, MB')
+    parser.add_argument('--clients', '-c', type=int, default=5,
+                        help='the count of client to send data')
+    return parser.parse_args()
+
+
+args = parse_cmd()
+PORT = args.port
+TOTAL = args.total * 1024 * 1024
+CLIENTS = args.clients
+
 pfd = select.epoll()
 
 
@@ -30,7 +43,7 @@ def unpack(data):
         (data[2] << 16) + (data[3] << 24)
 
 sockets = {}
-for i in range(1):
+for i in range(CLIENTS):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
     s.connect(('localhost', PORT))
     sockets[s.fileno()] = s
@@ -54,7 +67,7 @@ while running:
             if count > TOTAL:
                 running = False
         if writing and (event & select.EPOLLOUT):
-            b = pack('a'*random.randint(100, 2048))*random.randint(2, 5)
+            b = pack('a' * random.randint(100, 2048)) * random.randint(2, 5)
             wcount += len(b)
             if wcount > TOTAL:
                 writing = False
@@ -65,7 +78,7 @@ while running:
 
 end = time.time()
 
-duration = end-start
+duration = end - start
 
-print('%sB, %sKB, %sMB' % (count, count/1024, count/1024/1024))
-print('time: %s -- %s MB/S' % (duration, count/1024/1024/duration))
+print('%sB, %sKB, %sMB' % (count, count / 1024, count / 1024 / 1024))
+print('time: %s -- %s MB/S' % (duration, count / 1024 / 1024 / duration))
